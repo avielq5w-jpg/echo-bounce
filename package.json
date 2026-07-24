@@ -1,0 +1,23 @@
+{
+  "name": "echo-bounce",
+  "version": "1.0.0",
+  "description": "Echo Bounce - A minimalist dark-themed 2D arcade physics game",
+  "main": "game.js",
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html style.css game.js dist/",
+    "dev": "python3 -m http.server 8080",
+    "cap:sync": "npx cap sync",
+    "cap:ios": "npx cap run ios --target D2EAD9BA-C84A-4592-B406-F33CC0B7F2E1",
+    "cap:open": "npx cap open ios"
+  },
+  "keywords": [
+    "game",
+    "canvas",
+    "physics",
+    "arcade",
+    "capacitor",
+    "ios"
+  ],
+  "author": "",
+  "license": "ISC"
+}

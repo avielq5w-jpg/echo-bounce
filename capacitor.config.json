@@ -1,0 +1,8 @@
+{
+  "appId": "com.echobounce.app",
+  "appName": "Echo Bounce",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
