@@ -89,6 +89,41 @@ const SKINS = {
     purple: '#a100ff'
 };
 
+// 3-Star Rating Target Thresholds per Level { time: maxSec, bounces: maxBounces }
+const LEVEL_TARGETS = {
+    1:  { time: 8.0,  bounces: 6 },
+    2:  { time: 10.0, bounces: 8 },
+    3:  { time: 12.0, bounces: 10 },
+    4:  { time: 14.0, bounces: 12 },
+    5:  { time: 15.0, bounces: 14 },
+    6:  { time: 12.0, bounces: 10 },
+    7:  { time: 14.0, bounces: 12 },
+    8:  { time: 15.0, bounces: 13 },
+    9:  { time: 16.0, bounces: 15 },
+    10: { time: 18.0, bounces: 16 },
+    11: { time: 14.0, bounces: 12 },
+    12: { time: 16.0, bounces: 14 },
+    13: { time: 18.0, bounces: 16 },
+    14: { time: 20.0, bounces: 18 },
+    15: { time: 22.0, bounces: 20 }
+};
+
+function calculateStars(levelIndex, timeSec, bounces) {
+    const lvlNum = levelIndex + 1;
+    const target = LEVEL_TARGETS[lvlNum] || { time: 15.0, bounces: 12 };
+    let stars = 1; // 1 Star for completing
+    if (timeSec <= target.time) stars++;
+    if (bounces <= target.bounces) stars++;
+    return stars;
+}
+
+function getStarsString(count) {
+    if (!count || count <= 0) return '☆☆☆';
+    if (count === 1) return '⭐☆☆';
+    if (count === 2) return '⭐⭐☆';
+    return '⭐⭐⭐';
+}
+
 // Language cycle order & display labels
 const LANG_ORDER = ['en', 'he', 'es', 'fr', 'ja'];
 const LANG_LABELS = { en: '🇬🇧 EN', he: '🇮🇱 HE', es: '🇪🇸 ES', fr: '🇫🇷 FR', ja: '🇯🇵 JA' };
@@ -122,9 +157,12 @@ const TRANSLATIONS = {
         profileSub: "Lifetime Explorer & Orb Customization",
         lblPlayerName: "EXPLORER NAME",
         lblOrbSkin: "ORB GLOW SKIN",
+        lblTrailSkin: "ECHO TRAIL EFFECT",
+        lblTotalStars: "Total Stars Earned",
+        lblGhostOrb: "GHOST REPLAY",
         lblLevelsCleared: "Levels Cleared",
         lblLifetimeBounces: "Total Lifetime Bounces",
-        lblBestTimes: "BEST LEVEL TIMES",
+        lblBestTimes: "BEST LEVEL TIMES & STARS",
         pauseTitle: "GAME PAUSED",
         pauseSub: "Take a breath or return to menu",
         btnResume: "RESUME GAME",
@@ -354,18 +392,23 @@ const TRANSLATIONS = {
 // --- Storage & Save System ---
 class SaveSystem {
     constructor() {
-        this.STORAGE_KEY = 'echo_bounce_save_v4';
+        this.STORAGE_KEY = 'echo_bounce_save_v5';
         this.data = {
             playerName: 'Player 1',
             language: 'en',
             orbSkin: 'cyan',
+            trailSkin: 'standard',
+            ghostEnabled: true,
             unlockedLevel: 15, // all 15 levels unlocked for testing
             totalLifetimeBounces: 0,
             levelsCompleted: 0,
-            bestTimes: {}
+            bestTimes: {},
+            stars: {},
+            ghostTrajectories: {}
         };
         for (let i = 1; i <= 15; i++) {
             this.data.bestTimes[i] = null;
+            this.data.stars[i] = 0;
         }
         this.load();
     }
@@ -375,7 +418,12 @@ class SaveSystem {
             const raw = localStorage.getItem(this.STORAGE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                this.data = { ...this.data, ...parsed };
+                this.data = {
+                    ...this.data,
+                    ...parsed,
+                    stars: { ...this.data.stars, ...(parsed.stars || {}) },
+                    ghostTrajectories: { ...this.data.ghostTrajectories, ...(parsed.ghostTrajectories || {}) }
+                };
             }
         } catch (e) {
             console.warn('Could not load saved data from localStorage', e);
@@ -395,7 +443,7 @@ class SaveSystem {
         this.save();
     }
 
-    recordLevelVictory(levelIndex, bounces, timeSec) {
+    recordLevelVictory(levelIndex, bounces, timeSec, trajectory) {
         const lvlNum = levelIndex + 1;
         
         if (this.data.unlockedLevel < lvlNum + 1 && lvlNum < 15) {
@@ -403,9 +451,20 @@ class SaveSystem {
         }
 
         const currentBest = this.data.bestTimes[lvlNum];
-        if (currentBest === null || timeSec < currentBest) {
+        const isNewBest = (currentBest === null || timeSec < currentBest);
+
+        if (isNewBest) {
             this.data.bestTimes[lvlNum] = parseFloat(timeSec.toFixed(1));
+            if (trajectory && trajectory.length > 0) {
+                if (!this.data.ghostTrajectories) this.data.ghostTrajectories = {};
+                this.data.ghostTrajectories[lvlNum] = trajectory;
+            }
         }
+
+        const newStars = calculateStars(levelIndex, timeSec, bounces);
+        if (!this.data.stars) this.data.stars = {};
+        const currentStars = this.data.stars[lvlNum] || 0;
+        this.data.stars[lvlNum] = Math.max(currentStars, newStars);
 
         let completed = 0;
         for (let i = 1; i <= 15; i++) {
@@ -415,6 +474,8 @@ class SaveSystem {
 
         this.recordBounces(bounces);
         this.save();
+
+        return { stars: newStars, isNewBest };
     }
 }
 
@@ -951,16 +1012,59 @@ class PlayerOrb {
         this.trailTimer += dt;
         if (this.trailTimer >= 0.03 && this.vel.length() > 20) {
             this.trailTimer = 0;
+            const trailSkin = (gameInstance.saveSystem && gameInstance.saveSystem.data) ? (gameInstance.saveSystem.data.trailSkin || 'standard') : 'standard';
             const speedRatio = Math.min(1, this.vel.length() / 800);
-            gameInstance.particles.push(new Particle(
-                this.pos.x + (Math.random() - 0.5) * 4,
-                this.pos.y + (Math.random() - 0.5) * 4,
-                -this.vel.x * 0.15 + (Math.random() - 0.5) * 20,
-                -this.vel.y * 0.15 + (Math.random() - 0.5) * 20,
-                this.color,
-                2.5 * speedRatio + 1,
-                0.4 + speedRatio * 0.3
-            ));
+
+            if (trailSkin === 'fire') {
+                const colors = ['#ffe600', '#ff7700', '#ff2a2a', '#ff9900'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                gameInstance.particles.push(new Particle(
+                    this.pos.x + (Math.random() - 0.5) * 8,
+                    this.pos.y + (Math.random() - 0.5) * 8,
+                    -this.vel.x * 0.12 + (Math.random() - 0.5) * 30,
+                    -this.vel.y * 0.12 - 35 + (Math.random() - 0.5) * 30,
+                    color,
+                    3 * speedRatio + 1.5,
+                    0.35 + speedRatio * 0.25
+                ));
+            } else if (trailSkin === 'ice') {
+                const colors = ['#00f3ff', '#ffffff', '#a0f0ff', '#88e0ff'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                gameInstance.particles.push(new Particle(
+                    this.pos.x + (Math.random() - 0.5) * 10,
+                    this.pos.y + (Math.random() - 0.5) * 10,
+                    -this.vel.x * 0.1 + (Math.random() - 0.5) * 20,
+                    -this.vel.y * 0.1 + (Math.random() - 0.5) * 20,
+                    color,
+                    2.2 * speedRatio + 1.2,
+                    0.4 + speedRatio * 0.3
+                ));
+            } else if (trailSkin === 'electric') {
+                const colors = ['#00f3ff', '#a100ff', '#ffffff', '#e066ff'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const angle = Math.random() * Math.PI * 2;
+                const pSpeed = 40 + Math.random() * 80;
+                gameInstance.particles.push(new Particle(
+                    this.pos.x + (Math.random() - 0.5) * 6,
+                    this.pos.y + (Math.random() - 0.5) * 6,
+                    Math.cos(angle) * pSpeed - this.vel.x * 0.1,
+                    Math.sin(angle) * pSpeed - this.vel.y * 0.1,
+                    color,
+                    1.8 * speedRatio + 1,
+                    0.25 + speedRatio * 0.2
+                ));
+            } else {
+                // Standard Neon
+                gameInstance.particles.push(new Particle(
+                    this.pos.x + (Math.random() - 0.5) * 4,
+                    this.pos.y + (Math.random() - 0.5) * 4,
+                    -this.vel.x * 0.15 + (Math.random() - 0.5) * 20,
+                    -this.vel.y * 0.15 + (Math.random() - 0.5) * 20,
+                    this.color,
+                    2.5 * speedRatio + 1,
+                    0.4 + speedRatio * 0.3
+                ));
+            }
         }
     }
 
@@ -1038,6 +1142,14 @@ class EchoBounceGame {
         this.deathTimer = 0;
         this.absorptionTimer = 0;   // portal absorption animation timer
         this.carouselWorldIndex = 0; // last viewed world in level select carousel
+
+        // Ghost Replay & Star Rating State
+        this.currentTrajectory = [];
+        this.recordTimer = 0;
+        this.ghostData = null;
+        this.ghostTime = 0;
+        this.ghostPos = null;
+        this.lastVictoryStars = 1;
 
         this.lastTapTime = 0;
         this.lastTapPos = { x: 0, y: 0 };
@@ -1493,6 +1605,15 @@ class EchoBounceGame {
         this.pulseCooldown = 0;
         this.levelStartTime = performance.now();
 
+        // Ghost Replay & Trajectory Setup
+        this.currentTrajectory = [];
+        this.recordTimer = 0;
+        const lvlNum = levelIndex + 1;
+        const trajMap = this.saveSystem.data.ghostTrajectories;
+        this.ghostData = (trajMap && trajMap[lvlNum]) ? trajMap[lvlNum] : null;
+        this.ghostTime = 0;
+        this.ghostPos = null;
+
         this.updateHudLevelBadge();
 
         this.echoWaves.push(new EchoWave(w * 0.5, h * 0.88, 160, 1.0, this.player ? this.player.color : CONFIG.COLOR_CYAN));
@@ -1610,23 +1731,69 @@ class EchoBounceGame {
     }
 
     bindSkinSelectorEvents() {
-        if (!this.skinSwatchesContainer) return;
-        const swatches = this.skinSwatchesContainer.querySelectorAll('.skin-swatch');
+        // Orb Glow Swatches
+        if (this.skinSwatchesContainer) {
+            const swatches = this.skinSwatchesContainer.querySelectorAll('.skin-swatch');
+            swatches.forEach(swatch => {
+                swatch.addEventListener('click', () => {
+                    const selectedColor = swatch.getAttribute('data-color');
+                    this.saveSystem.data.orbSkin = selectedColor;
+                    this.saveSystem.save();
 
-        swatches.forEach(swatch => {
-            swatch.addEventListener('click', () => {
-                const selectedColor = swatch.getAttribute('data-color');
-                this.saveSystem.data.orbSkin = selectedColor;
-                this.saveSystem.save();
+                    swatches.forEach(s => s.classList.remove('active'));
+                    swatch.classList.add('active');
 
-                swatches.forEach(s => s.classList.remove('active'));
-                swatch.classList.add('active');
-
-                if (this.player) {
-                    this.player.setSkin(selectedColor);
-                }
+                    if (this.player) {
+                        this.player.setSkin(selectedColor);
+                    }
+                });
             });
-        });
+        }
+
+        // Echo Trail Effect Swatches
+        const trailContainer = document.getElementById('trail-swatches');
+        if (trailContainer) {
+            const trailSwatches = trailContainer.querySelectorAll('.trail-swatch');
+            trailSwatches.forEach(swatch => {
+                swatch.addEventListener('click', () => {
+                    const selectedTrail = swatch.getAttribute('data-trail');
+                    this.saveSystem.data.trailSkin = selectedTrail;
+                    this.saveSystem.save();
+
+                    trailSwatches.forEach(s => s.classList.remove('active'));
+                    swatch.classList.add('active');
+                });
+            });
+        }
+
+        // Ghost Replay Toggle Handler
+        const toggleGhost = () => {
+            const current = this.saveSystem.data.ghostEnabled !== false;
+            const nextState = !current;
+            this.saveSystem.data.ghostEnabled = nextState;
+            this.saveSystem.save();
+
+            const btnProfileGhost = document.getElementById('btn-toggle-ghost');
+            if (btnProfileGhost) {
+                btnProfileGhost.classList.toggle('active', nextState);
+                btnProfileGhost.textContent = nextState ? '👻 GHOST: ON' : '👻 GHOST: OFF';
+            }
+
+            const btnPauseGhost = document.getElementById('btn-pause-ghost');
+            if (btnPauseGhost) {
+                btnPauseGhost.textContent = nextState ? '👻 GHOST: ON' : '👻 GHOST: OFF';
+            }
+        };
+
+        const btnProfileGhost = document.getElementById('btn-toggle-ghost');
+        if (btnProfileGhost) {
+            btnProfileGhost.addEventListener('click', toggleGhost);
+        }
+
+        const btnPauseGhost = document.getElementById('btn-pause-ghost');
+        if (btnPauseGhost) {
+            btnPauseGhost.addEventListener('click', toggleGhost);
+        }
     }
 
     bindEvents() {
@@ -1735,31 +1902,14 @@ class EchoBounceGame {
             const endLvl   = w * 5;
             const cfg       = worldConfigs[w - 1];
 
-            // Progress badge: count cleared levels in this world
+            // Progress: total stars earned in this world
+            let worldStars = 0;
             let clearedCount = 0;
             for (let i = startLvl; i <= endLvl; i++) {
                 if (this.saveSystem.data.bestTimes[i] !== null) clearedCount++;
+                worldStars += (this.saveSystem.data.stars ? (this.saveSystem.data.stars[i] || 0) : 0);
             }
-            const allClear      = clearedCount === 5;
-            const progressLabel = `${clearedCount}/5`;
-
-            // Build level buttons
-            let levelsHtml = '';
-            for (let i = startLvl; i <= endLvl; i++) {
-                const isUnlocked = i <= unlocked;
-                const bestTime   = this.saveSystem.data.bestTimes[i];
-                const isCleared  = bestTime !== null;
-                const timeStr    = isCleared ? `${bestTime}s` : '—';
-                const timeClass  = isCleared ? 'cleared' : 'uncleared';
-                const btnClass   = isUnlocked ? 'unlocked' : 'locked';
-                const lockMark   = isUnlocked ? '' : '<span style="font-size:0.68rem;line-height:1">🔒</span>';
-
-                levelsHtml += `<div class="wlg-btn ${btnClass}" data-level="${i}">
-                    ${lockMark}
-                    <span class="wlg-num">${i}</span>
-                    <span class="wlg-time ${timeClass}">${timeStr}</span>
-                </div>`;
-            }
+            const allClear = clearedCount === 5;
 
             html += `<div class="carousel-slide" data-world="${w}">
                 <div class="world-preview-art">${cfg.art}</div>
@@ -1770,10 +1920,12 @@ class EchoBounceGame {
                         <p class="world-card-sub">${cfg.sub}</p>
                     </div>
                     <div class="world-progress-badge${allClear ? ' all-clear' : ''}">
-                        ${clearedCount > 0 ? '⭐' : '○'} ${progressLabel}
+                        ⭐ ${worldStars}/15
                     </div>
                 </div>
-                <div class="world-level-grid">${levelsHtml}</div>
+                <div class="world-card-tap-prompt">
+                    <span>🔍 TAP TO EXPLORE STAGES</span>
+                </div>
             </div>`;
         }
 
@@ -1838,6 +1990,7 @@ class EchoBounceGame {
             this.inputPlayerName.value = this.saveSystem.data.playerName;
         }
 
+        // Orb Glow Skin active swatch
         const activeSkin = this.saveSystem.data.orbSkin || 'cyan';
         if (this.skinSwatchesContainer) {
             this.skinSwatchesContainer.querySelectorAll('.skin-swatch').forEach(swatch => {
@@ -1849,15 +2002,47 @@ class EchoBounceGame {
             });
         }
 
+        // Echo Trail Effect active swatch
+        const activeTrail = this.saveSystem.data.trailSkin || 'standard';
+        const trailContainer = document.getElementById('trail-swatches');
+        if (trailContainer) {
+            trailContainer.querySelectorAll('.trail-swatch').forEach(swatch => {
+                if (swatch.getAttribute('data-trail') === activeTrail) {
+                    swatch.classList.add('active');
+                } else {
+                    swatch.classList.remove('active');
+                }
+            });
+        }
+
+        // Ghost Toggle Button State
+        const isGhostOn = this.saveSystem.data.ghostEnabled !== false;
+        const btnProfileGhost = document.getElementById('btn-toggle-ghost');
+        if (btnProfileGhost) {
+            btnProfileGhost.classList.toggle('active', isGhostOn);
+            btnProfileGhost.textContent = isGhostOn ? '👻 GHOST: ON' : '👻 GHOST: OFF';
+        }
+        const btnPauseGhost = document.getElementById('btn-pause-ghost');
+        if (btnPauseGhost) {
+            btnPauseGhost.textContent = isGhostOn ? '👻 GHOST: ON' : '👻 GHOST: OFF';
+        }
+
         const lang = this.saveSystem.data.language || 'en';
         const notClearedStr = TRANSLATIONS[lang].notCleared;
         const hudLevelPrefix = TRANSLATIONS[lang].hudLevelPrefix || 'LVL';
 
         const elCleared = document.getElementById('prof-levels-cleared');
+        const elTotalStars = document.getElementById('prof-total-stars');
         const elBounces = document.getElementById('prof-lifetime-bounces');
         const elBestTimes = document.getElementById('best-times-container');
 
+        let totalStars = 0;
+        for (let i = 1; i <= this.totalLevels; i++) {
+            totalStars += (this.saveSystem.data.stars ? (this.saveSystem.data.stars[i] || 0) : 0);
+        }
+
         if (elCleared) elCleared.textContent = `${this.saveSystem.data.levelsCompleted}/${this.totalLevels}`;
+        if (elTotalStars) elTotalStars.textContent = `${totalStars}/45`;
         if (elBounces) elBounces.textContent = this.saveSystem.data.totalLifetimeBounces;
 
         if (elBestTimes) {
@@ -1867,9 +2052,13 @@ class EchoBounceGame {
                 const isCleared = time !== null;
                 const display = isCleared ? `${time}s` : notClearedStr;
                 const valClass = isCleared ? '' : 'uncleared';
+                const starCount = (this.saveSystem.data.stars ? (this.saveSystem.data.stars[i] || 0) : 0);
+                const starsStr = isCleared ? getStarsString(starCount) : '☆☆☆';
+
                 html += `
                     <div class="best-time-row">
                         <span class="bt-lvl">${hudLevelPrefix} ${i}</span>
+                        <span class="bt-stars">${starsStr}</span>
                         <span class="bt-val ${valClass}">${display}</span>
                     </div>
                 `;
@@ -1926,7 +2115,13 @@ class EchoBounceGame {
         if (this.gameState !== 'PLAYING' && this.gameState !== 'ABSORBING') return;
 
         const elapsedSec = (performance.now() - this.levelStartTime) / 1000;
-        this.saveSystem.recordLevelVictory(this.currentLevelIndex, this.player.bounces, elapsedSec);
+        const res = this.saveSystem.recordLevelVictory(
+            this.currentLevelIndex, 
+            this.player.bounces, 
+            elapsedSec, 
+            this.currentTrajectory
+        );
+        this.lastVictoryStars = res.stars;
 
         this.switchState('PORTAL_ANIMATION');
         this.portalAnimTimer = 0;
@@ -1976,8 +2171,9 @@ class EchoBounceGame {
             setTimeout(() => {
                 if (fadeEl) fadeEl.classList.remove('fading');
 
-                // Show non-intrusive top toast
-                this._showLevelToast(`✓ Level ${clearedLevel} cleared! ${elapsedSec.toFixed(1)}s`);
+                // Show non-intrusive top toast with Stars!
+                const starsStr = getStarsString(this.lastVictoryStars || 1);
+                this._showLevelToast(`✓ Level ${clearedLevel} cleared! ${elapsedSec.toFixed(1)}s ${starsStr}`);
             }, 80);
         }, 380);
     }
@@ -2052,9 +2248,12 @@ class EchoBounceGame {
             const timeStr    = isCleared ? `${bestTime}s` : '—';
             const timeClass  = isCleared ? 'cleared' : 'uncleared';
             const btnClass   = isUnlocked ? 'unlocked' : 'locked';
+            const starCount  = (this.saveSystem.data.stars ? (this.saveSystem.data.stars[i] || 0) : 0);
+            const starsStr   = isCleared ? getStarsString(starCount) : '☆☆☆';
 
             levelsHtml += `<div class="wlg-btn ${btnClass}" data-level="${i}">
                 <span class="wlg-num">${i}</span>
+                <span class="wlg-stars">${starsStr}</span>
                 <span class="wlg-time ${timeClass}">${timeStr}</span>
             </div>`;
         }
@@ -2153,6 +2352,39 @@ class EchoBounceGame {
 
         if (this.gameState === 'PLAYING') {
             this.player.update(dt, this);
+
+            // Trajectory recording for Ghost Replay
+            this.recordTimer += dt;
+            if (this.recordTimer >= 0.04) {
+                this.recordTimer = 0;
+                if (!this.currentTrajectory) this.currentTrajectory = [];
+                this.currentTrajectory.push([
+                    Math.round(this.player.pos.x * 10) / 10,
+                    Math.round(this.player.pos.y * 10) / 10
+                ]);
+            }
+
+            // Ghost Orb Playback Update
+            if (this.saveSystem.data.ghostEnabled !== false && this.ghostData && this.ghostData.length > 1) {
+                this.ghostTime += dt;
+                const sampleIndex = this.ghostTime / 0.04;
+                const idx = Math.floor(sampleIndex);
+                if (idx < this.ghostData.length - 1) {
+                    const p1 = this.ghostData[idx];
+                    const p2 = this.ghostData[idx + 1];
+                    const t = sampleIndex - idx;
+                    this.ghostPos = {
+                        x: p1[0] + (p2[0] - p1[0]) * t,
+                        y: p1[1] + (p2[1] - p1[1]) * t
+                    };
+                } else if (idx < this.ghostData.length) {
+                    this.ghostPos = { x: this.ghostData[this.ghostData.length - 1][0], y: this.ghostData[this.ghostData.length - 1][1] };
+                } else {
+                    this.ghostPos = null;
+                }
+            } else {
+                this.ghostPos = null;
+            }
 
             // Gravitational portal pull — magnetic attraction when close
             if (this.portal) {
@@ -2277,6 +2509,11 @@ class EchoBounceGame {
             this.particles[i].draw(this.ctx);
         }
 
+        // Draw Ghost Orb (PB Replay)
+        if (this.ghostPos && this.saveSystem.data.ghostEnabled !== false && this.gameState !== 'MENU') {
+            this.drawGhostOrb(this.ctx);
+        }
+
         if (this.player && this.gameState !== 'DEATH' && this.gameState !== 'MENU') {
             this.player.draw(this.ctx);
         }
@@ -2290,6 +2527,43 @@ class EchoBounceGame {
             this.ctx.fillRect(0, 0, this.width, this.height);
             this.ctx.restore();
         }
+    }
+
+    drawGhostOrb(ctx) {
+        if (!this.ghostPos) return;
+        const gx = this.ghostPos.x;
+        const gy = this.ghostPos.y;
+
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+
+        // Outer glow
+        const glowRadius = CONFIG.ORB_RADIUS * 2.8;
+        const gGrad = ctx.createRadialGradient(gx, gy, 2, gx, gy, glowRadius);
+        gGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        gGrad.addColorStop(0.5, 'rgba(0, 243, 255, 0.5)');
+        gGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = gGrad;
+        ctx.beginPath();
+        ctx.arc(gx, gy, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dashed glowing circle
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(0, 243, 255, 0.85)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(gx, gy, CONFIG.ORB_RADIUS, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Ghost text label above ghost orb
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(0, 243, 255, 0.9)';
+        ctx.font = 'bold 9px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('👻 GHOST', gx, gy - 18);
+
+        ctx.restore();
     }
 
     renderGrid() {

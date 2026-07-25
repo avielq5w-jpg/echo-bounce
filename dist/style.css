@@ -1516,3 +1516,124 @@ html, body {
     border-color: rgba(0, 243, 255, 0.5);
     box-shadow: 0 0 14px rgba(0, 243, 255, 0.15);
 }
+
+/* ===== Phase 12 Update: Trail Swatches & Ghost Toggle & Star Rating Styles ===== */
+.trail-swatches {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.45rem;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.trail-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.6rem 0.2rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+}
+
+.trail-swatch .t-icon {
+    font-size: 1.1rem;
+}
+
+.trail-swatch .t-name {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.trail-swatch.active {
+    background: rgba(0, 243, 255, 0.12);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 14px rgba(0, 243, 255, 0.2);
+}
+.trail-swatch.active .t-name {
+    color: var(--neon-cyan);
+}
+
+.ghost-option-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 0.85rem;
+    padding: 0.65rem 0.85rem;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+}
+
+.ghost-option-lbl {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.btn-ghost-toggle {
+    padding: 0.45rem 0.85rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 20px;
+    color: var(--text-muted);
+    font-family: var(--font-family);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+}
+
+.btn-ghost-toggle.active {
+    background: rgba(0, 243, 255, 0.12);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(0, 243, 255, 0.2);
+}
+
+/* Star Rating Formatting */
+.wlg-stars, .lvl-stars, .bt-stars {
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    margin-top: 0.1rem;
+}
+
+.world-card-tap-prompt {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin: auto 0.85rem 1rem;
+    padding: 0.9rem 1rem;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--neon-cyan);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.carousel-slide:hover .world-card-tap-prompt,
+.carousel-slide.active .world-card-tap-prompt {
+    background: rgba(0, 243, 255, 0.15);
+    border-color: rgba(0, 243, 255, 0.4);
+    box-shadow: 0 0 16px rgba(0, 243, 255, 0.2);
+}
+

@@ -190,10 +190,39 @@
                     </div>
                 </div>
 
+                <!-- Echo Trail Effect Selector -->
+                <div class="skin-selector-group">
+                    <h3 data-i18n="lblTrailSkin">ECHO TRAIL EFFECT</h3>
+                    <div class="trail-swatches" id="trail-swatches">
+                        <div class="trail-swatch active" data-trail="standard">
+                            <span class="t-icon">✨</span> <span class="t-name">Neon</span>
+                        </div>
+                        <div class="trail-swatch" data-trail="fire">
+                            <span class="t-icon">🔥</span> <span class="t-name">Fire</span>
+                        </div>
+                        <div class="trail-swatch" data-trail="ice">
+                            <span class="t-icon">❄️</span> <span class="t-name">Ice</span>
+                        </div>
+                        <div class="trail-swatch" data-trail="electric">
+                            <span class="t-icon">⚡</span> <span class="t-name">Electric</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ghost Replay Setting -->
+                <div class="ghost-option-group">
+                    <span class="ghost-option-lbl" data-i18n="lblGhostOrb">👻 GHOST REPLAY</span>
+                    <button id="btn-toggle-ghost" class="btn-ghost-toggle active">👻 GHOST: ON</button>
+                </div>
+
                 <div class="stats-grid">
                     <div class="p-stat-card">
                         <span class="p-stat-val" id="prof-levels-cleared">0/15</span>
                         <span class="p-stat-lbl" data-i18n="lblLevelsCleared">Levels Cleared</span>
+                    </div>
+                    <div class="p-stat-card">
+                        <span class="p-stat-val" id="prof-total-stars">0/45</span>
+                        <span class="p-stat-lbl" data-i18n="lblTotalStars">Total Stars</span>
                     </div>
                     <div class="p-stat-card">
                         <span class="p-stat-val" id="prof-lifetime-bounces">0</span>
@@ -202,7 +231,7 @@
                 </div>
 
                 <div class="best-times-list">
-                    <h3 data-i18n="lblBestTimes">BEST LEVEL TIMES</h3>
+                    <h3 data-i18n="lblBestTimes">BEST LEVEL TIMES & STARS</h3>
                     <div id="best-times-container" class="best-times-scroll">
                         <!-- Rendered by JS -->
                     </div>
@@ -219,6 +248,7 @@
                 <p class="modal-desc" data-i18n="pauseSub">Take a breath or return to menu</p>
                 <div class="pause-buttons" style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%; margin-top: 1.25rem;">
                     <button id="btn-pause-resume" class="btn-primary" data-i18n="btnResume">RESUME GAME</button>
+                    <button id="btn-pause-ghost" class="btn-menu" style="width: 100%; border-color: rgba(0, 243, 255, 0.3);">👻 GHOST: ON</button>
                     <button id="btn-pause-restart" class="btn-menu" style="width: 100%;" data-i18n="btnRestart">RESTART LEVEL</button>
                     <button id="btn-pause-menu" class="btn-menu" style="width: 100%;" data-i18n="btnMainMenu">MAIN MENU</button>
                 </div>
