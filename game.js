@@ -93,6 +93,31 @@ const CONFIG = {
     COLOR_RED: '#ff2a2a'
 };
 
+// Strict 4-Color Palettes per World
+const WORLD_THEMES = {
+    1: {
+        bg: '#0B0C10',
+        wall: '#00E5FF',
+        hazard: '#FF007F',
+        portalBase: '#7B1FA2',
+        portalAccent: '#00E5FF'
+    },
+    2: {
+        bg: '#051914',
+        wall: '#00FF87',
+        hazard: '#FFD700',
+        portalBase: '#004D40',
+        portalAccent: '#FFD700'
+    },
+    3: {
+        bg: '#1A0505',
+        wall: '#FF9900',
+        hazard: '#FF003C',
+        portalBase: '#4A000B',
+        portalAccent: '#FF9900'
+    }
+};
+
 // Skin Glow Color Mapping
 const SKINS = {
     cyan: '#00f3ff',
@@ -738,17 +763,20 @@ class EchoWave {
 
 // --- Wall Line Segment ---
 class Wall {
-    constructor(x1, y1, x2, y2, color = CONFIG.COLOR_PINK) {
+    constructor(x1, y1, x2, y2, color = '#00e5ff', renderable = true) {
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
         this.y2 = y2;
         this.color = color;
+        this.renderable = renderable;
         this.illumination = 0;
+        this.flashTimer = 0; // Echo wave hit flash decay timer (~300ms)
     }
 
     update(dt, echoWaves) {
-        this.illumination = Math.max(0, this.illumination - dt * 0.6);
+        this.flashTimer = Math.max(0, this.flashTimer - dt * 3.3); // ~300ms fade back
+        this.illumination = Math.max(0, this.illumination - dt * 1.5);
         const samples = 6;
         for (let i = 0; i <= samples; i++) {
             const t = i / samples;
@@ -757,8 +785,9 @@ class Wall {
 
             for (const wave of echoWaves) {
                 const waveIntensity = wave.getIlluminationAt(sx, sy);
-                if (waveIntensity > this.illumination) {
-                    this.illumination = Math.min(1, waveIntensity * 1.5);
+                if (waveIntensity > 0.15) {
+                    this.flashTimer = Math.max(this.flashTimer, waveIntensity);
+                    this.illumination = Math.max(this.illumination, waveIntensity * 1.5);
                 }
             }
         }
@@ -796,6 +825,7 @@ class Wall {
 
             const normalImpactSpeed = -vDotN;
             if (normalImpactSpeed > 30.0) {
+                this.flashTimer = 1.0;
                 this.illumination = 1.0;
                 return { x: closestX, y: closestY, isRealBounce: true };
             } else {
@@ -808,14 +838,34 @@ class Wall {
     }
 
     draw(ctx) {
-        if (this.illumination <= 0.01) return;
+        if (!this.renderable) return;
+
+        // Subtle ambient glow by default + flash boost when echo wave hits
+        const flash = Math.max(this.illumination, this.flashTimer);
+        const alpha = Math.min(1, 0.35 + 0.65 * flash);
 
         ctx.save();
-        ctx.globalAlpha = Math.min(1, this.illumination);
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 3;
-        ctx.shadowBlur = 12 * this.illumination;
-        ctx.shadowColor = this.color;
+        ctx.globalAlpha = alpha;
+        ctx.lineCap = 'round'; // Capsule rounded end-caps
+
+        // Dynamic Laser Rod Outer Glow
+        const glowAmount = 8 + 18 * flash;
+        ctx.shadowBlur = glowAmount;
+        ctx.shadowColor = flash > 0.3 ? '#ffffff' : this.color;
+
+        // Base Styled Neon Rod
+        ctx.strokeStyle = flash > 0.3 ? '#ffffff' : this.color;
+        ctx.lineWidth = 5.5;
+
+        ctx.beginPath();
+        ctx.moveTo(this.x1, this.y1);
+        ctx.lineTo(this.x2, this.y2);
+        ctx.stroke();
+
+        // Inner Bright Neon Core Line
+        ctx.shadowBlur = flash > 0.3 ? 12 : 0;
+        ctx.strokeStyle = flash > 0.3 ? '#ffffff' : 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 2.0;
 
         ctx.beginPath();
         ctx.moveTo(this.x1, this.y1);
@@ -826,22 +876,50 @@ class Wall {
     }
 }
 
-// --- Base Hazard Class ---
+// --- Base Hazard Class (Pulsing Hazard Mines with Particle Sparks) ---
 class Hazard {
-    constructor(x, y, radius = 18) {
+    constructor(x, y, radius = 18, color = '#FF007F') {
         this.x = x;
         this.y = y;
         this.radius = radius;
+        this.color = color;
         this.illumination = 0;
+        this.pulseTimer = Math.random() * Math.PI * 2;
+        this.sparks = [];
     }
 
     update(dt, echoWaves) {
+        this.pulseTimer += dt * 3.5;
         this.illumination = Math.max(0, this.illumination - dt * 0.6);
         for (const wave of echoWaves) {
             const intensity = wave.getIlluminationAt(this.x, this.y);
             if (intensity > this.illumination) {
                 this.illumination = Math.min(1, intensity * 1.5);
             }
+        }
+
+        // Spawn occasional subtle floating spark particles
+        if (Math.random() < 0.2) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * this.radius;
+            this.sparks.push({
+                x: this.x + Math.cos(angle) * dist,
+                y: this.y + Math.sin(angle) * dist,
+                vx: (Math.random() - 0.5) * 14,
+                vy: -10 - Math.random() * 16,
+                life: 0.35 + Math.random() * 0.3,
+                maxLife: 0.65,
+                size: 1.2 + Math.random() * 1.5
+            });
+        }
+
+        // Update active sparks
+        for (let i = this.sparks.length - 1; i >= 0; i--) {
+            const s = this.sparks[i];
+            s.x += s.vx * dt;
+            s.y += s.vy * dt;
+            s.life -= dt;
+            if (s.life <= 0) this.sparks.splice(i, 1);
         }
     }
 
@@ -851,22 +929,32 @@ class Hazard {
     }
 
     draw(ctx) {
-        if (this.illumination <= 0.01) return;
+        const baseAlpha = Math.min(1, 0.45 + 0.55 * this.illumination);
 
         ctx.save();
-        ctx.globalAlpha = Math.min(1, this.illumination);
+        ctx.globalAlpha = baseAlpha;
 
-        ctx.shadowBlur = 16 * this.illumination;
-        ctx.shadowColor = CONFIG.COLOR_RED;
-        ctx.strokeStyle = CONFIG.COLOR_RED;
-        ctx.fillStyle = 'rgba(255, 42, 42, 0.25)';
+        // Pulsing outer aura shadowBlur in theme hazard color
+        const pulse = 0.5 + 0.5 * Math.sin(this.pulseTimer);
+        const blurAmount = 14 + pulse * 14;
+
+        ctx.shadowBlur = blurAmount;
+        ctx.shadowColor = this.color;
+        ctx.strokeStyle = this.color;
+        
+        let hex = this.color.replace('#', '');
+        let r = parseInt(hex.substring(0, 2), 16) || 255;
+        let g = parseInt(hex.substring(2, 4), 16) || 0;
+        let b = parseInt(hex.substring(4, 6), 16) || 127;
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.25 + 0.2 * pulse})`;
         ctx.lineWidth = 2.5;
 
+        // Hazard Triangle Body
         ctx.beginPath();
         for (let i = 0; i < 3; i++) {
             const angle = (Math.PI * 2 / 3) * i - Math.PI / 2;
-            const px = this.x + Math.cos(angle) * this.radius;
-            const py = this.y + Math.sin(angle) * this.radius;
+            const px = this.x + Math.cos(angle) * (this.radius + pulse * 1.2);
+            const py = this.y + Math.sin(angle) * (this.radius + pulse * 1.2);
             if (i === 0) ctx.moveTo(px, py);
             else ctx.lineTo(px, py);
         }
@@ -874,10 +962,24 @@ class Hazard {
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = CONFIG.COLOR_RED;
+        // Inner glowing core dot
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ffffff';
+        ctx.fillStyle = pulse > 0.5 ? '#ffffff' : this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 3.5, 0, Math.PI * 2);
         ctx.fill();
+
+        // Draw floating spark particles matching theme hazard color
+        for (const s of this.sparks) {
+            const sparkAlpha = Math.max(0, s.life / s.maxLife) * baseAlpha;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = this.color;
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${sparkAlpha})`;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.restore();
     }
@@ -885,8 +987,8 @@ class Hazard {
 
 // --- World 2: Moving Hazard Spikes ---
 class MovingHazard extends Hazard {
-    constructor(x1, y1, x2, y2, speed = 120, radius = 18) {
-        super(x1, y1, radius);
+    constructor(x1, y1, x2, y2, speed = 120, radius = 18, color = '#FF007F') {
+        super(x1, y1, radius, color);
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
@@ -911,8 +1013,8 @@ class MovingHazard extends Hazard {
 
 // --- World 3: Pulsing Hazard Spikes (Timer ON/OFF) ---
 class PulsingHazard extends Hazard {
-    constructor(x, y, onDuration = 1.5, offDuration = 1.5, radius = 18) {
-        super(x, y, radius);
+    constructor(x, y, onDuration = 1.5, offDuration = 1.5, radius = 18, color = '#FF007F') {
+        super(x, y, radius, color);
         this.onDuration = onDuration;
         this.offDuration = offDuration;
         this.timer = 0;
@@ -946,10 +1048,12 @@ class PulsingHazard extends Hazard {
 // --- Exit Portal ---
 // ===== Cosmic Black Hole Exit Portal =====
 class ExitPortal {
-    constructor(x, y, radius = 22) {
+    constructor(x, y, radius = 22, baseColor = '#7B1FA2', accentColor = '#00E5FF') {
         this.x = x;
         this.y = y;
         this.radius = radius;
+        this.baseColor = baseColor;
+        this.accentColor = accentColor;
         this.diskAngle  = 0;   // accretion disk rotation
         this.orbitAngle = 0;   // orbiting particle angle
         this.illumination = 0.55;
@@ -970,15 +1074,15 @@ class ExitPortal {
     }
 
     draw(ctx) {
-        const { x, y, radius: r, diskAngle, orbitAngle, illumination: il } = this;
+        const { x, y, radius: r, diskAngle, orbitAngle, illumination: il, baseColor, accentColor } = this;
         ctx.save();
         ctx.globalAlpha = Math.min(1, il);
 
         // ── 1. Outer accretion glow ──
         const outerGlow = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 4);
         outerGlow.addColorStop(0,   'transparent');
-        outerGlow.addColorStop(0.3, `rgba(0,255,136,${0.06 * il})`);
-        outerGlow.addColorStop(0.6, `rgba(0,200,255,${0.04 * il})`);
+        outerGlow.addColorStop(0.4, accentColor);
+        outerGlow.addColorStop(0.85, baseColor);
         outerGlow.addColorStop(1,   'transparent');
         ctx.fillStyle = outerGlow;
         ctx.beginPath(); ctx.arc(x, y, r * 4, 0, Math.PI * 2); ctx.fill();
@@ -987,30 +1091,32 @@ class ExitPortal {
         ctx.save();
         ctx.translate(x, y);
 
-        // Outer ring
+        // Outer ring (Accent Color)
         ctx.rotate(diskAngle);
-        ctx.strokeStyle = `rgba(0,255,136,${0.45 * il})`;
+        ctx.strokeStyle = accentColor;
         ctx.lineWidth = 2.5;
         ctx.shadowBlur = 14 * il;
-        ctx.shadowColor = '#00ff88';
+        ctx.shadowColor = accentColor;
         ctx.beginPath(); ctx.ellipse(0, 0, r * 2.3, r * 0.52, 0, 0, Math.PI * 2); ctx.stroke();
 
-        // Inner ring (counter-rotates)
+        // Inner ring (Base Color)
         ctx.rotate(-diskAngle * 2.1);
-        ctx.strokeStyle = `rgba(0,220,255,${0.35 * il})`;
-        ctx.lineWidth = 1.8;
-        ctx.shadowColor = '#00f3ff';
+        ctx.strokeStyle = baseColor;
+        ctx.lineWidth = 2.0;
+        ctx.shadowColor = baseColor;
         ctx.beginPath(); ctx.ellipse(0, 0, r * 1.65, r * 0.35, 0.4, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
 
-        // ── 3. Gravitational lensing rings (subtle purple) ──
+        // ── 3. Gravitational lensing rings ──
         ctx.shadowBlur = 0;
         for (let i = 0; i < 3; i++) {
             const rr = r * (0.85 + i * 0.28);
-            ctx.strokeStyle = `rgba(180,80,255,${(0.18 - i * 0.05) * il})`;
+            ctx.strokeStyle = accentColor;
             ctx.lineWidth = 1;
+            ctx.globalAlpha = Math.min(1, (0.25 - i * 0.06) * il);
             ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.stroke();
         }
+        ctx.globalAlpha = Math.min(1, il);
 
         // ── 4. Orbiting particle dots ──
         const drawParticles = (count, radius, speed, color, size) => {
@@ -1024,23 +1130,23 @@ class ExitPortal {
                 ctx.beginPath(); ctx.arc(px, py, size, 0, Math.PI * 2); ctx.fill();
             }
         };
-        drawParticles(7, r * 2.0, 1,    `rgba(0,255,136,${0.85 * il})`, 2.0);
-        drawParticles(5, r * 1.65,-1.4, `rgba(0,220,255,${0.7  * il})`, 1.5);
+        drawParticles(7, r * 2.0, 1,    accentColor, 2.2);
+        drawParticles(5, r * 1.65,-1.4, baseColor,   1.8);
 
-        // ── 5. Event horizon — pure black void center ──
+        // ── 5. Event horizon — black hole void center ──
         const horizon = ctx.createRadialGradient(x, y, 0, x, y, r * 1.05);
         horizon.addColorStop(0,   '#000000');
         horizon.addColorStop(0.75,'#000000');
-        horizon.addColorStop(0.9, `rgba(0,30,60,${0.6 * il})`);
+        horizon.addColorStop(0.95, baseColor);
         horizon.addColorStop(1,   'transparent');
         ctx.shadowBlur = 0;
         ctx.fillStyle = horizon;
         ctx.beginPath(); ctx.arc(x, y, r * 1.05, 0, Math.PI * 2); ctx.fill();
 
         // ── 6. Tiny bright singularity point ──
-        ctx.fillStyle = `rgba(255,255,255,${0.7 * il})`;
+        ctx.fillStyle = '#ffffff';
         ctx.shadowBlur = 12 * il;
-        ctx.shadowColor = '#ffffff';
+        ctx.shadowColor = accentColor;
         ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
 
         ctx.restore();
@@ -1369,16 +1475,14 @@ class EchoBounceGame {
 
     getWallColor() {
         const world = this.getWorldForLevel(this.currentLevelIndex);
-        if (world === 1) return CONFIG.COLOR_PINK;
-        if (world === 2) return CONFIG.COLOR_GREEN;
-        return CONFIG.COLOR_GOLD;
+        const theme = WORLD_THEMES[world] || WORLD_THEMES[1];
+        return theme.wall;
     }
 
     getWaveColor() {
         const world = this.getWorldForLevel(this.currentLevelIndex);
-        if (world === 1) return CONFIG.COLOR_PINK;
-        if (world === 2) return CONFIG.COLOR_PURPLE;
-        return CONFIG.COLOR_RED;
+        const theme = WORLD_THEMES[world] || WORLD_THEMES[1];
+        return theme.wall;
     }
 
     resetCamera() {
@@ -1615,13 +1719,18 @@ class EchoBounceGame {
         const h = this.height;
 
         this.resetCamera();
-        const wallColor = this.getWallColor();
+        const world = this.getWorldForLevel(levelIndex);
+        const theme = WORLD_THEMES[world] || WORLD_THEMES[1];
+        const wallColor = theme.wall;
+        const hazardColor = theme.hazard;
+        const portalBase = theme.portalBase;
+        const portalAccent = theme.portalAccent;
 
         this.walls = [
-            new Wall(0, 0, w, 0, wallColor),
-            new Wall(0, h, w, h, wallColor),
-            new Wall(0, 0, 0, h, wallColor),
-            new Wall(w, 0, w, h, wallColor)
+            new Wall(0, 0, w, 0, wallColor, false), // Top boundary: active physics, unrendered visual
+            new Wall(0, h, w, h, wallColor, true),  // Bottom boundary wall
+            new Wall(0, 0, 0, h, wallColor, true),  // Left boundary wall
+            new Wall(w, 0, w, h, wallColor, true)   // Right boundary wall
         ];
 
         this.hazards = [];
@@ -1631,15 +1740,15 @@ class EchoBounceGame {
             // Level 1: Intro Tutorial (0 hazards)
             this.walls.push(new Wall(w * 0.25, h * 0.65, w, h * 0.65, wallColor));
             this.walls.push(new Wall(0, h * 0.42, w * 0.75, h * 0.42, wallColor));
-            this.portal = new ExitPortal(w * 0.5, h * 0.15, 24);
+            this.portal = new ExitPortal(w * 0.5, h * 0.15, 24, portalBase, portalAccent);
 
         } else if (levelIndex === 1) {
             // Level 2: Intro Hazard (1 static spike)
             this.walls.push(new Wall(w * 0.35, h * 0.72, w, h * 0.72, wallColor));
             this.walls.push(new Wall(0, h * 0.48, w * 0.65, h * 0.48, wallColor));
             this.walls.push(new Wall(w * 0.30, h * 0.30, w, h * 0.30, wallColor));
-            this.hazards.push(new Hazard(w * 0.40, h * 0.48 - 18, 18));
-            this.portal = new ExitPortal(w * 0.85, h * 0.12, 22);
+            this.hazards.push(new Hazard(w * 0.40, h * 0.48 - 18, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.85, h * 0.12, 22, portalBase, portalAccent);
 
         } else if (levelIndex === 2) {
             // Level 3: Void Labyrinth
@@ -1647,10 +1756,10 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.40, h * 0.62, w, h * 0.62, wallColor));
             this.walls.push(new Wall(0, h * 0.46, w * 0.65, h * 0.46, wallColor));
             this.walls.push(new Wall(w * 0.35, h * 0.30, w, h * 0.30, wallColor));
-            this.hazards.push(new Hazard(w * 0.75, h * 0.78 - 18, 18));
-            this.hazards.push(new Hazard(w * 0.25, h * 0.62 - 18, 18));
-            this.hazards.push(new Hazard(w * 0.80, h * 0.46 - 18, 18));
-            this.portal = new ExitPortal(w * 0.20, h * 0.12, 20);
+            this.hazards.push(new Hazard(w * 0.75, h * 0.78 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.25, h * 0.62 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.80, h * 0.46 - 18, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.20, h * 0.12, 20, portalBase, portalAccent);
 
         } else if (levelIndex === 3) {
             // Level 4: Precision Pulse
@@ -1659,10 +1768,10 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.25, h * 0.60, w * 0.75, h * 0.60, wallColor));
             this.walls.push(new Wall(0, h * 0.42, w * 0.45, h * 0.42, wallColor));
             this.walls.push(new Wall(w * 0.55, h * 0.42, w, h * 0.42, wallColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.80 - 18, 18));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.60 - 18, 18));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.60 - 18, 18));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19);
+            this.hazards.push(new Hazard(w * 0.50, h * 0.80 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.15, h * 0.60 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.85, h * 0.60 - 18, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 4) {
             // Level 5: Echo Core
@@ -1670,10 +1779,10 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.68, w * 0.70, h * 0.68, wallColor));
             this.walls.push(new Wall(w * 0.30, h * 0.54, w, h * 0.54, wallColor));
             this.walls.push(new Wall(0, h * 0.40, w * 0.70, h * 0.40, wallColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.82 - 18, 18));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.68 - 18, 18));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.54 - 18, 18));
-            this.portal = new ExitPortal(w * 0.88, h * 0.10, 18);
+            this.hazards.push(new Hazard(w * 0.15, h * 0.82 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.85, h * 0.68 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.15, h * 0.54 - 18, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
 
         // --- WORLD 2: EMERALD ABYSS (Levels 6 to 10 - MOVING HAZARDS) ---
         } else if (levelIndex === 5) {
@@ -1681,17 +1790,17 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.70, w * 0.65, h * 0.70, wallColor));
             this.walls.push(new Wall(w * 0.35, h * 0.45, w, h * 0.45, wallColor));
             // 1 Moving Spike sliding left & right
-            this.hazards.push(new MovingHazard(w * 0.15, h * 0.70 - 18, w * 0.55, h * 0.70 - 18, 110, 18));
-            this.portal = new ExitPortal(w * 0.20, h * 0.15, 22);
+            this.hazards.push(new MovingHazard(w * 0.15, h * 0.70 - 18, w * 0.55, h * 0.70 - 18, 110, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.20, h * 0.15, 22, portalBase, portalAccent);
 
         } else if (levelIndex === 6) {
             // Level 7: Sliding Blades
             this.walls.push(new Wall(w * 0.25, h * 0.75, w, h * 0.75, wallColor));
             this.walls.push(new Wall(0, h * 0.55, w * 0.75, h * 0.55, wallColor));
             this.walls.push(new Wall(w * 0.25, h * 0.35, w, h * 0.35, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.75 - 18, w * 0.85, h * 0.75 - 18, 140, 18));
-            this.hazards.push(new MovingHazard(w * 0.10, h * 0.55 - 18, w * 0.65, h * 0.55 - 18, 160, 18));
-            this.portal = new ExitPortal(w * 0.80, h * 0.12, 20);
+            this.hazards.push(new MovingHazard(w * 0.30, h * 0.75 - 18, w * 0.85, h * 0.75 - 18, 140, 18, hazardColor));
+            this.hazards.push(new MovingHazard(w * 0.10, h * 0.55 - 18, w * 0.65, h * 0.55 - 18, 160, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.80, h * 0.12, 20, portalBase, portalAccent);
 
         } else if (levelIndex === 7) {
             // Level 8: Double Gate
@@ -1700,8 +1809,8 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.20, h * 0.52, w * 0.80, h * 0.52, wallColor));
             this.walls.push(new Wall(0, h * 0.30, w * 0.40, h * 0.30, wallColor));
             this.walls.push(new Wall(w * 0.60, h * 0.30, w, h * 0.30, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.25, h * 0.52 - 18, w * 0.75, h * 0.52 - 18, 180, 18));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19);
+            this.hazards.push(new MovingHazard(w * 0.25, h * 0.52 - 18, w * 0.75, h * 0.52 - 18, 180, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 8) {
             // Level 9: Serpent Pass
@@ -1709,10 +1818,10 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.65, w * 0.75, h * 0.65, wallColor));
             this.walls.push(new Wall(w * 0.25, h * 0.50, w, h * 0.50, wallColor));
             this.walls.push(new Wall(0, h * 0.35, w * 0.75, h * 0.35, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.80 - 18, w * 0.90, h * 0.80 - 18, 150, 18));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.65 - 18, w * 0.65, h * 0.65 - 18, 170, 18));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.50 - 18, w * 0.90, h * 0.50 - 18, 190, 18));
-            this.portal = new ExitPortal(w * 0.15, h * 0.12, 18);
+            this.hazards.push(new MovingHazard(w * 0.30, h * 0.80 - 18, w * 0.90, h * 0.80 - 18, 150, 18, hazardColor));
+            this.hazards.push(new MovingHazard(w * 0.05, h * 0.65 - 18, w * 0.65, h * 0.65 - 18, 170, 18, hazardColor));
+            this.hazards.push(new MovingHazard(w * 0.30, h * 0.50 - 18, w * 0.90, h * 0.50 - 18, 190, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.15, h * 0.12, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 9) {
             // Level 10: Matrix Heart
@@ -1720,10 +1829,10 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.40, h * 0.66, w, h * 0.66, wallColor));
             this.walls.push(new Wall(0, h * 0.50, w * 0.60, h * 0.50, wallColor));
             this.walls.push(new Wall(w * 0.40, h * 0.34, w, h * 0.34, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.10, h * 0.82 - 18, w * 0.50, h * 0.82 - 18, 160, 18));
-            this.hazards.push(new MovingHazard(w * 0.50, h * 0.66 - 18, w * 0.90, h * 0.66 - 18, 200, 18));
-            this.hazards.push(new MovingHazard(w * 0.10, h * 0.50 - 18, w * 0.50, h * 0.50 - 18, 220, 18));
-            this.portal = new ExitPortal(w * 0.85, h * 0.10, 18);
+            this.hazards.push(new MovingHazard(w * 0.10, h * 0.82 - 18, w * 0.50, h * 0.82 - 18, 160, 18, hazardColor));
+            this.hazards.push(new MovingHazard(w * 0.50, h * 0.66 - 18, w * 0.90, h * 0.66 - 18, 200, 18, hazardColor));
+            this.hazards.push(new MovingHazard(w * 0.10, h * 0.50 - 18, w * 0.50, h * 0.50 - 18, 220, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
 
         // --- WORLD 3: SOLAR CORE (Levels 11 to 15 - PULSING HAZARDS) ---
         } else if (levelIndex === 10) {
@@ -1731,8 +1840,8 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.20, h * 0.68, w, h * 0.68, wallColor));
             this.walls.push(new Wall(0, h * 0.44, w * 0.80, h * 0.44, wallColor));
             // 1 Pulsing Hazard toggling ON/OFF
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.68 - 18, 1.4, 1.4, 18));
-            this.portal = new ExitPortal(w * 0.50, h * 0.12, 22);
+            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.68 - 18, 1.4, 1.4, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.50, h * 0.12, 22, portalBase, portalAccent);
 
         } else if (levelIndex === 11) {
             // Level 12: Lava Choke
@@ -1741,10 +1850,10 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.20, h * 0.52, w * 0.80, h * 0.52, wallColor));
             this.walls.push(new Wall(0, h * 0.32, w * 0.45, h * 0.32, wallColor));
             this.walls.push(new Wall(w * 0.55, h * 0.32, w, h * 0.32, wallColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.76 - 18, 1.2, 1.2, 18));
-            this.hazards.push(new PulsingHazard(w * 0.30, h * 0.52 - 18, 1.5, 1.5, 18));
-            this.hazards.push(new PulsingHazard(w * 0.70, h * 0.52 - 18, 1.5, 1.5, 18));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19);
+            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.76 - 18, 1.2, 1.2, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.30, h * 0.52 - 18, 1.5, 1.5, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.70, h * 0.52 - 18, 1.5, 1.5, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 12) {
             // Level 13: Flame Wave
@@ -1752,10 +1861,10 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.62, w * 0.70, h * 0.62, wallColor));
             this.walls.push(new Wall(w * 0.30, h * 0.44, w, h * 0.44, wallColor));
             this.walls.push(new Wall(0, h * 0.28, w * 0.70, h * 0.28, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.35, h * 0.80 - 18, w * 0.85, h * 0.80 - 18, 160, 18));
-            this.hazards.push(new PulsingHazard(w * 0.35, h * 0.62 - 18, 1.2, 1.2, 18));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.44 - 18, 1.0, 1.0, 18));
-            this.portal = new ExitPortal(w * 0.85, h * 0.10, 18);
+            this.hazards.push(new MovingHazard(w * 0.35, h * 0.80 - 18, w * 0.85, h * 0.80 - 18, 160, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.35, h * 0.62 - 18, 1.2, 1.2, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.44 - 18, 1.0, 1.0, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 13) {
             // Level 14: Infernal Chamber
@@ -1765,11 +1874,11 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.46, w * 0.45, h * 0.46, wallColor));
             this.walls.push(new Wall(w * 0.55, h * 0.46, w, h * 0.46, wallColor));
             this.walls.push(new Wall(w * 0.25, h * 0.28, w * 0.75, h * 0.28, wallColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.82 - 18, 1.1, 1.1, 18));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.64 - 18, w * 0.70, h * 0.64 - 18, 190, 18));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.46 - 18, 0.9, 0.9, 18));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.28 - 18, 1.3, 1.3, 18));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 18);
+            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.82 - 18, 1.1, 1.1, 18, hazardColor));
+            this.hazards.push(new MovingHazard(w * 0.30, h * 0.64 - 18, w * 0.70, h * 0.64 - 18, 190, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.46 - 18, 0.9, 0.9, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.28 - 18, 1.3, 1.3, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.50, h * 0.10, 18, portalBase, portalAccent);
 
         } else {
             // Level 15: Core Apex (Master World 3 Boss Level)
@@ -1778,12 +1887,12 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.35, h * 0.56, w, h * 0.56, wallColor));
             this.walls.push(new Wall(0, h * 0.42, w * 0.65, h * 0.42, wallColor));
             this.walls.push(new Wall(w * 0.35, h * 0.28, w, h * 0.28, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.40, h * 0.84 - 18, w * 0.90, h * 0.84 - 18, 200, 18));
-            this.hazards.push(new PulsingHazard(w * 0.30, h * 0.70 - 18, 1.0, 1.0, 18));
-            this.hazards.push(new MovingHazard(w * 0.40, h * 0.56 - 18, w * 0.90, h * 0.56 - 18, 220, 18));
-            this.hazards.push(new PulsingHazard(w * 0.30, h * 0.42 - 18, 0.9, 0.9, 18));
-            this.hazards.push(new PulsingHazard(w * 0.60, h * 0.28 - 18, 0.8, 0.8, 18));
-            this.portal = new ExitPortal(w * 0.88, h * 0.10, 18);
+            this.hazards.push(new MovingHazard(w * 0.40, h * 0.84 - 18, w * 0.90, h * 0.84 - 18, 200, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.30, h * 0.70 - 18, 1.0, 1.0, 18, hazardColor));
+            this.hazards.push(new MovingHazard(w * 0.40, h * 0.56 - 18, w * 0.90, h * 0.56 - 18, 220, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.30, h * 0.42 - 18, 0.9, 0.9, 18, hazardColor));
+            this.hazards.push(new PulsingHazard(w * 0.60, h * 0.28 - 18, 0.8, 0.8, 18, hazardColor));
+            this.portal = new ExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
         }
 
         const skin = this.saveSystem.data.orbSkin || 'cyan';
@@ -2800,7 +2909,10 @@ class EchoBounceGame {
     render() {
         this.ctx.save();
 
-        this.ctx.fillStyle = '#0a0a12';
+        const worldId = this.getWorldForLevel(this.currentLevelIndex);
+        const theme = WORLD_THEMES[worldId] || WORLD_THEMES[1];
+
+        this.ctx.fillStyle = theme.bg;
         this.ctx.fillRect(0, 0, this.width, this.height);
 
         // Glitch Shake effect during hazard impact (150ms)
