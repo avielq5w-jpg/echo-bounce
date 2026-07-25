@@ -54,6 +54,38 @@ html, body {
     padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
+
+    /* Prominent neon outer glow */
+    box-shadow:
+        0 0 0 1px rgba(0, 229, 255, 0.18),
+        0 0 28px rgba(0, 229, 255, 0.22),
+        0 0 60px rgba(0, 229, 255, 0.09),
+        inset 0 0 40px rgba(0, 229, 255, 0.06);
+    animation: containerGlowBreath 5s ease-in-out infinite alternate;
+}
+
+@keyframes containerGlowBreath {
+    0%   {
+        box-shadow:
+            0 0 0 1px rgba(0, 229, 255, 0.14),
+            0 0 22px rgba(0, 229, 255, 0.18),
+            0 0 50px rgba(0, 229, 255, 0.07),
+            inset 0 0 30px rgba(0, 229, 255, 0.04);
+    }
+    50%  {
+        box-shadow:
+            0 0 0 1px rgba(161, 0, 255, 0.18),
+            0 0 32px rgba(0, 229, 255, 0.25),
+            0 0 75px rgba(161, 0, 255, 0.10),
+            inset 0 0 50px rgba(0, 229, 255, 0.07);
+    }
+    100% {
+        box-shadow:
+            0 0 0 1px rgba(0, 229, 255, 0.22),
+            0 0 36px rgba(0, 229, 255, 0.30),
+            0 0 80px rgba(0, 229, 255, 0.10),
+            inset 0 0 55px rgba(0, 229, 255, 0.08);
+    }
 }
 
 #game-canvas {
@@ -266,15 +298,17 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(10, 10, 18, 0.88);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(10, 10, 18, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     padding: max(24px, env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px));
     animation: fadeIn 0.4s ease-out;
+    overflow: hidden;
 }
 
 .menu-card, .screen-card {
     position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -284,10 +318,42 @@ html, body {
     overflow-y: auto;
     padding: 1.8rem 1.8rem 2.2rem 1.8rem;
     background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
+    border: 1px solid rgba(0, 229, 255, 0.6);
     border-radius: 24px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+    box-shadow:
+        0 0 30px rgba(0, 229, 255, 0.45),
+        0 0 70px rgba(161, 0, 255, 0.3),
+        0 0 120px rgba(0, 243, 255, 0.18),
+        inset 0 0 15px rgba(0, 229, 255, 0.15);
     text-align: center;
+    animation: cardNeonPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes cardNeonPulse {
+    0% {
+        border-color: rgba(0, 229, 255, 0.6);
+        box-shadow:
+            0 0 25px rgba(0, 229, 255, 0.4),
+            0 0 65px rgba(161, 0, 255, 0.28),
+            0 0 110px rgba(0, 243, 255, 0.15),
+            inset 0 0 12px rgba(0, 229, 255, 0.15);
+    }
+    50% {
+        border-color: rgba(161, 0, 255, 0.65);
+        box-shadow:
+            0 0 35px rgba(161, 0, 255, 0.5),
+            0 0 85px rgba(0, 243, 255, 0.35),
+            0 0 140px rgba(161, 0, 255, 0.22),
+            inset 0 0 16px rgba(161, 0, 255, 0.18);
+    }
+    100% {
+        border-color: rgba(0, 229, 255, 0.75);
+        box-shadow:
+            0 0 30px rgba(0, 229, 255, 0.48),
+            0 0 75px rgba(161, 0, 255, 0.32),
+            0 0 130px rgba(0, 229, 255, 0.2),
+            inset 0 0 15px rgba(0, 229, 255, 0.2);
+    }
 }
 
 .screen-card-large {
@@ -436,23 +502,27 @@ html, body {
     align-items: center;
     width: 100%;
     height: 100%;
-    padding-top: max(2.5rem, env(safe-area-inset-top, 0px));
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
-    gap: 0.65rem;
+    padding-top: max(0.2rem, env(safe-area-inset-top, 0px));
+    padding-bottom: max(0.6rem, env(safe-area-inset-bottom, 0px));
+    gap: 0.25rem;
 }
 
 .level-select-header {
     text-align: center;
     flex-shrink: 0;
+    margin-bottom: 0.15rem;
 }
 
 .carousel-wrapper {
     flex: 1;
     width: 100%;
-    overflow: hidden;
+    /* Use overflow-x: auto on the wrapper so fast swipes don't clip */
+    overflow: visible;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     min-height: 0;
+    /* Ensure the peek cards at edges stay visible */
+    padding: 0 0;
 }
 
 /* Horizontal scroll-snap track — 9% side padding creates peek effect */
@@ -460,7 +530,8 @@ html, body {
     display: flex;
     width: 100%;
     height: 100%;
-    overflow-x: scroll;
+    overflow-x: auto;
+    overflow-y: visible;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -468,6 +539,8 @@ html, body {
     padding: 0.75rem 9%;
     gap: 14px;
     align-items: center;
+    /* Clip-free: box-shadow on children can overflow */
+    scroll-behavior: auto;
 }
 .carousel-track::-webkit-scrollbar { display: none; }
 
@@ -476,16 +549,18 @@ html, body {
 
 /* ── World Card Base ── */
 .carousel-slide {
-    flex: 0 0 82%;
-    height: 64vh;
-    max-height: 500px;
-    min-height: 280px;
+    flex: 0 0 85%;
+    height: 100%;
+    max-height: 520px;
+    min-height: 300px;
     scroll-snap-align: center;
     border-radius: 24px;
     overflow: hidden;
     position: relative;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
+    cursor: pointer;
 
     /* Inactive: scaled down & dimmed for peek effect */
     transform: scale(0.83);
@@ -514,8 +589,8 @@ html, body {
     border-color: rgba(0,243,255,0.18);
 }
 .carousel-slide[data-world="1"].active {
-    border-color: rgba(0,243,255,0.42);
-    box-shadow: 0 0 50px rgba(0,243,255,0.12), 0 20px 60px rgba(0,0,0,0.7);
+    border: 1px solid rgba(0, 243, 255, 0.6);
+    box-shadow: 0 0 25px rgba(0, 243, 255, 0.35), inset 0 0 12px rgba(0, 243, 255, 0.15);
 }
 
 /* ── World 2: Emerald Abyss ── */
@@ -528,8 +603,8 @@ html, body {
     border-color: rgba(0,255,136,0.15);
 }
 .carousel-slide[data-world="2"].active {
-    border-color: rgba(0,255,136,0.38);
-    box-shadow: 0 0 50px rgba(0,255,136,0.1), 0 20px 60px rgba(0,0,0,0.7);
+    border: 1px solid rgba(0, 255, 136, 0.6);
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.35), inset 0 0 12px rgba(0, 255, 136, 0.15);
 }
 
 /* ── World 3: Solar Core ── */
@@ -542,8 +617,8 @@ html, body {
     border-color: rgba(255,200,0,0.15);
 }
 .carousel-slide[data-world="3"].active {
-    border-color: rgba(255,200,0,0.38);
-    box-shadow: 0 0 50px rgba(255,200,0,0.09), 0 20px 60px rgba(0,0,0,0.7);
+    border: 1px solid rgba(255, 210, 0, 0.6);
+    box-shadow: 0 0 25px rgba(255, 210, 0, 0.35), inset 0 0 12px rgba(255, 210, 0, 0.15);
 }
 
 /* ── World Preview Art Layer (decorative, pointer-events: none) ── */
@@ -645,38 +720,54 @@ html, body {
     50%       { transform: scale(0);   opacity: 0; }
 }
 
-/* ── World Card Header ── */
-.world-card-header {
+/* ── World Card Footer (Text Info at Bottom) ── */
+.world-card-footer {
     position: relative;
     z-index: 3;
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 1rem 1rem 0.5rem;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 100%);
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.4rem 1.15rem 1.15rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 75%, transparent 100%);
     flex-shrink: 0;
 }
 
+.world-card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.world-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
 .world-badge {
-    font-size: 1.55rem;
+    font-size: 1.35rem;
     line-height: 1;
     flex-shrink: 0;
 }
 
-.world-card-info { flex: 1; text-align: left; }
-
-.world-card-title {
-    font-size: 0.92rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    line-height: 1.1;
+.world-card-sub {
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.world-card-sub {
-    font-size: 0.62rem;
-    color: var(--text-muted);
-    letter-spacing: 0.07em;
-    margin-top: 0.1rem;
+.world-card-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1.15;
+    text-align: left;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
 }
 
 .world-progress-badge {
@@ -717,45 +808,8 @@ html, body {
     flex-shrink: 0;
 }
 
-.wlg-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.15rem;
-    padding: 0.6rem 0.1rem;
-    min-height: 54px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.04);
-    cursor: pointer;
-    transition: all 0.18s ease;
-    touch-action: manipulation !important;
-}
-.wlg-btn.unlocked:hover,
-.wlg-btn.unlocked:active {
-    transform: translateY(-2px) scale(1.07);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-}
-.wlg-btn.locked {
-    opacity: 0.3;
-    cursor: not-allowed;
-    background: transparent;
-}
 
-.wlg-num {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1;
-}
-.wlg-time {
-    font-size: 0.48rem;
-    line-height: 1;
-    font-weight: 600;
-}
-.wlg-time.cleared   { color: var(--neon-green); }
-.wlg-time.uncleared { color: var(--text-dim); }
+
 
 /* World-colour accent on unlocked buttons */
 .carousel-slide[data-world="1"] .wlg-btn.unlocked {
@@ -950,9 +1004,9 @@ html, body {
     margin-top: 0.2rem;
 }
 
+/* Best-times list hidden from profile (stats are on level select) */
 .best-times-list {
-    width: 100%;
-    text-align: left;
+    display: none;
 }
 
 .best-times-list h3 {
@@ -1062,10 +1116,16 @@ html, body {
     max-width: 360px;
     padding: 2rem;
     background: var(--panel-bg);
-    border: 1px solid rgba(0, 255, 136, 0.3);
+    border: 1px solid rgba(0, 229, 255, 0.6);
     border-radius: 20px;
-    box-shadow: 0 0 40px var(--neon-green-glow);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.35), inset 0 0 12px rgba(0, 229, 255, 0.15);
     text-align: center;
+    animation: cardNeonPulse 4s ease-in-out infinite alternate;
+}
+
+.victory-card {
+    border: 1px solid rgba(0, 255, 136, 0.6);
+    box-shadow: 0 0 22px rgba(0, 255, 136, 0.35), inset 0 0 14px rgba(0, 255, 136, 0.15);
 }
 
 .modal-icon {
@@ -1407,20 +1467,21 @@ html, body {
 .world-expanded-overlay {
     z-index: 60;
     align-items: flex-start;
-    padding: max(2rem, env(safe-area-inset-top, 0px)) 1rem max(1.5rem, env(safe-area-inset-bottom, 0px));
+    padding: max(1.2rem, env(safe-area-inset-top, 0px)) 0.9rem max(1rem, env(safe-area-inset-bottom, 0px));
     animation: none;
 }
 
 .world-expanded-card {
     position: relative;
     width: 100%;
-    max-width: 460px;
+    max-width: 480px;
+    min-height: 72vh;           /* Taller — fills the empty space */
     border-radius: 24px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(255,255,255,0.12);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(0, 229, 255, 0.6);
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.35), inset 0 0 15px rgba(0, 229, 255, 0.15);
     animation: expandCard 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes expandCard {
@@ -1433,8 +1494,8 @@ html, body {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 1.1rem 1rem 0.6rem;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 100%);
+    padding: 1.4rem 1.1rem 1rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
 }
 
 .wec-preview-art {
@@ -1454,36 +1515,100 @@ html, body {
     width: 100%;
 }
 
+/* World title & sub inside expanded card header */
+.world-card-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.1;
+    margin-bottom: 0.12rem;
+}
+.world-card-sub {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.06em;
+}
+
+/* Level grid: larger cells, more prominent */
 .wec-level-grid {
     position: relative;
     z-index: 2;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.55rem;
-    margin: 0.5rem 0.9rem;
-    padding: 1rem 0.8rem;
-    background: rgba(0, 0, 0, 0.62);
+    gap: 0.65rem;
+    margin: 0.6rem 1rem 0.5rem;
+    padding: 1.1rem 0.9rem;
+    background: rgba(0, 0, 0, 0.65);
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 18px;
+    border-radius: 20px;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+    flex: 1;                   /* stretch to fill available height */
+    align-content: center;     /* center rows vertically inside */
 }
+
+/* Larger, more prominent level buttons */
+.wlg-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.85rem 0.1rem;   /* taller */
+    min-height: 68px;          /* larger (was 54px) */
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    touch-action: manipulation !important;
+}
+.wlg-btn.unlocked:hover,
+.wlg-btn.unlocked:active {
+    transform: translateY(-2px) scale(1.07);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+}
+.wlg-btn.locked {
+    opacity: 0.28;
+    cursor: not-allowed;
+    background: transparent;
+}
+
+.wlg-num {
+    font-size: 1.3rem;         /* bigger number (was 1.15rem) */
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+.wlg-stars {
+    font-size: 0.6rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+.wlg-time {
+    font-size: 0.52rem;
+    line-height: 1;
+    font-weight: 600;
+}
+.wlg-time.cleared   { color: var(--neon-green); }
+.wlg-time.uncleared { color: var(--text-dim); }
 
 .wec-btn-close {
     position: relative;
     z-index: 2;
-    margin: 0.5rem 0.9rem 0.9rem;
-    padding: 0.75rem;
+    margin: 0.6rem 1rem 1.1rem;
+    padding: 0.85rem;
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 14px;
+    border-radius: 16px;
     color: var(--text-muted);
     font-family: var(--font-family);
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     cursor: pointer;
-    width: calc(100% - 1.8rem);
+    width: calc(100% - 2rem);
     transition: all 0.2s ease;
     touch-action: manipulation;
 }
@@ -1608,32 +1733,289 @@ html, body {
     margin-top: 0.1rem;
 }
 
-.world-card-tap-prompt {
-    position: relative;
-    z-index: 3;
+
+
+/* ===== Phase 13: Ambient Neon Outer Glow Frame ===== */
+.ambient-glow-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    animation: ambientGlowPulse 5s ease-in-out infinite alternate;
+}
+
+@keyframes ambientGlowPulse {
+    0%   { box-shadow: inset 0 0 0 1.5px rgba(0,243,255,0.07), inset 0 0 45px rgba(0,243,255,0.04); }
+    50%  { box-shadow: inset 0 0 0 1.5px rgba(161,0,255,0.1), inset 0 0 60px rgba(161,0,255,0.05); }
+    100% { box-shadow: inset 0 0 0 1.5px rgba(0,243,255,0.11), inset 0 0 55px rgba(0,243,255,0.06); }
+}
+
+/* Corner accent brackets */
+.ambient-glow-frame::before,
+.ambient-glow-frame::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+}
+.ambient-glow-frame::before {
+    top: 12px; left: 12px;
+    border-top: 1.5px solid rgba(0, 243, 255, 0.4);
+    border-left: 1.5px solid rgba(0, 243, 255, 0.4);
+    border-radius: 2px 0 0 0;
+    animation: ambientCornerPulse 5s ease-in-out infinite alternate;
+}
+.ambient-glow-frame::after {
+    bottom: 12px; right: 12px;
+    border-bottom: 1.5px solid rgba(0, 243, 255, 0.4);
+    border-right: 1.5px solid rgba(0, 243, 255, 0.4);
+    border-radius: 0 0 2px 0;
+    animation: ambientCornerPulse 5s ease-in-out infinite alternate;
+}
+@keyframes ambientCornerPulse {
+    0%, 100% { opacity: 0.35; }
+    50%       { opacity: 0.65; }
+}
+
+/* ===== Phase 13: Settings Button Style ===== */
+.btn-settings-style {
+    border-color: rgba(161, 0, 255, 0.3);
+    color: rgba(210, 170, 255, 0.9);
+}
+.btn-settings-style:hover, .btn-settings-style:active {
+    background: rgba(161, 0, 255, 0.15);
+    border-color: var(--neon-purple);
+    color: #e066ff;
+    box-shadow: 0 4px 16px rgba(161, 0, 255, 0.25);
+}
+
+/* ===== Phase 13: Settings Modal Card ===== */
+.settings-card {
+    gap: 0;
+    padding-bottom: 1.5rem;
+    border-color: rgba(161, 0, 255, 0.22);
+    box-shadow: 0 0 40px rgba(161, 0, 255, 0.08);
+    max-height: 88vh;
+    overflow-y: auto;
+}
+
+.settings-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    margin: auto 0.85rem 1rem;
-    padding: 0.9rem 1rem;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: var(--neon-cyan);
-    font-size: 0.82rem;
+    gap: 0.55rem;
+    margin-bottom: 1.2rem;
+}
+.settings-icon { font-size: 1.4rem; line-height: 1; }
+
+/* Settings row */
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    margin-bottom: 0.45rem;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 13px;
+    transition: background 0.2s ease;
+}
+
+.settings-row-info {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.settings-row-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+    width: 26px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.settings-row-label {
+    display: block;
+    font-size: 0.86rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    color: var(--text-main);
+    line-height: 1.15;
+}
+
+.settings-row-sub {
+    display: block;
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+    line-height: 1.2;
+}
+
+/* Language pill */
+.settings-pill-btn {
+    padding: 0.35rem 0.8rem;
+    background: rgba(0, 243, 255, 0.09);
+    border: 1px solid rgba(0, 243, 255, 0.32);
+    border-radius: 20px;
+    color: var(--neon-cyan);
+    font-family: var(--font-family);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.settings-pill-btn:hover, .settings-pill-btn:active {
+    background: rgba(0, 243, 255, 0.2);
+    box-shadow: 0 0 12px rgba(0, 243, 255, 0.22);
 }
 
-.carousel-slide:hover .world-card-tap-prompt,
-.carousel-slide.active .world-card-tap-prompt {
-    background: rgba(0, 243, 255, 0.15);
-    border-color: rgba(0, 243, 255, 0.4);
-    box-shadow: 0 0 16px rgba(0, 243, 255, 0.2);
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 27px;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    touch-action: manipulation;
+}
+.toggle-switch[data-state="on"] {
+    background: rgba(0, 243, 255, 0.22);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.28);
 }
 
+.toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 19px;
+    height: 19px;
+    background: rgba(140, 155, 180, 0.9);
+    border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease;
+}
+.toggle-switch[data-state="on"] .toggle-thumb {
+    transform: translateX(21px);
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px rgba(0, 243, 255, 0.7);
+}
+
+/* How-To-Play collapsible */
+.settings-how-to-play {
+    width: 100%;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 13px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.settings-htp-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-family);
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.settings-htp-toggle:hover { color: var(--text-main); }
+
+.htp-arrow {
+    font-size: 1.15rem;
+    transition: transform 0.25s ease;
+    display: inline-block;
+    line-height: 1;
+}
+.htp-arrow.open { transform: rotate(90deg); }
+
+.settings-htp-body {
+    padding: 0 0.9rem 0.85rem;
+}
+
+.htp-row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    margin-bottom: 0.65rem;
+}
+.htp-row:last-child { margin-bottom: 0; }
+.htp-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 0.05rem; }
+.htp-row strong { font-size: 0.8rem; color: var(--neon-cyan); display: block; margin-bottom: 0.08rem; }
+.htp-row p { font-size: 0.7rem; color: var(--text-muted); margin: 0; line-height: 1.35; }
+
+/* ===== Phase 13: Unified Theme Presets ===== */
+.theme-section-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    width: 100%;
+    text-align: left;
+}
+
+.theme-presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.55rem;
+    width: 100%;
+}
+
+.theme-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.22rem;
+    padding: 0.65rem 0.3rem 0.55rem;
+    background: rgba(0, 0, 0, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+}
+.theme-preset:hover, .theme-preset:active {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+}
+.theme-preset.active {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 243, 255, 0.07);
+    box-shadow: 0 0 14px rgba(0, 243, 255, 0.14);
+}
+
+.theme-orb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.theme-name {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+}
+.theme-sub {
+    font-size: 0.56rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+.theme-preset.active .theme-name { color: var(--neon-cyan); }

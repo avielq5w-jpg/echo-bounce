@@ -23,6 +23,9 @@
     </div>
 
     <div id="game-container">
+        <!-- Ambient neon glow frame -->
+        <div class="ambient-glow-frame" aria-hidden="true"></div>
+
         <canvas id="game-canvas"></canvas>
         <!-- Level Fade Overlay (seamless transitions) -->
         <div id="level-fade-overlay" class="level-fade"></div>
@@ -75,11 +78,6 @@
         <!-- 1. MAIN MENU SCREEN -->
         <div id="menu-screen" class="screen-overlay">
             <div class="menu-card">
-                <div class="menu-header-bar">
-                    <button id="btn-lang-toggle" class="btn-lang" title="Switch Language">
-                        <span>🌐</span> <span id="lang-label">EN</span>
-                    </button>
-                </div>
                 <div class="menu-hero">
                     <h1 class="hero-title">ECHO<span class="highlight">BOUNCE</span></h1>
                     <p class="hero-subtitle" data-i18n="heroSubtitle">NAVIGATE THE DARKNESS</p>
@@ -87,8 +85,8 @@
                 <div class="menu-buttons">
                     <button id="btn-menu-play" class="btn-menu btn-primary-menu" data-i18n="menuPlay">PLAY GAME</button>
                     <button id="btn-menu-levels" class="btn-menu" data-i18n="menuLevels">LEVEL SELECT</button>
-                    <button id="btn-menu-profile" class="btn-menu" data-i18n="menuProfile">PROFILE & SKINS</button>
-                    <button id="btn-menu-tutorial" class="btn-menu" data-i18n="menuTutorial">HOW TO PLAY</button>
+                    <button id="btn-menu-profile" class="btn-menu" data-i18n="menuProfile">PROFILE &amp; SKINS</button>
+                    <button id="btn-menu-settings" class="btn-menu btn-settings-style">⚙️ SETTINGS</button>
                 </div>
             </div>
         </div>
@@ -98,7 +96,7 @@
             <div class="level-select-layout">
                 <div class="screen-header level-select-header">
                     <h2 data-i18n="levelSelectTitle">LEVEL SELECT</h2>
-                    <p class="sub-title" data-i18n="levelSelectSub">Swipe between worlds</p>
+                    <p class="sub-title" data-i18n="levelSelectSub">Tap world card to view stages</p>
                 </div>
 
                 <!-- Swipeable World Carousel with Peek Effect -->
@@ -119,49 +117,87 @@
             </div>
         </div>
 
+        <!-- 3. SETTINGS MODAL (replaces How To Play) -->
+        <div id="settings-modal" class="modal-overlay hidden">
+            <div class="modal-card settings-card">
+                <div class="settings-header">
+                    <span class="settings-icon">⚙️</span>
+                    <h2 class="modal-title" style="color: var(--neon-cyan);">SETTINGS</h2>
+                </div>
 
-        <!-- 3. HOW TO PLAY / TUTORIAL SCREEN -->
-        <div id="tutorial-screen" class="screen-overlay hidden">
-            <div class="screen-card">
-                <div class="screen-header">
-                    <h2 data-i18n="tutorialTitle">HOW TO PLAY</h2>
-                    <p class="sub-title" data-i18n="tutorialSub">Master the bouncing light orb</p>
+                <!-- Language Toggle -->
+                <div class="settings-row" id="settings-lang-row">
+                    <div class="settings-row-info">
+                        <span class="settings-row-icon">🌐</span>
+                        <div>
+                            <span class="settings-row-label">Language</span>
+                            <span class="settings-row-sub" id="settings-lang-sub">English</span>
+                        </div>
+                    </div>
+                    <button id="btn-settings-lang" class="settings-pill-btn">EN → HE</button>
                 </div>
-                <div class="tutorial-grid">
-                    <div class="tutorial-card">
-                        <div class="tut-icon">👆</div>
+
+                <!-- SFX Toggle -->
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <span class="settings-row-icon">🔊</span>
                         <div>
-                            <h3 data-i18n="tutCard1Title">Tap to Boost</h3>
-                            <p data-i18n="tutCard1Desc">Single tap anywhere on the canvas to propel your glowing orb in that direction.</p>
+                            <span class="settings-row-label">Sound Effects</span>
+                            <span class="settings-row-sub">Echo &amp; bounce audio</span>
                         </div>
                     </div>
-                    <div class="tutorial-card">
-                        <div class="tut-icon">📡</div>
-                        <div>
-                            <h3 data-i18n="tutCard2Title">Echo Sonar</h3>
-                            <p data-i18n="tutCard2Desc">Walls are invisible in darkness! Impacts & double-taps emit sonar waves revealing nearby geometry.</p>
-                        </div>
-                    </div>
-                    <div class="tutorial-card">
-                        <div class="tut-icon">⚠️</div>
-                        <div>
-                            <h3 data-i18n="tutCard3Title">Avoid Red Hazards</h3>
-                            <p data-i18n="tutCard3Desc">Static, moving, and pulsing spikes reset your level instantly on contact.</p>
-                        </div>
-                    </div>
-                    <div class="tutorial-card">
-                        <div class="tut-icon">🌀</div>
-                        <div>
-                            <h3 data-i18n="tutCard4Title">Reach Exit Portal</h3>
-                            <p data-i18n="tutCard4Desc">Bounce through the invisible maze and enter the glowing emerald/gold portal to win.</p>
-                        </div>
+                    <div class="toggle-switch" id="toggle-sfx" data-state="on" role="switch" aria-checked="true" aria-label="Sound Effects">
+                        <div class="toggle-thumb"></div>
                     </div>
                 </div>
-                <button id="btn-tutorial-back" class="btn-menu btn-back" data-i18n="btnBack">BACK TO MENU</button>
+
+                <!-- Haptics Toggle -->
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <span class="settings-row-icon">📳</span>
+                        <div>
+                            <span class="settings-row-label">Haptic Feedback</span>
+                            <span class="settings-row-sub">Vibration on impact</span>
+                        </div>
+                    </div>
+                    <div class="toggle-switch" id="toggle-haptics" data-state="on" role="switch" aria-checked="true" aria-label="Haptic Feedback">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </div>
+
+                <!-- Ghost Replay Row -->
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <span class="settings-row-icon">👻</span>
+                        <div>
+                            <span class="settings-row-label">Ghost Replay</span>
+                            <span class="settings-row-sub">Show your best run</span>
+                        </div>
+                    </div>
+                    <div class="toggle-switch" id="toggle-ghost-settings" data-state="on" role="switch" aria-checked="true" aria-label="Ghost Replay">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </div>
+
+                <!-- How To Play collapsible -->
+                <div class="settings-how-to-play" id="settings-htp-section">
+                    <button class="settings-htp-toggle" id="btn-htp-toggle">
+                        <span>📖 How To Play</span>
+                        <span class="htp-arrow" id="htp-arrow">›</span>
+                    </button>
+                    <div class="settings-htp-body hidden" id="settings-htp-body">
+                        <div class="htp-row"><span class="htp-icon">👆</span><div><strong>Tap to Boost</strong><p>Single tap to propel your orb toward that point.</p></div></div>
+                        <div class="htp-row"><span class="htp-icon">📡</span><div><strong>Echo Sonar</strong><p>Double-tap or hit walls to reveal hidden geometry.</p></div></div>
+                        <div class="htp-row"><span class="htp-icon">⚠️</span><div><strong>Avoid Hazards</strong><p>Red spikes reset your level on contact.</p></div></div>
+                        <div class="htp-row"><span class="htp-icon">🌀</span><div><strong>Reach the Portal</strong><p>Enter the glowing black-hole portal to win.</p></div></div>
+                    </div>
+                </div>
+
+                <button id="btn-settings-close" class="btn-menu btn-back" style="margin-top: 0.75rem;">← BACK TO MENU</button>
             </div>
         </div>
 
-        <!-- 4. PROFILE & BALL SKINS SCREEN -->
+        <!-- 4. PROFILE & THEMES SCREEN (consolidated) -->
         <div id="profile-screen" class="screen-overlay hidden">
             <div class="screen-card">
                 <!-- Top Back Button -->
@@ -170,51 +206,59 @@
                 </div>
                 <div class="screen-header">
                     <h2 data-i18n="profileTitle">PLAYER PROFILE</h2>
-                    <p class="sub-title" data-i18n="profileSub">Lifetime Explorer & Orb Customization</p>
+                    <p class="sub-title">Explorer Stats &amp; Orb Theme</p>
                 </div>
-                
+
+                <!-- Explorer Name -->
                 <div class="profile-name-group">
                     <label for="input-player-name" data-i18n="lblPlayerName">EXPLORER NAME</label>
                     <input type="text" id="input-player-name" value="Player 1" maxlength="15" spellcheck="false">
                 </div>
 
-                <!-- Ball Skin Color Selector -->
+                <!-- Unified Theme Presets -->
                 <div class="skin-selector-group">
-                    <h3 data-i18n="lblOrbSkin">ORB GLOW SKIN</h3>
-                    <div class="skin-swatches" id="skin-swatches">
-                        <div class="skin-swatch active" data-color="cyan" style="--swatch-color: #00f3ff;"></div>
-                        <div class="skin-swatch" data-color="gold" style="--swatch-color: #ffe600;"></div>
-                        <div class="skin-swatch" data-color="pink" style="--swatch-color: #ff007f;"></div>
-                        <div class="skin-swatch" data-color="green" style="--swatch-color: #00ff88;"></div>
-                        <div class="skin-swatch" data-color="purple" style="--swatch-color: #a100ff;"></div>
+                    <h3 class="theme-section-label">🎨 ORB THEME</h3>
+                    <div class="theme-presets" id="theme-presets">
+                        <!-- Cyber Neon -->
+                        <div class="theme-preset active" data-theme="cyber" data-color="cyan" data-trail="standard">
+                            <div class="theme-orb" style="background: radial-gradient(circle, #00f3ff 30%, rgba(0,243,255,0.1) 80%); box-shadow: 0 0 14px #00f3ff;"></div>
+                            <span class="theme-name">Cyber</span>
+                            <span class="theme-sub">Neon</span>
+                        </div>
+                        <!-- Solar Fire -->
+                        <div class="theme-preset" data-theme="solar" data-color="gold" data-trail="fire">
+                            <div class="theme-orb" style="background: radial-gradient(circle, #ffe600 30%, rgba(255,120,0,0.15) 80%); box-shadow: 0 0 14px #ffe600;"></div>
+                            <span class="theme-name">Solar</span>
+                            <span class="theme-sub">Fire</span>
+                        </div>
+                        <!-- Arctic Ice -->
+                        <div class="theme-preset" data-theme="arctic" data-color="cyan" data-trail="ice">
+                            <div class="theme-orb" style="background: radial-gradient(circle, #ffffff 20%, rgba(0,243,255,0.3) 60%, transparent 80%); box-shadow: 0 0 14px rgba(0,243,255,0.7);"></div>
+                            <span class="theme-name">Arctic</span>
+                            <span class="theme-sub">Ice</span>
+                        </div>
+                        <!-- Volt Electric -->
+                        <div class="theme-preset" data-theme="volt" data-color="purple" data-trail="electric">
+                            <div class="theme-orb" style="background: radial-gradient(circle, #e066ff 30%, rgba(161,0,255,0.15) 80%); box-shadow: 0 0 14px #a100ff;"></div>
+                            <span class="theme-name">Volt</span>
+                            <span class="theme-sub">Electric</span>
+                        </div>
+                        <!-- Emerald Abyss -->
+                        <div class="theme-preset" data-theme="emerald" data-color="green" data-trail="standard">
+                            <div class="theme-orb" style="background: radial-gradient(circle, #00ff88 30%, rgba(0,255,136,0.1) 80%); box-shadow: 0 0 14px #00ff88;"></div>
+                            <span class="theme-name">Emerald</span>
+                            <span class="theme-sub">Abyss</span>
+                        </div>
+                        <!-- Crimson Storm -->
+                        <div class="theme-preset" data-theme="crimson" data-color="pink" data-trail="fire">
+                            <div class="theme-orb" style="background: radial-gradient(circle, #ff007f 30%, rgba(255,0,127,0.1) 80%); box-shadow: 0 0 14px #ff007f;"></div>
+                            <span class="theme-name">Crimson</span>
+                            <span class="theme-sub">Storm</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Echo Trail Effect Selector -->
-                <div class="skin-selector-group">
-                    <h3 data-i18n="lblTrailSkin">ECHO TRAIL EFFECT</h3>
-                    <div class="trail-swatches" id="trail-swatches">
-                        <div class="trail-swatch active" data-trail="standard">
-                            <span class="t-icon">✨</span> <span class="t-name">Neon</span>
-                        </div>
-                        <div class="trail-swatch" data-trail="fire">
-                            <span class="t-icon">🔥</span> <span class="t-name">Fire</span>
-                        </div>
-                        <div class="trail-swatch" data-trail="ice">
-                            <span class="t-icon">❄️</span> <span class="t-name">Ice</span>
-                        </div>
-                        <div class="trail-swatch" data-trail="electric">
-                            <span class="t-icon">⚡</span> <span class="t-name">Electric</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ghost Replay Setting -->
-                <div class="ghost-option-group">
-                    <span class="ghost-option-lbl" data-i18n="lblGhostOrb">👻 GHOST REPLAY</span>
-                    <button id="btn-toggle-ghost" class="btn-ghost-toggle active">👻 GHOST: ON</button>
-                </div>
-
+                <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="p-stat-card">
                         <span class="p-stat-val" id="prof-levels-cleared">0/15</span>
@@ -224,16 +268,9 @@
                         <span class="p-stat-val" id="prof-total-stars">0/45</span>
                         <span class="p-stat-lbl" data-i18n="lblTotalStars">Total Stars</span>
                     </div>
-                    <div class="p-stat-card">
+                    <div class="p-stat-card" style="grid-column: span 2;">
                         <span class="p-stat-val" id="prof-lifetime-bounces">0</span>
                         <span class="p-stat-lbl" data-i18n="lblLifetimeBounces">Total Lifetime Bounces</span>
-                    </div>
-                </div>
-
-                <div class="best-times-list">
-                    <h3 data-i18n="lblBestTimes">BEST LEVEL TIMES & STARS</h3>
-                    <div id="best-times-container" class="best-times-scroll">
-                        <!-- Rendered by JS -->
                     </div>
                 </div>
 
@@ -253,12 +290,6 @@
                     <button id="btn-pause-menu" class="btn-menu" style="width: 100%;" data-i18n="btnMainMenu">MAIN MENU</button>
                 </div>
             </div>
-        </div>
-
-        <!-- Death Flash Banner -->
-        <div id="death-banner" class="banner-overlay hidden">
-            <span class="banner-title" data-i18n="deathTitle">HAZARD IMPACT!</span>
-            <span class="banner-sub" data-i18n="deathSub">Restarting level...</span>
         </div>
 
         <!-- Level Complete Toast Modal (minimal) -->
@@ -304,9 +335,19 @@
             </div>
         </div>
 
+        <!-- Tutorial screen kept hidden (tutorial is now in Settings) -->
+        <div id="tutorial-screen" class="screen-overlay hidden">
+            <div class="screen-card">
+                <div class="screen-header">
+                    <h2 data-i18n="tutorialTitle">HOW TO PLAY</h2>
+                    <p class="sub-title" data-i18n="tutorialSub">Master the bouncing light orb</p>
+                </div>
+                <button id="btn-tutorial-back" class="btn-menu btn-back" data-i18n="btnBack">BACK TO MENU</button>
+            </div>
+        </div>
+
     </div>
 
     <script src="game.js"></script>
 </body>
 </html>
-

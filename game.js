@@ -39,17 +39,24 @@ class AudioManager {
         } catch (e) {}
     }
 
-    playBounce()      { this._tone(260, 130, 0.1,  'triangle', 0.07); }
-    playPulse()       { this._tone(880, 440, 0.09, 'sine',     0.06); }
+    playBounce()      {
+        if (this._ready && (!window.game || window.game.saveSystem.data.sfxEnabled !== false)) this._tone(260, 130, 0.1, 'triangle', 0.07);
+    }
+    playPulse()       {
+        if (this._ready && (!window.game || window.game.saveSystem.data.sfxEnabled !== false)) this._tone(880, 440, 0.09, 'sine', 0.06);
+    }
     playPortalEntry() {
+        if (!this._ready || (window.game && window.game.saveSystem.data.sfxEnabled === false)) return;
         this._tone(440, 1200, 0.55, 'sine', 0.16);
         this._tone(660, 1800, 0.4,  'sine', 0.10, 0.08);
     }
     playDeath() {
+        if (!this._ready || (window.game && window.game.saveSystem.data.sfxEnabled === false)) return;
         this._tone(180, 90, 0.12, 'sawtooth', 0.12);
         this._tone(120, 60, 0.22, 'sawtooth', 0.07, 0.1);
     }
     playLevelClear() {
+        if (!this._ready || (window.game && window.game.saveSystem.data.sfxEnabled === false)) return;
         [523, 659, 784, 1047].forEach((f, i) =>
             this._tone(f, f * 1.1, 0.14, 'sine', 0.1, i * 0.09)
         );
@@ -58,9 +65,15 @@ class AudioManager {
 
 const Audio = new AudioManager();
 
-// Haptic helper
+// Haptic helper — respects hapticsEnabled setting
 function haptic(pattern) {
-    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+    try {
+        if (navigator.vibrate && window.game && window.game.saveSystem && window.game.saveSystem.data.hapticsEnabled !== false) {
+            navigator.vibrate(pattern);
+        } else if (navigator.vibrate && (!window.game || !window.game.saveSystem)) {
+            navigator.vibrate(pattern); // fallback before game init
+        }
+    } catch(e) {}
 }
 
 // --- Constants & Config ---
@@ -87,6 +100,16 @@ const SKINS = {
     pink: '#ff007f',
     green: '#00ff88',
     purple: '#a100ff'
+};
+
+// Unified Theme Presets: each sets orbSkin + trailSkin together
+const THEMES = {
+    cyber:   { color: 'cyan',   trail: 'standard', label: 'Cyber Neon' },
+    solar:   { color: 'gold',   trail: 'fire',      label: 'Solar Fire' },
+    arctic:  { color: 'cyan',   trail: 'ice',       label: 'Arctic Ice'  },
+    volt:    { color: 'purple', trail: 'electric',  label: 'Volt Electric' },
+    emerald: { color: 'green',  trail: 'standard',  label: 'Emerald Abyss' },
+    crimson: { color: 'pink',   trail: 'fire',      label: 'Crimson Storm' }
 };
 
 // 3-Star Rating Target Thresholds per Level { time: maxSec, bounces: maxBounces }
@@ -138,10 +161,10 @@ const TRANSLATIONS = {
         menuProfile: "PROFILE & SKINS",
         menuTutorial: "HOW TO PLAY",
         levelSelectTitle: "LEVEL SELECT",
-        levelSelectSub: "Select an unlocked labyrinth level",
-        world1Title: "WORLD 1: CYBER NEON",
-        world2Title: "WORLD 2: EMERALD ABYSS",
-        world3Title: "WORLD 3: SOLAR CORE",
+        levelSelectSub: "Tap world card to view stages",
+        world1Title: "CYBER NEON",
+        world2Title: "EMERALD ABYSS",
+        world3Title: "SOLAR CORE",
         btnBack: "BACK TO MENU",
         tutorialTitle: "HOW TO PLAY",
         tutorialSub: "Master the bouncing light orb",
@@ -192,10 +215,10 @@ const TRANSLATIONS = {
         menuProfile: "פרופיל ועורים",
         menuTutorial: "איך משחקים",
         levelSelectTitle: "בחירת שלב",
-        levelSelectSub: "בחר שלב פתוח במבוך",
-        world1Title: "עולם 1: ניאון סייבר",
-        world2Title: "עולם 2: תהום ברקת",
-        world3Title: "עולם 3: ליבה סולארית",
+        levelSelectSub: "הקש על כרטיס העולם לצפייה בשלבים",
+        world1Title: "ניאון סייבר",
+        world2Title: "תהום ברקת",
+        world3Title: "ליבה סולארית",
         btnBack: "חזרה לתפריט",
         tutorialTitle: "איך משחקים",
         tutorialSub: "שלוט בכדור האור הקופץ",
@@ -243,10 +266,10 @@ const TRANSLATIONS = {
         menuProfile: "PERFIL Y SKINS",
         menuTutorial: "CÓMO JUGAR",
         levelSelectTitle: "SELECCIÓN DE NIVEL",
-        levelSelectSub: "Selecciona un nivel desbloqueado",
-        world1Title: "MUNDO 1: CIBER NEÓN",
-        world2Title: "MUNDO 2: ABISMO ESMERALDA",
-        world3Title: "MUNDO 3: NÚCLEO SOLAR",
+        levelSelectSub: "Toca la tarjeta del mundo para ver etapas",
+        world1Title: "CIBER NEÓN",
+        world2Title: "ABISMO ESMERALDA",
+        world3Title: "NÚCLEO SOLAR",
         btnBack: "VOLVER AL MENÚ",
         tutorialTitle: "CÓMO JUGAR",
         tutorialSub: "Domina el orbe de luz",
@@ -345,10 +368,10 @@ const TRANSLATIONS = {
         menuProfile: "プロフィール",
         menuTutorial: "遊び方",
         levelSelectTitle: "ステージ選択",
-        levelSelectSub: "解除されたステージを選択してください",
-        world1Title: "ワールド 1: サイバーネオン",
-        world2Title: "ワールド 2: エメラルドの深淵",
-        world3Title: "ワールド 3: ソーラーコア",
+        levelSelectSub: "ワールドカードをタップしてステージを表示",
+        world1Title: "サイバーネオン",
+        world2Title: "エメラルドの深淵",
+        world3Title: "ソーラーコア",
         btnBack: "メニューに戻る",
         tutorialTitle: "遊び方",
         tutorialSub: "光のオーブを操作しよう",
@@ -398,8 +421,11 @@ class SaveSystem {
             language: 'en',
             orbSkin: 'cyan',
             trailSkin: 'standard',
+            theme: 'cyber',
             ghostEnabled: true,
-            unlockedLevel: 15, // all 15 levels unlocked for testing
+            sfxEnabled: true,
+            hapticsEnabled: true,
+            unlockedLevel: 15,
             totalLifetimeBounces: 0,
             levelsCompleted: 0,
             bestTimes: {},
@@ -522,6 +548,8 @@ class Particle {
     update(dt) {
         this.x += this.vx * dt;
         this.y += this.vy * dt;
+        this.vx *= 0.95;
+        this.vy *= 0.95;
         this.life -= dt;
     }
 
@@ -539,6 +567,116 @@ class Particle {
         ctx.beginPath();
         ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
+    }
+}
+
+// --- Nexus Live Wallpaper Background Stream System ---
+class NexusStream {
+    constructor(width, height, gridSize = 40) {
+        this.gridSize = gridSize;
+        this.reset(width, height, true);
+    }
+
+    reset(width, height, isInitial = false) {
+        this.isVert = Math.random() < 0.5;
+        this.speed = (60 + Math.random() * 80) * (Math.random() < 0.5 ? 1 : -1);
+        
+        // Colors directly inspired by classic Nexus Live Wallpaper (Cyan, Blue, Gold, Green, Red)
+        const colors = [
+            { head: '#00f3ff', glow: 'rgba(0, 243, 255, 0.5)' },   // Cyan
+            { head: '#3399ff', glow: 'rgba(51, 153, 255, 0.5)' },   // Nexus Blue
+            { head: '#ffcc00', glow: 'rgba(255, 204, 0, 0.5)' },   // Nexus Gold
+            { head: '#00ff88', glow: 'rgba(0, 255, 136, 0.5)' },   // Nexus Green
+            { head: '#ff3344', glow: 'rgba(255, 51, 68, 0.5)' }     // Nexus Red
+        ];
+        this.colorCfg = colors[Math.floor(Math.random() * colors.length)];
+        this.headSize = 10 + Math.floor(Math.random() * 4); // 10px to 13px square head
+        this.trailLength = 160 + Math.random() * 140;       // glowing tail length
+
+        const colCount = Math.max(1, Math.floor((width || 400) / this.gridSize));
+        const rowCount = Math.max(1, Math.floor((height || 800) / this.gridSize));
+
+        if (this.isVert) {
+            const col = Math.floor(Math.random() * colCount);
+            this.x = col * this.gridSize + (this.gridSize - this.headSize) / 2;
+            this.y = isInitial ? Math.random() * (height || 800) : (this.speed > 0 ? -this.trailLength : (height || 800) + this.trailLength);
+        } else {
+            const row = Math.floor(Math.random() * rowCount);
+            this.y = row * this.gridSize + (this.gridSize - this.headSize) / 2;
+            this.x = isInitial ? Math.random() * (width || 400) : (this.speed > 0 ? -this.trailLength : (width || 400) + this.trailLength);
+        }
+
+        this.alpha = 0.4 + Math.random() * 0.35;
+    }
+
+    update(dt, width, height) {
+        const w = width || 400;
+        const h = height || 800;
+        if (this.isVert) {
+            this.y += this.speed * dt;
+            if ((this.speed > 0 && this.y - this.trailLength > h) ||
+                (this.speed < 0 && this.y + this.trailLength < 0)) {
+                this.reset(w, h);
+            }
+        } else {
+            this.x += this.speed * dt;
+            if ((this.speed > 0 && this.x - this.trailLength > w) ||
+                (this.speed < 0 && this.x + this.trailLength < 0)) {
+                this.reset(w, h);
+            }
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+
+        const head = this.colorCfg.head;
+        const glow = this.colorCfg.glow;
+        const hs = this.headSize;
+
+        if (this.isVert) {
+            // Trailing light stripe behind head
+            const trailY = this.speed > 0 ? this.y - this.trailLength : this.y + hs + this.trailLength;
+            const grad = ctx.createLinearGradient(this.x + hs / 2, this.y + hs / 2, this.x + hs / 2, trailY);
+            grad.addColorStop(0, glow);
+            grad.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = grad;
+            if (this.speed > 0) {
+                ctx.fillRect(this.x + 1, this.y - this.trailLength, hs - 2, this.trailLength);
+            } else {
+                ctx.fillRect(this.x + 1, this.y + hs, hs - 2, this.trailLength);
+            }
+
+            // Glowing Leading Square Head
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = head;
+            ctx.fillStyle = head;
+            ctx.fillRect(this.x, this.y, hs, hs);
+
+        } else {
+            // Trailing light stripe behind head
+            const trailX = this.speed > 0 ? this.x - this.trailLength : this.x + hs + this.trailLength;
+            const grad = ctx.createLinearGradient(this.x + hs / 2, this.y + hs / 2, trailX, this.y + hs / 2);
+            grad.addColorStop(0, glow);
+            grad.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = grad;
+            if (this.speed > 0) {
+                ctx.fillRect(this.x - this.trailLength, this.y + 1, this.trailLength, hs - 2);
+            } else {
+                ctx.fillRect(this.x + hs, this.y + 1, this.trailLength, hs - 2);
+            }
+
+            // Glowing Leading Square Head
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = head;
+            ctx.fillStyle = head;
+            ctx.fillRect(this.x, this.y, hs, hs);
+        }
+
         ctx.restore();
     }
 }
@@ -1131,7 +1269,8 @@ class EchoBounceGame {
             y: 0,
             scale: 1.0,
             targetScale: 1.0,
-            flashAlpha: 0.0
+            flashAlpha: 0.0,   // legacy; no longer used for green flash
+            blackFadeAlpha: 0.0 // used for fade-to-black portal exit
         };
         this.portalAnimTimer = 0;
 
@@ -1140,8 +1279,14 @@ class EchoBounceGame {
         this.levelStartTime = 0;
         this.gameState = 'MENU';
         this.deathTimer = 0;
+        this.shakeTimer = 0;        // 150ms Glitch Shake timer
+        this.redFlashTimer = 0;     // 150ms Red Flash timer
         this.absorptionTimer = 0;   // portal absorption animation timer
         this.carouselWorldIndex = 0; // last viewed world in level select carousel
+
+        // Live Nexus Wallpaper streams
+        this.nexusStreams = [];
+        this.initNexusStreams();
 
         // Ghost Replay & Star Rating State
         this.currentTrajectory = [];
@@ -1159,6 +1304,7 @@ class EchoBounceGame {
         this.elLevelSelectScreen = document.getElementById('level-select-screen');
         this.elTutorialScreen = document.getElementById('tutorial-screen');
         this.elProfileScreen = document.getElementById('profile-screen');
+        this.elSettingsModal = document.getElementById('settings-modal');
         this.elGameHud = document.getElementById('game-hud');
         this.elGameActionBar = document.getElementById('game-action-bar');
         this.elPauseModal = document.getElementById('pause-modal');
@@ -1167,8 +1313,8 @@ class EchoBounceGame {
         this.elHintBanner = document.getElementById('level-hint-banner');
         this.elHintText = document.getElementById('hint-text');
 
-        // i18n & Language Elements
-        this.btnLangToggle = document.getElementById('btn-lang-toggle');
+        // i18n — managed via Settings modal pill
+        this.btnLangToggle = document.getElementById('btn-lang-toggle'); // null in Phase 13
         this.elLangLabel = document.getElementById('lang-label');
 
         // HUD Elements
@@ -1241,6 +1387,7 @@ class EchoBounceGame {
         this.camera.scale = 1.0;
         this.camera.targetScale = 1.0;
         this.camera.flashAlpha = 0.0;
+        this.camera.blackFadeAlpha = 0.0;
     }
 
     setLanguage(lang) {
@@ -1297,6 +1444,17 @@ class EchoBounceGame {
             this.player.setSkin(skin);
             if (this.gameState === 'PLAYING') this.loadLevel(this.currentLevelIndex);
         }
+
+        if (!this.nexusStreams || this.nexusStreams.length === 0) {
+            this.initNexusStreams();
+        }
+    }
+
+    initNexusStreams() {
+        this.nexusStreams = [];
+        for (let i = 0; i < 14; i++) {
+            this.nexusStreams.push(new NexusStream(this.width || 400, this.height || 800));
+        }
     }
 
     switchState(newState) {
@@ -1304,14 +1462,15 @@ class EchoBounceGame {
 
         this.elMenuScreen.classList.add('hidden');
         this.elLevelSelectScreen.classList.add('hidden');
-        this.elTutorialScreen.classList.add('hidden');
+        if (this.elTutorialScreen) this.elTutorialScreen.classList.add('hidden');
         this.elProfileScreen.classList.add('hidden');
         this.elGameHud.classList.add('hidden');
         this.elGameActionBar.classList.add('hidden');
         this.elPauseModal.classList.add('hidden');
-        this.elDeathBanner.classList.add('hidden');
+        if (this.elDeathBanner) this.elDeathBanner.classList.add('hidden');
         this.elVictoryModal.classList.add('hidden');
         if (this.elHintBanner) this.elHintBanner.classList.add('hidden');
+        if (this.elSettingsModal) this.elSettingsModal.classList.add('hidden');
 
         switch (newState) {
             case 'MENU':
@@ -1326,7 +1485,13 @@ class EchoBounceGame {
                 break;
 
             case 'TUTORIAL':
-                this.elTutorialScreen.classList.remove('hidden');
+                if (this.elTutorialScreen) this.elTutorialScreen.classList.remove('hidden');
+                break;
+
+            case 'SETTINGS':
+                this.elMenuScreen.classList.remove('hidden');
+                if (this.elSettingsModal) this.elSettingsModal.classList.remove('hidden');
+                this._syncSettingsUI();
                 break;
 
             case 'PROFILE':
@@ -1335,10 +1500,18 @@ class EchoBounceGame {
                 break;
 
             case 'PLAYING':
-                this.resetCamera();
+                // Zoom-out entry: start slightly zoomed in, ease back to 1.0
+                this.camera.x = this.width / 2;
+                this.camera.y = this.height / 2;
+                this.camera.scale = 1.18;       // start zoomed in
+                this.camera.targetScale = 1.0;  // ease out to normal
+                this.camera.flashAlpha = 0.0;
+                this.camera.blackFadeAlpha = 0.0;
+                this._zoomOutEntry = true;       // flag for smooth easing
                 this.elGameHud.classList.remove('hidden');
                 this.elGameActionBar.classList.remove('hidden');
                 this.updateOnScreenHint();
+                this._firstTapDone = false; // reset first-tap flag for tutorial
                 break;
 
             case 'PORTAL_ANIMATION':
@@ -1360,7 +1533,6 @@ class EchoBounceGame {
             case 'DEATH':
                 this.elGameHud.classList.remove('hidden');
                 this.elGameActionBar.classList.remove('hidden');
-                this.elDeathBanner.classList.remove('hidden');
                 break;
 
             case 'ONBOARDING': {
@@ -1387,21 +1559,41 @@ class EchoBounceGame {
         const lang = this.saveSystem.data.language || 'en';
         const dict = TRANSLATIONS[lang];
 
-        if (this.currentLevelIndex === 0) {
-            this.elHintText.textContent = dict.level1Hint;
-            this.elHintBanner.classList.remove('hidden');
-        } else if (this.currentLevelIndex === 1) {
-            this.elHintText.textContent = dict.level2Hint;
-            this.elHintBanner.classList.remove('hidden');
-        } else {
-            this.elHintText.textContent = dict.level3Hint;
-            this.elHintBanner.classList.remove('hidden');
+        // Clear any previously pending auto-hide timer
+        if (this._hintAutoHideTimer) {
+            clearTimeout(this._hintAutoHideTimer);
+            this._hintAutoHideTimer = null;
+        }
 
-            setTimeout(() => {
-                if (this.gameState === 'PLAYING' && this.currentLevelIndex >= 2) {
-                    this.elHintBanner.classList.add('hidden');
-                }
-            }, 3500);
+        let hintText = dict.level3Hint;
+        if (this.currentLevelIndex === 0) {
+            hintText = dict.level1Hint;
+        } else if (this.currentLevelIndex === 1) {
+            hintText = dict.level2Hint;
+        }
+
+        this.elHintText.textContent = hintText;
+        // Reset opacity in case it was faded out previously
+        this.elHintBanner.style.transition = '';
+        this.elHintBanner.style.opacity = '1';
+        this.elHintBanner.classList.remove('hidden');
+
+        // Auto-fade after 3 seconds
+        this._hintAutoHideTimer = setTimeout(() => {
+            this._fadeOutHintBanner();
+        }, 3000);
+    }
+
+    _fadeOutHintBanner() {
+        if (!this.elHintBanner) return;
+        this.elHintBanner.style.transition = 'opacity 0.5s ease';
+        this.elHintBanner.style.opacity = '0';
+        setTimeout(() => {
+            if (this.elHintBanner) this.elHintBanner.classList.add('hidden');
+        }, 520);
+        if (this._hintAutoHideTimer) {
+            clearTimeout(this._hintAutoHideTimer);
+            this._hintAutoHideTimer = null;
         }
     }
 
@@ -1620,7 +1812,7 @@ class EchoBounceGame {
     }
 
     bindNavigationEvents() {
-        // Language Toggle (Cycles EN -> HE -> ES -> FR -> JA -> EN)
+        // Legacy lang toggle (null in Phase 13 — safety guard)
         if (this.btnLangToggle) {
             this.btnLangToggle.addEventListener('click', () => {
                 const current = this.saveSystem.data.language || 'en';
@@ -1633,37 +1825,86 @@ class EchoBounceGame {
         document.getElementById('btn-menu-play').addEventListener('click', () => {
             this.startGameAtLevel(this.saveSystem.data.unlockedLevel - 1);
         });
-
         document.getElementById('btn-menu-levels').addEventListener('click', () => {
             this.switchState('LEVEL_SELECT');
         });
-
         document.getElementById('btn-menu-profile').addEventListener('click', () => {
             this.switchState('PROFILE');
         });
 
-        document.getElementById('btn-menu-tutorial').addEventListener('click', () => {
-            this.switchState('TUTORIAL');
-        });
+        // Settings button
+        const btnSettings = document.getElementById('btn-menu-settings');
+        if (btnSettings) btnSettings.addEventListener('click', () => this.switchState('SETTINGS'));
 
-        // Back Buttons
-        document.getElementById('btn-level-back').addEventListener('click', () => {
-            this.switchState('MENU');
-        });
-        document.getElementById('btn-tutorial-back').addEventListener('click', () => {
-            this.switchState('MENU');
-        });
-        // Bottom back button
-        document.getElementById('btn-profile-back').addEventListener('click', () => {
-            this.switchState('MENU');
-        });
-        // Top back button (Phase 9)
-        const btnProfileBackTop = document.getElementById('btn-profile-back-top');
-        if (btnProfileBackTop) {
-            btnProfileBackTop.addEventListener('click', () => {
-                this.switchState('MENU');
+        // Settings modal close
+        const btnSettingsClose = document.getElementById('btn-settings-close');
+        if (btnSettingsClose) btnSettingsClose.addEventListener('click', () => this.switchState('MENU'));
+
+        // Settings: Language pill (cycles all langs)
+        const btnSettingsLang = document.getElementById('btn-settings-lang');
+        if (btnSettingsLang) {
+            btnSettingsLang.addEventListener('click', () => {
+                const current = this.saveSystem.data.language || 'en';
+                const nextIdx = (LANG_ORDER.indexOf(current) + 1) % LANG_ORDER.length;
+                this.setLanguage(LANG_ORDER[nextIdx]);
+                this._syncSettingsUI();
             });
         }
+
+        // Settings: SFX toggle
+        const toggleSfx = document.getElementById('toggle-sfx');
+        if (toggleSfx) {
+            toggleSfx.addEventListener('click', () => {
+                const next = this.saveSystem.data.sfxEnabled === false;
+                this.saveSystem.data.sfxEnabled = next;
+                this.saveSystem.save();
+                this._syncSettingsUI();
+            });
+        }
+
+        // Settings: Haptics toggle
+        const toggleHaptics = document.getElementById('toggle-haptics');
+        if (toggleHaptics) {
+            toggleHaptics.addEventListener('click', () => {
+                const next = this.saveSystem.data.hapticsEnabled === false;
+                this.saveSystem.data.hapticsEnabled = next;
+                this.saveSystem.save();
+                this._syncSettingsUI();
+            });
+        }
+
+        // Settings: Ghost toggle
+        const toggleGhostSettings = document.getElementById('toggle-ghost-settings');
+        if (toggleGhostSettings) {
+            toggleGhostSettings.addEventListener('click', () => {
+                const next = this.saveSystem.data.ghostEnabled === false;
+                this.saveSystem.data.ghostEnabled = next;
+                this.saveSystem.save();
+                this._syncSettingsUI();
+                const btnPauseGhost = document.getElementById('btn-pause-ghost');
+                if (btnPauseGhost) btnPauseGhost.textContent = next ? '👻 GHOST: ON' : '👻 GHOST: OFF';
+            });
+        }
+
+        // Settings: How To Play accordion
+        const btnHtp = document.getElementById('btn-htp-toggle');
+        const htpBody = document.getElementById('settings-htp-body');
+        const htpArrow = document.getElementById('htp-arrow');
+        if (btnHtp && htpBody) {
+            btnHtp.addEventListener('click', () => {
+                const wasHidden = htpBody.classList.contains('hidden');
+                htpBody.classList.toggle('hidden', !wasHidden);
+                if (htpArrow) htpArrow.classList.toggle('open', wasHidden);
+            });
+        }
+
+        // Back Buttons
+        document.getElementById('btn-level-back').addEventListener('click', () => this.switchState('MENU'));
+        const btnTutBack = document.getElementById('btn-tutorial-back');
+        if (btnTutBack) btnTutBack.addEventListener('click', () => this.switchState('MENU'));
+        document.getElementById('btn-profile-back').addEventListener('click', () => this.switchState('MENU'));
+        const btnProfileBackTop = document.getElementById('btn-profile-back-top');
+        if (btnProfileBackTop) btnProfileBackTop.addEventListener('click', () => this.switchState('MENU'));
 
         // Carousel dot click navigation
         document.querySelectorAll('#carousel-dots .dot').forEach((dot, idx) => {
@@ -1731,74 +1972,63 @@ class EchoBounceGame {
     }
 
     bindSkinSelectorEvents() {
-        // Orb Glow Swatches
+        // Legacy orb swatches (not shown in Phase 13 UI, but kept for save compat)
         if (this.skinSwatchesContainer) {
-            const swatches = this.skinSwatchesContainer.querySelectorAll('.skin-swatch');
-            swatches.forEach(swatch => {
+            this.skinSwatchesContainer.querySelectorAll('.skin-swatch').forEach(swatch => {
                 swatch.addEventListener('click', () => {
                     const selectedColor = swatch.getAttribute('data-color');
                     this.saveSystem.data.orbSkin = selectedColor;
                     this.saveSystem.save();
-
-                    swatches.forEach(s => s.classList.remove('active'));
+                    this.skinSwatchesContainer.querySelectorAll('.skin-swatch').forEach(s => s.classList.remove('active'));
                     swatch.classList.add('active');
-
-                    if (this.player) {
-                        this.player.setSkin(selectedColor);
-                    }
+                    if (this.player) this.player.setSkin(selectedColor);
                 });
             });
         }
 
-        // Echo Trail Effect Swatches
-        const trailContainer = document.getElementById('trail-swatches');
-        if (trailContainer) {
-            const trailSwatches = trailContainer.querySelectorAll('.trail-swatch');
-            trailSwatches.forEach(swatch => {
-                swatch.addEventListener('click', () => {
-                    const selectedTrail = swatch.getAttribute('data-trail');
-                    this.saveSystem.data.trailSkin = selectedTrail;
+        // Unified Theme Presets
+        const themeContainer = document.getElementById('theme-presets');
+        if (themeContainer) {
+            themeContainer.querySelectorAll('.theme-preset').forEach(card => {
+                card.addEventListener('click', () => {
+                    const themeKey = card.getAttribute('data-theme');
+                    const theme = THEMES[themeKey];
+                    if (!theme) return;
+                    this.saveSystem.data.theme = themeKey;
+                    this.saveSystem.data.orbSkin = theme.color;
+                    this.saveSystem.data.trailSkin = theme.trail;
                     this.saveSystem.save();
-
-                    trailSwatches.forEach(s => s.classList.remove('active'));
-                    swatch.classList.add('active');
+                    themeContainer.querySelectorAll('.theme-preset').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    if (this.player) this.player.setSkin(theme.color);
                 });
             });
         }
 
-        // Ghost Replay Toggle Handler
+        // Ghost Replay Toggle Handler (pause modal)
         const toggleGhost = () => {
             const current = this.saveSystem.data.ghostEnabled !== false;
             const nextState = !current;
             this.saveSystem.data.ghostEnabled = nextState;
             this.saveSystem.save();
-
-            const btnProfileGhost = document.getElementById('btn-toggle-ghost');
-            if (btnProfileGhost) {
-                btnProfileGhost.classList.toggle('active', nextState);
-                btnProfileGhost.textContent = nextState ? '👻 GHOST: ON' : '👻 GHOST: OFF';
-            }
-
             const btnPauseGhost = document.getElementById('btn-pause-ghost');
-            if (btnPauseGhost) {
-                btnPauseGhost.textContent = nextState ? '👻 GHOST: ON' : '👻 GHOST: OFF';
-            }
+            if (btnPauseGhost) btnPauseGhost.textContent = nextState ? '👻 GHOST: ON' : '👻 GHOST: OFF';
+            const tgs = document.getElementById('toggle-ghost-settings');
+            if (tgs) { tgs.setAttribute('data-state', nextState ? 'on' : 'off'); tgs.setAttribute('aria-checked', String(nextState)); }
         };
-
-        const btnProfileGhost = document.getElementById('btn-toggle-ghost');
-        if (btnProfileGhost) {
-            btnProfileGhost.addEventListener('click', toggleGhost);
-        }
-
         const btnPauseGhost = document.getElementById('btn-pause-ghost');
-        if (btnPauseGhost) {
-            btnPauseGhost.addEventListener('click', toggleGhost);
-        }
+        if (btnPauseGhost) btnPauseGhost.addEventListener('click', toggleGhost);
     }
 
     bindEvents() {
         const handleTap = (clientX, clientY) => {
             if (this.gameState !== 'PLAYING') return;
+
+            // First tap → immediately fade out tutorial hint banner
+            if (!this._firstTapDone) {
+                this._firstTapDone = true;
+                this._fadeOutHintBanner();
+            }
 
             const rect = this.canvas.getBoundingClientRect();
             const tapX = clientX - rect.left;
@@ -1913,18 +2143,17 @@ class EchoBounceGame {
 
             html += `<div class="carousel-slide" data-world="${w}">
                 <div class="world-preview-art">${cfg.art}</div>
-                <div class="world-card-header">
-                    <div class="world-badge">${cfg.badge}</div>
-                    <div class="world-card-info">
-                        <h3 class="world-card-title" style="color:${cfg.color}">${cfg.title}</h3>
-                        <p class="world-card-sub">${cfg.sub}</p>
+                <div class="world-card-footer">
+                    <div class="world-card-top-row">
+                        <div class="world-badge-group">
+                            <span class="world-badge">${cfg.badge}</span>
+                            <span class="world-card-sub">${cfg.sub}</span>
+                        </div>
+                        <div class="world-progress-badge${allClear ? ' all-clear' : ''}">
+                            ⭐ ${worldStars}/15
+                        </div>
                     </div>
-                    <div class="world-progress-badge${allClear ? ' all-clear' : ''}">
-                        ⭐ ${worldStars}/15
-                    </div>
-                </div>
-                <div class="world-card-tap-prompt">
-                    <span>🔍 TAP TO EXPLORE STAGES</span>
+                    <h3 class="world-card-title" style="color:${cfg.color}">${cfg.title}</h3>
                 </div>
             </div>`;
         }
@@ -1985,47 +2214,65 @@ class EchoBounceGame {
         });
     }
 
+    // Sync all Settings modal toggle UI to current save state
+    _syncSettingsUI() {
+        const d = this.saveSystem.data;
+
+        // Language pill label
+        const langSub = document.getElementById('settings-lang-sub');
+        const btnLangPill = document.getElementById('btn-settings-lang');
+        const langNames = { en: 'English', he: 'Hebrew', es: 'Spanish', fr: 'French', ja: 'Japanese' };
+        const lang = d.language || 'en';
+        if (langSub) langSub.textContent = langNames[lang] || lang.toUpperCase();
+        if (btnLangPill) {
+            const nextIdx = (LANG_ORDER.indexOf(lang) + 1) % LANG_ORDER.length;
+            const nextLang = LANG_ORDER[nextIdx].toUpperCase();
+            btnLangPill.textContent = `${lang.toUpperCase()} → ${nextLang}`;
+        }
+
+        // SFX toggle
+        const sfxOn = d.sfxEnabled !== false;
+        const toggleSfx = document.getElementById('toggle-sfx');
+        if (toggleSfx) {
+            toggleSfx.setAttribute('data-state', sfxOn ? 'on' : 'off');
+            toggleSfx.setAttribute('aria-checked', String(sfxOn));
+        }
+
+        // Haptics toggle
+        const hapOn = d.hapticsEnabled !== false;
+        const toggleHap = document.getElementById('toggle-haptics');
+        if (toggleHap) {
+            toggleHap.setAttribute('data-state', hapOn ? 'on' : 'off');
+            toggleHap.setAttribute('aria-checked', String(hapOn));
+        }
+
+        // Ghost toggle
+        const ghostOn = d.ghostEnabled !== false;
+        const toggleGh = document.getElementById('toggle-ghost-settings');
+        if (toggleGh) {
+            toggleGh.setAttribute('data-state', ghostOn ? 'on' : 'off');
+            toggleGh.setAttribute('aria-checked', String(ghostOn));
+        }
+    }
+
     renderProfile() {
         if (this.inputPlayerName) {
             this.inputPlayerName.value = this.saveSystem.data.playerName;
         }
 
-        // Orb Glow Skin active swatch
-        const activeSkin = this.saveSystem.data.orbSkin || 'cyan';
-        if (this.skinSwatchesContainer) {
-            this.skinSwatchesContainer.querySelectorAll('.skin-swatch').forEach(swatch => {
-                if (swatch.getAttribute('data-color') === activeSkin) {
-                    swatch.classList.add('active');
-                } else {
-                    swatch.classList.remove('active');
-                }
+        // Theme Preset active highlight
+        const activeTheme = this.saveSystem.data.theme || 'cyber';
+        const themeContainer = document.getElementById('theme-presets');
+        if (themeContainer) {
+            themeContainer.querySelectorAll('.theme-preset').forEach(card => {
+                card.classList.toggle('active', card.getAttribute('data-theme') === activeTheme);
             });
         }
 
-        // Echo Trail Effect active swatch
-        const activeTrail = this.saveSystem.data.trailSkin || 'standard';
-        const trailContainer = document.getElementById('trail-swatches');
-        if (trailContainer) {
-            trailContainer.querySelectorAll('.trail-swatch').forEach(swatch => {
-                if (swatch.getAttribute('data-trail') === activeTrail) {
-                    swatch.classList.add('active');
-                } else {
-                    swatch.classList.remove('active');
-                }
-            });
-        }
-
-        // Ghost Toggle Button State
+        // Sync pause ghost button text
         const isGhostOn = this.saveSystem.data.ghostEnabled !== false;
-        const btnProfileGhost = document.getElementById('btn-toggle-ghost');
-        if (btnProfileGhost) {
-            btnProfileGhost.classList.toggle('active', isGhostOn);
-            btnProfileGhost.textContent = isGhostOn ? '👻 GHOST: ON' : '👻 GHOST: OFF';
-        }
         const btnPauseGhost = document.getElementById('btn-pause-ghost');
-        if (btnPauseGhost) {
-            btnPauseGhost.textContent = isGhostOn ? '👻 GHOST: ON' : '👻 GHOST: OFF';
-        }
+        if (btnPauseGhost) btnPauseGhost.textContent = isGhostOn ? '👻 GHOST: ON' : '👻 GHOST: OFF';
 
         const lang = this.saveSystem.data.language || 'en';
         const notClearedStr = TRANSLATIONS[lang].notCleared;
@@ -2093,20 +2340,47 @@ class EchoBounceGame {
     triggerDeath() {
         if (this.gameState !== 'PLAYING') return;
         this.switchState('DEATH');
-        this.deathTimer = 0.9;
-        haptic([30, 50, 30]);       // haptic: death rumble
+        this.deathTimer = 0.75;     // 750ms satisfying shatter & fade timing
+        this.shakeTimer = 0.22;     // 220ms Glitch Shake effect
+        this.redFlashTimer = 0.22;  // 220ms Red Flash overlay
+        haptic([40, 30, 40]);       // haptic: brief vibration
         Audio.playDeath();          // audio: death crunch
 
-        for (let i = 0; i < 30; i++) {
+        // Rich 2-layer Orb Shatter particle explosion effect at collision point
+        const orbX = this.player ? this.player.pos.x : this.width / 2;
+        const orbY = this.player ? this.player.pos.y : this.height / 2;
+        const shatterColors = [CONFIG.COLOR_RED, '#ff5500', '#ffaa00', '#ff007f', '#ffffff'];
+        
+        // Layer 1: Fast directional sparks (45 particles)
+        for (let i = 0; i < 45; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = 80 + Math.random() * 220;
+            const speed = 120 + Math.random() * 280;
+            const color = shatterColors[Math.floor(Math.random() * shatterColors.length)];
+            const size = 2.5 + Math.random() * 3.5;
             this.particles.push(new Particle(
-                this.player.pos.x,
-                this.player.pos.y,
+                orbX,
+                orbY,
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed,
-                CONFIG.COLOR_RED,
-                4, 0.7
+                color,
+                size,
+                0.6 + Math.random() * 0.25
+            ));
+        }
+
+        // Layer 2: Expanding debris shockwave ring (16 particles)
+        for (let i = 0; i < 16; i++) {
+            const angle = (i / 16) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+            const speed = 70 + Math.random() * 90;
+            const size = 3 + Math.random() * 2;
+            this.particles.push(new Particle(
+                orbX,
+                orbY,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                '#ff3366',
+                size,
+                0.65 + Math.random() * 0.2
             ));
         }
     }
@@ -2315,12 +2589,25 @@ class EchoBounceGame {
     }
 
     update(dt) {
+        if (this.nexusStreams) {
+            for (let i = 0; i < this.nexusStreams.length; i++) {
+                this.nexusStreams[i].update(dt, this.width, this.height);
+            }
+        }
+
         if (this.pulseCooldown > 0) {
             this.pulseCooldown = Math.max(0, this.pulseCooldown - dt);
             if (this.elCooldownBar) {
                 const ratio = this.pulseCooldown / CONFIG.PULSE_COOLDOWN;
                 this.elCooldownBar.style.transform = `scaleX(${ratio})`;
             }
+        }
+
+        if (this.shakeTimer > 0) {
+            this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+        }
+        if (this.redFlashTimer > 0) {
+            this.redFlashTimer = Math.max(0, this.redFlashTimer - dt);
         }
 
         if (this.gameState === 'DEATH') {
@@ -2332,25 +2619,44 @@ class EchoBounceGame {
 
         if (this.gameState === 'PORTAL_ANIMATION') {
             this.portalAnimTimer += dt;
+            // Total duration: 0.9s — zoom into black hole center, then fade to black
+            const ANIM_DURATION = 0.9;
 
             if (this.portal) {
-                const lerpRate = dt * 6.0;
+                // Smooth lerp camera toward portal center
+                const lerpRate = dt * 5.5;
                 this.camera.x += (this.portal.x - this.camera.x) * lerpRate;
                 this.camera.y += (this.portal.y - this.camera.y) * lerpRate;
-                this.camera.scale += (4.5 - this.camera.scale) * (dt * 4.5);
+                // Scale up toward portal (zoom into black void)
+                const targetZoom = 5.5;
+                this.camera.scale += (targetZoom - this.camera.scale) * (dt * 3.8);
             }
 
-            if (this.portalAnimTimer > 0.4) {
-                const flashProgress = (this.portalAnimTimer - 0.4) / 0.6;
-                this.camera.flashAlpha = Math.min(1.0, flashProgress);
+            // Fade to BLACK (not green) starting at 35% progress
+            if (this.portalAnimTimer > 0.35) {
+                const fadeProgress = (this.portalAnimTimer - 0.35) / 0.55;
+                this.camera.blackFadeAlpha = Math.min(1.0, fadeProgress * fadeProgress);
             }
 
-            if (this.portalAnimTimer >= 1.0) {
+            if (this.portalAnimTimer >= ANIM_DURATION) {
+                this.camera.blackFadeAlpha = 1.0;
                 this.finishVictorySequence();
             }
         }
 
         if (this.gameState === 'PLAYING') {
+            // Zoom-out entry animation: ease camera scale back to 1.0
+            if (this._zoomOutEntry && this.camera.scale > 1.005) {
+                this.camera.scale += (1.0 - this.camera.scale) * (dt * 4.5);
+                if (this.camera.scale <= 1.005) {
+                    this.camera.scale = 1.0;
+                    this._zoomOutEntry = false;
+                }
+            } else if (this._zoomOutEntry) {
+                this.camera.scale = 1.0;
+                this._zoomOutEntry = false;
+            }
+
             this.player.update(dt, this);
 
             // Trajectory recording for Ghost Replay
@@ -2386,13 +2692,19 @@ class EchoBounceGame {
                 this.ghostPos = null;
             }
 
-            // Gravitational portal pull — magnetic attraction when close
+            // Gravitational portal pull — slower suck when very close (< 60px)
             if (this.portal) {
                 const pdx = this.portal.x - this.player.pos.x;
                 const pdy = this.portal.y - this.player.pos.y;
                 const pdist = Math.hypot(pdx, pdy);
                 const PULL_RADIUS = 90;
                 if (pdist < PULL_RADIUS && pdist > 0) {
+                    // Slow down player speed as it nears the portal center
+                    const proximityFactor = pdist / PULL_RADIUS;
+                    const speedDamp = 0.85 + proximityFactor * 0.15; // clamp speed less as it gets closer
+                    this.player.vel.x *= speedDamp;
+                    this.player.vel.y *= speedDamp;
+
                     const pullStr = 500 * Math.pow(1 - pdist / PULL_RADIUS, 1.5);
                     this.player.vel.x += (pdx / pdist) * pullStr * dt;
                     this.player.vel.y += (pdy / pdist) * pullStr * dt;
@@ -2411,32 +2723,33 @@ class EchoBounceGame {
             }
         }
 
-        // Portal absorption animation: shrink orb into portal, then trigger victory zoom
+        // Portal absorption animation: slowly pull orb toward portal center, shrink to 0 over 0.6s
         if (this.gameState === 'ABSORBING') {
-            const ABSORB_DURATION = 0.45;
+            const ABSORB_DURATION = 0.6;
             this.absorptionTimer += dt;
             const progress = Math.min(1, this.absorptionTimer / ABSORB_DURATION);
 
             if (this.portal && this.player) {
-                // Smooth lerp orb toward portal center
-                const lerpRate = dt * 14;
+                // Smooth slow lerp toward portal center (slower than before = feels like gravity suck)
+                const lerpRate = dt * (4 + progress * 10); // starts slow, accelerates
                 this.player.pos.x += (this.portal.x - this.player.pos.x) * lerpRate;
                 this.player.pos.y += (this.portal.y - this.player.pos.y) * lerpRate;
                 this.player.vel.x = 0;
                 this.player.vel.y = 0;
-                this.player.drawScale = Math.max(0, 1 - progress);
+                // Smooth easeIn scale from 1 → 0
+                this.player.drawScale = Math.max(0, 1 - progress * progress);
 
                 // Spiral particles pulled into portal
-                if (Math.random() < 0.7) {
+                if (Math.random() < 0.75) {
                     const angle = Math.random() * Math.PI * 2;
-                    const r = Math.max(0, this.portal.radius * (1.8 - progress * 1.5));
+                    const r = Math.max(0, this.portal.radius * (2.0 - progress * 1.8));
                     this.particles.push(new Particle(
                         this.portal.x + Math.cos(angle) * r,
                         this.portal.y + Math.sin(angle) * r,
-                        (Math.random() - 0.5) * 20,
-                        (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 15,
+                        (Math.random() - 0.5) * 15,
                         Math.random() < 0.5 ? CONFIG.COLOR_GREEN : CONFIG.COLOR_GOLD,
-                        2.5, 0.3
+                        2.0, 0.25
                     ));
                 }
             }
@@ -2481,6 +2794,14 @@ class EchoBounceGame {
         this.ctx.fillStyle = '#0a0a12';
         this.ctx.fillRect(0, 0, this.width, this.height);
 
+        // Glitch Shake effect during hazard impact (150ms)
+        if (this.shakeTimer > 0) {
+            const intensity = (this.shakeTimer / 0.15) * 8;
+            const shakeX = (Math.random() - 0.5) * intensity;
+            const shakeY = (Math.random() - 0.5) * intensity;
+            this.ctx.translate(shakeX, shakeY);
+        }
+
         if (this.camera.scale !== 1.0 || this.camera.x !== this.width / 2 || this.camera.y !== this.height / 2) {
             this.ctx.translate(this.width / 2, this.height / 2);
             this.ctx.scale(this.camera.scale, this.camera.scale);
@@ -2488,6 +2809,13 @@ class EchoBounceGame {
         }
 
         this.renderGrid();
+
+        // Draw live Nexus Light Streams behind menu/UI screens
+        if (this.nexusStreams && (this.gameState === 'MENU' || this.gameState === 'LEVEL_SELECT' || this.gameState === 'SETTINGS' || this.gameState === 'PROFILE')) {
+            for (let i = 0; i < this.nexusStreams.length; i++) {
+                this.nexusStreams[i].draw(this.ctx);
+            }
+        }
 
         for (const wall of this.walls) {
             wall.draw(this.ctx);
@@ -2520,10 +2848,21 @@ class EchoBounceGame {
 
         this.ctx.restore();
 
-        if (this.camera.flashAlpha > 0) {
+        // Subtle 150ms Red Flash overlay on hazard collision
+        if (this.redFlashTimer > 0) {
             this.ctx.save();
-            this.ctx.globalAlpha = Math.min(1.0, this.camera.flashAlpha);
-            this.ctx.fillStyle = '#00ff88';
+            const flashAlpha = (this.redFlashTimer / 0.15) * 0.35;
+            this.ctx.globalAlpha = Math.min(0.35, flashAlpha);
+            this.ctx.fillStyle = '#ff0033';
+            this.ctx.fillRect(0, 0, this.width, this.height);
+            this.ctx.restore();
+        }
+
+        // Black fade overlay for portal exit (replaces green flash)
+        if (this.camera.blackFadeAlpha > 0) {
+            this.ctx.save();
+            this.ctx.globalAlpha = Math.min(1.0, this.camera.blackFadeAlpha);
+            this.ctx.fillStyle = '#000000';
             this.ctx.fillRect(0, 0, this.width, this.height);
             this.ctx.restore();
         }
