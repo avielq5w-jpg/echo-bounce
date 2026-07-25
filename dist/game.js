@@ -1708,13 +1708,21 @@ class EchoBounceGame {
     }
 
     startGameAtLevel(levelIndex) {
-        this.currentLevelIndex = levelIndex;
-        this.loadLevel(levelIndex);
+        // Always coerce to integer — a string index causes all `=== N` checks
+        // in loadLevel to silently fall through to the else (Level 15) branch.
+        const idx = parseInt(levelIndex, 10);
+        if (isNaN(idx)) { console.error('startGameAtLevel: invalid levelIndex', levelIndex); return; }
+        const clamped = Math.max(0, Math.min(idx, this.totalLevels - 1));
+        const worldId = this.getWorldForLevel(clamped);
+        console.log('Transitioning to: world', worldId, 'level index', clamped, '(level', clamped + 1, ')');
+        this.currentLevelIndex = clamped;
+        this.loadLevel(clamped);
         this.switchState('PLAYING');
     }
 
     loadLevel(levelIndex) {
-        this.currentLevelIndex = levelIndex;
+        this.currentLevelIndex = parseInt(levelIndex, 10);
+        this._victorySequenceStarted = false; // Reset one-shot guard for new level
         const w = this.width;
         const h = this.height;
 
@@ -1932,7 +1940,8 @@ class EchoBounceGame {
 
         // Main Menu Buttons
         document.getElementById('btn-menu-play').addEventListener('click', () => {
-            this.startGameAtLevel(this.saveSystem.data.unlockedLevel - 1);
+            const resumeIdx = parseInt(this.saveSystem.data.unlockedLevel, 10) - 1;
+            this.startGameAtLevel(resumeIdx);
         });
         document.getElementById('btn-menu-levels').addEventListener('click', () => {
             this.switchState('LEVEL_SELECT');
@@ -2537,6 +2546,10 @@ class EchoBounceGame {
     }
 
     finishVictorySequence() {
+        // One-shot guard: prevent multiple calls from queuing duplicate setTimeout chains
+        if (this._victorySequenceStarted) return;
+        this._victorySequenceStarted = true;
+
         const elapsedSec = this.lastElapsedSec || 0;
         const clearedLevel = this.currentLevelIndex + 1;
         const isLastLevel  = this.currentLevelIndex >= this.totalLevels - 1;
@@ -2556,8 +2569,9 @@ class EchoBounceGame {
                 return;
             }
 
-            // Load the next level silently
-            this.startGameAtLevel(this.currentLevelIndex + 1);
+            // Load the next level silently — explicit parseInt guards against string coercion
+            const nextIdx = parseInt(this.currentLevelIndex, 10) + 1;
+            this.startGameAtLevel(nextIdx);
 
             // Brief pause then fade back in
             setTimeout(() => {
@@ -2758,6 +2772,8 @@ class EchoBounceGame {
 
             if (this.portalAnimTimer >= ANIM_DURATION) {
                 this.camera.blackFadeAlpha = 1.0;
+                // Switch state FIRST so this block never re-fires on subsequent frames
+                this.switchState('VICTORY');
                 this.finishVictorySequence();
             }
         }
@@ -3027,8 +3043,12 @@ class EchoBounceGame {
     }
 
     renderGrid() {
+        const worldId = this.getWorldForLevel(this.currentLevelIndex);
+        const theme = WORLD_THEMES[worldId] || WORLD_THEMES[1];
+
         this.ctx.save();
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+        this.ctx.globalAlpha = 0.065;
+        this.ctx.strokeStyle = theme.wall;
         this.ctx.lineWidth = 1;
 
         const gridSize = 40;
