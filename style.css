@@ -496,21 +496,40 @@ html, body {
 }
 
 /* ===== Level Select — World Card Visual Carousel ===== */
+#level-select-screen {
+    padding-top: max(10px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .level-select-layout {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
     height: 100%;
-    padding-top: max(0.2rem, env(safe-area-inset-top, 0px));
-    padding-bottom: max(0.6rem, env(safe-area-inset-bottom, 0px));
-    gap: 0.25rem;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+    box-sizing: border-box;
+}
+
+#btn-level-back {
+    width: 88%;
+    max-width: 380px;
+    margin-top: 0.25rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.7rem 1.25rem;
+    flex-shrink: 0;
 }
 
 .level-select-header {
     text-align: center;
     flex-shrink: 0;
-    margin-bottom: 0.15rem;
+    margin-top: 0.1rem;
+    margin-bottom: 0.2rem;
 }
 
 .carousel-wrapper {
@@ -519,13 +538,13 @@ html, body {
     /* Use overflow-x: auto on the wrapper so fast swipes don't clip */
     overflow: visible;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     min-height: 0;
     /* Ensure the peek cards at edges stay visible */
     padding: 0 0;
 }
 
-/* Horizontal scroll-snap track — 9% side padding creates peek effect */
+/* Horizontal scroll-snap track — equal side padding (12%) creates true centred peek effect */
 .carousel-track {
     display: flex;
     width: 100%;
@@ -536,11 +555,12 @@ html, body {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     touch-action: pan-x;
-    padding: 0.75rem 9%;
-    gap: 14px;
+    padding: 0.75rem 12%;
+    gap: 16px;
     align-items: center;
-    /* Clip-free: box-shadow on children can overflow */
     scroll-behavior: auto;
+    /* Ensure snap target is centred relative to the track */
+    scroll-padding-inline: 12%;
 }
 .carousel-track::-webkit-scrollbar { display: none; }
 
@@ -549,10 +569,11 @@ html, body {
 
 /* ── World Card Base ── */
 .carousel-slide {
-    flex: 0 0 85%;
-    height: 100%;
-    max-height: 520px;
-    min-height: 300px;
+    flex: 0 0 100%;
+    width: 100%;
+    height: 60vh;
+    max-height: 490px;
+    min-height: 320px;
     scroll-snap-align: center;
     border-radius: 24px;
     overflow: hidden;
@@ -561,14 +582,15 @@ html, body {
     flex-direction: column;
     justify-content: flex-end;
     cursor: pointer;
+    box-sizing: border-box;
 
     /* Inactive: scaled down & dimmed for peek effect */
-    transform: scale(0.83);
-    opacity: 0.5;
-    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity   0.45s ease,
-                box-shadow 0.45s ease,
-                border-color 0.45s ease;
+    transform: scale(0.88);
+    opacity: 0.55;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.4s ease,
+                box-shadow 0.4s ease,
+                border-color 0.4s ease;
     border: 1px solid rgba(255,255,255,0.1);
     box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
@@ -675,9 +697,9 @@ html, body {
     background: linear-gradient(90deg, transparent, rgba(255,180,0,0.7) 25%, rgba(255,80,0,0.65) 75%, transparent);
     box-shadow: 0 0 7px 2px rgba(255,160,0,0.3);
 }
-.wpa-wall-a { left: 18%; width: 62%; top: 32%; }
-.wpa-wall-b { left: 0%;  width: 72%; top: 52%; }
-.wpa-wall-c { left: 25%; width: 58%; top: 68%; }
+.wpa-wall-a { left: 18%; width: 64%; top: 25%; }
+.wpa-wall-b { left: 0%;  width: 72%; top: 45%; }
+.wpa-wall-c { left: 22%; width: 60%; top: 65%; }
 
 /* Static spike triangles — World 1 */
 .wpa-hazard {
@@ -688,8 +710,9 @@ html, body {
     border-bottom: 17px solid rgba(255,42,42,0.72);
     filter: drop-shadow(0 0 6px rgba(255,42,42,0.65));
 }
-.wpa-hz-1.wpa-hazard { top: calc(32% - 17px); right: 20%; }
-.wpa-hz-2.wpa-hazard { top: calc(52% - 17px); left: 22%; }
+.wpa-hz-1.wpa-hazard { top: calc(25% - 17px); right: 22%; }
+.wpa-hz-2.wpa-hazard { top: calc(45% - 17px); left: 24%; }
+.wpa-hz-3.wpa-hazard { top: calc(65% - 17px); right: 26%; }
 
 /* Moving circles — World 2 */
 .wpa-moving-hz {
@@ -699,8 +722,9 @@ html, body {
     background: rgba(255,42,42,0.72);
     box-shadow: 0 0 10px rgba(255,42,42,0.6);
 }
-.wpa-hz-1.wpa-moving-hz { top: calc(32% - 8px); left: 18%; animation: wpaSlide1 2.4s ease-in-out infinite alternate; }
-.wpa-hz-2.wpa-moving-hz { top: calc(52% - 8px); right: 18%; animation: wpaSlide2 1.9s ease-in-out infinite alternate; }
+.wpa-hz-1.wpa-moving-hz { top: calc(25% - 8px); left: 18%; animation: wpaSlide1 2.4s ease-in-out infinite alternate; }
+.wpa-hz-2.wpa-moving-hz { top: calc(45% - 8px); right: 18%; animation: wpaSlide2 1.9s ease-in-out infinite alternate; }
+.wpa-hz-3.wpa-moving-hz { top: calc(65% - 8px); left: 22%; animation: wpaSlide1 2.2s ease-in-out infinite alternate; }
 @keyframes wpaSlide1 { from { transform: translateX(0); }    to { transform: translateX(120px); } }
 @keyframes wpaSlide2 { from { transform: translateX(0); }    to { transform: translateX(-100px); } }
 
@@ -712,9 +736,9 @@ html, body {
     background: rgba(255,42,42,0.7);
     box-shadow: 0 0 12px rgba(255,42,42,0.6);
 }
-.wpa-hz-1.wpa-pulse-hz { top: calc(32% - 10px); left:  28%; animation: wpaPulse 1.5s ease-in-out infinite; animation-delay: 0s; }
-.wpa-hz-2.wpa-pulse-hz { top: calc(52% - 10px); right: 24%; animation: wpaPulse 1.5s ease-in-out infinite; animation-delay: 0.55s; }
-.wpa-hz-3.wpa-pulse-hz { top: calc(68% - 10px); left:  45%; animation: wpaPulse 1.5s ease-in-out infinite; animation-delay: 1.1s; }
+.wpa-hz-1.wpa-pulse-hz { top: calc(25% - 10px); left:  28%; animation: wpaPulse 1.5s ease-in-out infinite; animation-delay: 0s; }
+.wpa-hz-2.wpa-pulse-hz { top: calc(45% - 10px); right: 24%; animation: wpaPulse 1.5s ease-in-out infinite; animation-delay: 0.55s; }
+.wpa-hz-3.wpa-pulse-hz { top: calc(65% - 10px); left:  45%; animation: wpaPulse 1.5s ease-in-out infinite; animation-delay: 1.1s; }
 @keyframes wpaPulse {
     0%, 100% { transform: scale(1);   opacity: 0.85; }
     50%       { transform: scale(0);   opacity: 0; }
@@ -726,10 +750,11 @@ html, body {
     z-index: 3;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    padding: 1.4rem 1.15rem 1.15rem;
-    background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 75%, transparent 100%);
+    gap: 0.4rem;
+    padding: 1.6rem 1.25rem 1.25rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
     flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .world-card-top-row {
@@ -737,31 +762,33 @@ html, body {
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    gap: 0.5rem;
 }
 
 .world-badge-group {
     display: flex;
     align-items: center;
     gap: 0.45rem;
+    min-width: 0;
 }
 
 .world-badge {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     line-height: 1;
     flex-shrink: 0;
 }
 
 .world-card-sub {
-    font-size: 0.64rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.75);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
 .world-card-title {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     line-height: 1.15;
@@ -774,11 +801,11 @@ html, body {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.25rem 0.55rem;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
+    padding: 0.28rem 0.65rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 20px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-muted);
     white-space: nowrap;

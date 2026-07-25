@@ -1911,8 +1911,10 @@ class EchoBounceGame {
             dot.addEventListener('click', () => {
                 const carousel = document.getElementById('worlds-carousel');
                 const slides = carousel ? carousel.querySelectorAll('.carousel-slide') : [];
-                if (slides[idx]) {
-                    slides[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                if (slides[idx] && carousel) {
+                    const slide  = slides[idx];
+                    const target = slide.offsetLeft + slide.offsetWidth / 2 - carousel.offsetWidth / 2;
+                    carousel.scrollTo({ left: target, behavior: 'smooth' });
                     this.carouselWorldIndex = idx;
                     this.updateCarouselDots(idx);
                 }
@@ -2097,8 +2099,10 @@ class EchoBounceGame {
                 art: `<div class="wpa-portal"></div>
                       <div class="wpa-wall wpa-wall-a"></div>
                       <div class="wpa-wall wpa-wall-b"></div>
+                      <div class="wpa-wall wpa-wall-c"></div>
                       <div class="wpa-hazard wpa-hz-1"></div>
-                      <div class="wpa-hazard wpa-hz-2"></div>`
+                      <div class="wpa-hazard wpa-hz-2"></div>
+                      <div class="wpa-hazard wpa-hz-3"></div>`
             },
             {
                 title:  dict.world2Title || 'EMERALD ABYSS',
@@ -2108,8 +2112,10 @@ class EchoBounceGame {
                 art: `<div class="wpa-portal"></div>
                       <div class="wpa-wall wpa-wall-a"></div>
                       <div class="wpa-wall wpa-wall-b"></div>
+                      <div class="wpa-wall wpa-wall-c"></div>
                       <div class="wpa-moving-hz wpa-hz-1"></div>
-                      <div class="wpa-moving-hz wpa-hz-2"></div>`
+                      <div class="wpa-moving-hz wpa-hz-2"></div>
+                      <div class="wpa-moving-hz wpa-hz-3"></div>`
             },
             {
                 title:  dict.world3Title || 'SOLAR CORE',
@@ -2174,17 +2180,20 @@ class EchoBounceGame {
             this.updateCarouselDots(closestIdx);
         };
 
-        // Restore last viewed world, then mark active
+        // Restore last viewed world — precisely centre the target slide.
+        // scrollIntoView is unreliable with scroll-padding + snap, so we
+        // manually compute scrollLeft = slide_centre - half_carousel_width.
         const targetIdx = Math.min(2, Math.max(0, this.carouselWorldIndex || 0));
-        requestAnimationFrame(() => {
-            if (targetIdx > 0) {
-                const slides = carousel.querySelectorAll('.carousel-slide');
-                if (slides[targetIdx]) {
-                    slides[targetIdx].scrollIntoView({ block: 'nearest', inline: 'center' });
-                }
-            }
+        const centreSlide = (idx) => {
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const slide  = slides[idx];
+            if (!slide) return;
+            const target = slide.offsetLeft + slide.offsetWidth / 2 - carousel.offsetWidth / 2;
+            carousel.scrollLeft = target;
             updateActiveSlide();
-        });
+        };
+        // Double rAF: first frame starts layout, second frame has final geometry
+        requestAnimationFrame(() => requestAnimationFrame(() => centreSlide(targetIdx)));
 
         // Level button click events
         carousel.querySelectorAll('.wlg-btn.unlocked').forEach(btn => {
