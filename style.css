@@ -32,11 +32,22 @@
     touch-action: none;
 }
 
-html, body {
+html {
     width: 100%;
     height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
-    background-color: var(--bg-dark);
+    background-color: #0a0a12 !important;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #0a0a12 !important;
     font-family: var(--font-family);
     color: var(--text-main);
 }
@@ -45,13 +56,13 @@ html, body {
     position: relative;
     width: 100vw;
     height: 100vh;
+    height: -webkit-fill-available;
     overflow: hidden;
+    background: #0a0a12;
     background: radial-gradient(circle at center, #121224 0%, #0a0a12 100%);
     touch-action: none;
 
-    /* iPhone Safe Area Top and Bottom Padding */
-    padding-top: max(24px, env(safe-area-inset-top, 0px));
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+    /* iPhone Safe Area Side Insets */
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
 
@@ -125,55 +136,19 @@ html, body {
 /* Header & HUD */
 .hud-header {
     position: absolute;
-    top: max(24px, env(safe-area-inset-top, 0px));
+    top: max(16px, calc(env(safe-area-inset-top, 0px) + 10px));
     left: calc(1rem + env(safe-area-inset-left, 0px));
     right: calc(1rem + env(safe-area-inset-right, 0px));
     display: flex;
-    justify-content: space-between;
     align-items: center;
     pointer-events: none;
     z-index: 10;
 }
 
-.brand {
+.hud-left {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-}
-
-.logo {
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    color: var(--text-main);
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
-}
-
-.logo .highlight {
-    color: var(--neon-cyan);
-    text-shadow: 0 0 10px var(--neon-cyan-glow);
-}
-
-.level-badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--neon-cyan);
-    background: rgba(0, 243, 255, 0.1);
-    border: 1px solid rgba(0, 243, 255, 0.35);
-    border-radius: 12px;
-    padding: 0.25rem 0.65rem;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    margin-left: 0.5rem;
-}
-
-.hud-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     pointer-events: auto;
 }
 
@@ -181,15 +156,16 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
-    border-radius: 10px;
+    border-radius: 9px;
     color: var(--text-main);
     cursor: pointer;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    pointer-events: auto;
     transition: all 0.2s ease;
 }
 .btn-icon-hud:hover, .btn-icon-hud:active {
@@ -198,10 +174,29 @@ html, body {
     color: var(--neon-cyan);
 }
 
+.level-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--neon-cyan);
+    background: rgba(0, 243, 255, 0.1);
+    border: 1px solid rgba(0, 243, 255, 0.35);
+    border-radius: 9px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: auto;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.15);
+    line-height: 1;
+}
+
 /* Dynamic On-Screen Level Tutorial Hint Banner — lower third, away from portal */
 .hint-banner {
     position: absolute;
-    bottom: calc(6.5rem + max(20px, env(safe-area-inset-bottom, 0px)));
+    bottom: calc(7rem + max(24px, env(safe-area-inset-bottom, 0px)));
     left: 50%;
     transform: translateX(-50%);
     z-index: 12;
@@ -231,7 +226,7 @@ html, body {
 /* Floating Mobile Action Bar */
 .action-bar {
     position: absolute;
-    bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
     right: calc(1rem + env(safe-area-inset-right, 0px));
     z-index: 10;
     display: flex;

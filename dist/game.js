@@ -1530,6 +1530,21 @@ class EchoBounceGame {
         this.elLevel.textContent = `${prefix} ${this.currentLevelIndex + 1}/${this.totalLevels}`;
     }
 
+    getBottomFloorY() {
+        let safeBottom = 34; // default iOS home indicator baseline (px)
+        try {
+            const testEl = document.createElement('div');
+            testEl.style.paddingBottom = 'env(safe-area-inset-bottom, 34px)';
+            testEl.style.position = 'fixed';
+            testEl.style.visibility = 'hidden';
+            document.body.appendChild(testEl);
+            const val = parseFloat(window.getComputedStyle(testEl).paddingBottom);
+            if (!isNaN(val) && val > 0) safeBottom = val;
+            document.body.removeChild(testEl);
+        } catch(e) {}
+        return this.height - (safeBottom + 28);
+    }
+
     resize() {
         const rect = this.canvas.parentElement.getBoundingClientRect();
         this.width = rect.width;
@@ -1542,8 +1557,9 @@ class EchoBounceGame {
         this.resetCamera();
 
         const skin = this.saveSystem ? this.saveSystem.data.orbSkin : 'cyan';
+        const floorY = this.getBottomFloorY();
         if (!this.player) {
-            this.player = new PlayerOrb(this.width / 2, this.height * 0.85, skin);
+            this.player = new PlayerOrb(this.width / 2, floorY - CONFIG.ORB_RADIUS - 2, skin);
         } else {
             this.player.setSkin(skin);
             if (this.gameState === 'PLAYING') this.loadLevel(this.currentLevelIndex);
@@ -1734,9 +1750,10 @@ class EchoBounceGame {
         const portalBase = theme.portalBase;
         const portalAccent = theme.portalAccent;
 
+        const floorY = this.getBottomFloorY();
         this.walls = [
             new Wall(0, 0, w, 0, wallColor, false), // Top boundary: active physics, unrendered visual
-            new Wall(0, h, w, h, wallColor, true),  // Bottom boundary wall
+            new Wall(0, floorY, w, floorY, wallColor, true),  // Elevated bottom boundary wall above safe area
             new Wall(0, 0, 0, h, wallColor, true),  // Left boundary wall
             new Wall(w, 0, w, h, wallColor, true)   // Right boundary wall
         ];
@@ -1904,9 +1921,10 @@ class EchoBounceGame {
         }
 
         const skin = this.saveSystem.data.orbSkin || 'cyan';
+        const spawnY = floorY - CONFIG.ORB_RADIUS - 2;
         if (this.player) {
             this.player.setSkin(skin);
-            this.player.reset(w * 0.5, h * 0.88);
+            this.player.reset(w * 0.5, spawnY);
         }
 
         this.echoWaves = [];
@@ -1925,7 +1943,7 @@ class EchoBounceGame {
 
         this.updateHudLevelBadge();
 
-        this.echoWaves.push(new EchoWave(w * 0.5, h * 0.88, 160, 1.0, this.player ? this.player.color : CONFIG.COLOR_CYAN));
+        this.echoWaves.push(new EchoWave(w * 0.5, spawnY, 160, 1.0, this.player ? this.player.color : CONFIG.COLOR_CYAN));
     }
 
     bindNavigationEvents() {
