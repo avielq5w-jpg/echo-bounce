@@ -281,6 +281,26 @@ body {
     box-shadow: 0 0 16px var(--neon-pink-glow);
 }
 
+/* Level 2 Sonar Pulse Onboarding Glow Animation */
+.btn-pulse-style.pulse-tutorial-glow {
+    animation: sonarPulseTutorialGlow 1.1s ease-in-out infinite alternate !important;
+    position: relative;
+    z-index: 15;
+}
+
+@keyframes sonarPulseTutorialGlow {
+    0% {
+        box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-pink-glow);
+        transform: scale(1);
+        border-color: var(--neon-pink);
+    }
+    100% {
+        box-shadow: 0 0 28px #ffffff, 0 0 45px var(--neon-pink), inset 0 0 14px var(--neon-pink);
+        transform: scale(1.18);
+        border-color: #ffffff;
+    }
+}
+
 .cooldown-bar {
     position: absolute;
     bottom: 0;

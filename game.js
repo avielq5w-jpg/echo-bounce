@@ -222,9 +222,9 @@ const TRANSLATIONS = {
         mTime: "Time Taken",
         btnNextLevel: "NEXT LEVEL",
         hudLevelPrefix: "LVL",
-        level1Hint: "Tap anywhere to bounce. Hit walls to emit Echo waves!",
-        level2Hint: "Avoid red spikes! Reach the glowing portal.",
-        level3Hint: "Navigate the maze to reach the exit portal.",
+        level1Hint: "Blueprint Mode: Walls are faintly visible. Tap to bounce!",
+        level2Hint: "Tap Sonar to reveal hidden walls!",
+        level3Hint: "Full Dark Mode: Walls are 100% hidden. Bounce & use Sonar!",
         levelCompleteTitle: "LEVEL COMPLETE!",
         levelCompleteDesc: (lvl) => `Level ${lvl} cleared! Get ready for Level ${lvl + 1}.`,
         allCompleteTitle: "ALL WORLDS CLEARED!",
@@ -273,9 +273,9 @@ const TRANSLATIONS = {
         mTime: "זמן",
         btnNextLevel: "השלב הבא",
         hudLevelPrefix: "שלב",
-        level1Hint: "לחץ בכל מקום כדי לקפוץ. פגש קירות כדי לפלוט גלי הד!",
-        level2Hint: "הזהר ממוקשים אדומים! הגיע לפורטל הזוהר.",
-        level3Hint: "נווט במבוך הנסתר כדי להגיע לפורטל היציאה.",
+        level1Hint: "מצב שרטוט: הקירות גלויים בעמימות. לחץ כדי לקפוץ!",
+        level2Hint: "לחץ על הסונאר כדי לגלות קירות נסתרים!",
+        level3Hint: "חשיכה מוחלטת: קירות נסתרים לחלוטין. קפוץ והשתמש בסונאר!",
         levelCompleteTitle: "השלב הושלם!",
         levelCompleteDesc: (lvl) => `שלב ${lvl} הושלם בהצלחה! היערך לשלב ${lvl + 1}.`,
         allCompleteTitle: "כל העולמות הושלמו!",
@@ -324,9 +324,9 @@ const TRANSLATIONS = {
         mTime: "Tiempo",
         btnNextLevel: "SIGUIENTE NIVEL",
         hudLevelPrefix: "NIV",
-        level1Hint: "Toca en cualquier lugar para rebotar y emitir ecos.",
-        level2Hint: "¡Evita los pinchos rojos! Llega al portal.",
-        level3Hint: "Navega por el laberinto para llegar al portal.",
+        level1Hint: "Modo Plano: Las paredes se ven tenues. ¡Toca para rebotar!",
+        level2Hint: "¡Toca Sonar para revelar paredes ocultas!",
+        level3Hint: "Modo Oscuro: Paredes 100% ocultas. ¡Rebota y usa el Sonar!",
         levelCompleteTitle: "¡NIVEL COMPLETADO!",
         levelCompleteDesc: (lvl) => `¡Nivel ${lvl} completado! Prepárate para el Nivel ${lvl + 1}.`,
         allCompleteTitle: "¡TODOS LOS MUNDOS SUPERADOS!",
@@ -375,9 +375,9 @@ const TRANSLATIONS = {
         mTime: "Temps",
         btnNextLevel: "NIVEAU SUIVANT",
         hudLevelPrefix: "NIV",
-        level1Hint: "Touchez n'importe où pour rebondir et créer des échos.",
-        level2Hint: "Évitez les pics rouges! Atteignez le portail.",
-        level3Hint: "Naviguez dans le labyrinthe pour atteindre la sortie.",
+        level1Hint: "Mode Plan: Les murs sont légèrement visibles. Touchez pour rebondir!",
+        level2Hint: "Touchez le Sonar pour révéler les murs cachés!",
+        level3Hint: "Obscurité Totale: Murs 100% cachés. Sautez et utilisez le Sonar!",
         levelCompleteTitle: "NIVEAU RÉUSSI!",
         levelCompleteDesc: (lvl) => `Niveau ${lvl} réussi! Préparez-vous au Niveau ${lvl + 1}.`,
         allCompleteTitle: "TOUS LES MONDES RÉUSSIS!",
@@ -426,9 +426,9 @@ const TRANSLATIONS = {
         mTime: "タイム",
         btnNextLevel: "次のステージ",
         hudLevelPrefix: "STAGE",
-        level1Hint: "タップして跳ね、壁に当ててエコーを発生させよう。",
-        level2Hint: "赤いトゲを避けてポータルに到達しよう！",
-        level3Hint: "迷路をナビゲートして出口を目指そう。",
+        level1Hint: "設計図モード: 壁が薄く表示されます。タップして跳ねよう！",
+        level2Hint: "ソナーをタップして隠された壁を照らそう！",
+        level3Hint: "完全暗闇モード: 壁は100%不可視です。バウンスとソナーで攻略！",
         levelCompleteTitle: "ステージクリア！",
         levelCompleteDesc: (lvl) => `ステージ ${lvl} クリア！次のステージ ${lvl + 1} へ。`,
         allCompleteTitle: "全ワールド全制覇！",
@@ -836,37 +836,43 @@ class Wall {
         return null;
     }
 
-    draw(ctx) {
+    draw(ctx, gameInstance) {
         if (!this.renderable) return;
 
-        // Walls stay nearly invisible until an echo/sonar wave illuminates them
-        // (base 0.04 = essentially dark; flash lifts it up to full brightness)
         const flash = Math.max(this.illumination, this.flashTimer);
-        if (flash < 0.015) return; // skip draw if completely dark (perf win)
-        const alpha = Math.min(1, 0.04 + 0.96 * flash);
+        const levelIndex = gameInstance ? gameInstance.currentLevelIndex : 0;
+        
+        // Level 1 (Index 0): Faint Blueprint Mode — unrevealed walls render at ~18% opacity outline
+        // Level 2+ (Index 1+): Standard Dark Mode — unrevealed walls hidden at ~4% opacity until Echo/Sonar hits
+        const isBlueprint = (levelIndex === 0);
+        const baseAlpha = isBlueprint ? 0.18 : 0.04;
+
+        if (!isBlueprint && flash < 0.015) return; // skip draw when completely dark on Level 2+ for performance
+
+        const alpha = Math.min(1, baseAlpha + (1 - baseAlpha) * flash);
 
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.lineCap = 'round';
 
-        // Only apply shadowBlur when actually flashing — expensive on mobile GPUs
-        const glowAmount = flash > 0.3 ? 8 + 18 * flash : 4;
+        // Subtle blueprint glow for Level 1, dynamic glow when flash > 0.3
+        const glowAmount = isBlueprint ? (flash > 0.3 ? 8 + 18 * flash : 6) : (flash > 0.3 ? 8 + 18 * flash : 4);
         ctx.shadowBlur = glowAmount;
-        ctx.shadowColor = flash > 0.3 ? '#ffffff' : this.color;
+        ctx.shadowColor = (flash > 0.3 || isBlueprint) ? this.color : '#ffffff';
 
         // Base Neon Rod
         ctx.strokeStyle = flash > 0.3 ? '#ffffff' : this.color;
-        ctx.lineWidth = 5.5;
+        ctx.lineWidth = isBlueprint ? 4.5 : 5.5;
         ctx.beginPath();
         ctx.moveTo(this.x1, this.y1);
         ctx.lineTo(this.x2, this.y2);
         ctx.stroke();
 
-        // Inner bright core line — only when visibly lit
-        if (flash > 0.15) {
-            ctx.shadowBlur = flash > 0.3 ? 10 : 0;
-            ctx.strokeStyle = flash > 0.3 ? '#ffffff' : 'rgba(255, 255, 255, 0.85)';
-            ctx.lineWidth = 2.0;
+        // Inner bright core line
+        if (flash > 0.15 || isBlueprint) {
+            ctx.shadowBlur = flash > 0.3 ? 10 : (isBlueprint ? 4 : 0);
+            ctx.strokeStyle = flash > 0.3 ? '#ffffff' : (isBlueprint ? 'rgba(0, 243, 255, 0.45)' : 'rgba(255, 255, 255, 0.85)');
+            ctx.lineWidth = 1.8;
             ctx.beginPath();
             ctx.moveTo(this.x1, this.y1);
             ctx.lineTo(this.x2, this.y2);
@@ -1688,7 +1694,7 @@ class EchoBounceGame {
     updateOnScreenHint() {
         if (!this.elHintBanner || !this.elHintText) return;
         const lang = this.saveSystem.data.language || 'en';
-        const dict = TRANSLATIONS[lang];
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS['en'];
 
         // Clear any previously pending auto-hide timer
         if (this._hintAutoHideTimer) {
@@ -1696,11 +1702,18 @@ class EchoBounceGame {
             this._hintAutoHideTimer = null;
         }
 
-        let hintText = dict.level3Hint;
+        let hintText = null;
         if (this.currentLevelIndex === 0) {
             hintText = dict.level1Hint;
         } else if (this.currentLevelIndex === 1) {
             hintText = dict.level2Hint;
+        } else if (this.currentLevelIndex === 2) {
+            hintText = dict.level3Hint;
+        }
+
+        if (!hintText) {
+            this.elHintBanner.classList.add('hidden');
+            return;
         }
 
         this.elHintText.textContent = hintText;
@@ -1709,10 +1722,10 @@ class EchoBounceGame {
         this.elHintBanner.style.opacity = '1';
         this.elHintBanner.classList.remove('hidden');
 
-        // Auto-fade after 3 seconds
+        // Auto-fade after 4.5 seconds for tutorial levels (1-3)
         this._hintAutoHideTimer = setTimeout(() => {
             this._fadeOutHintBanner();
-        }, 3000);
+        }, 4500);
     }
 
     _fadeOutHintBanner() {
@@ -1955,6 +1968,27 @@ class EchoBounceGame {
         this.updateHudLevelBadge();
 
         this.echoWaves.push(new EchoWave(w * 0.5, spawnY, 160, 1.0, this.player ? this.player.color : CONFIG.COLOR_CYAN));
+
+        // Clear Sonar tutorial highlight button state
+        if (this.btnPulse) {
+            this.btnPulse.classList.remove('pulse-tutorial-glow');
+        }
+
+        // Onboarding Tutorial Logic (World 1: Levels 1-3)
+        if (levelIndex === 1) {
+            // Level 2 (Sonar Pulse Tutorial): Highlight Sonar button with pulsing glow
+            if (this.btnPulse) {
+                this.btnPulse.classList.add('pulse-tutorial-glow');
+            }
+            // Trigger 1 free full-screen pulse at level start after 400ms
+            setTimeout(() => {
+                if (this.gameState === 'PLAYING' && this.currentLevelIndex === 1) {
+                    this.triggerFreeAutoPulse();
+                }
+            }, 400);
+        }
+
+        this.updateOnScreenHint();
     }
 
     bindNavigationEvents() {
@@ -2470,10 +2504,40 @@ class EchoBounceGame {
         }
     }
 
+    triggerFreeAutoPulse() {
+        if (this.gameState !== 'PLAYING' || !this.player) return;
+        const waveRadius = Math.max(this.width, this.height) * 0.9;
+        const waveColor = this.getWaveColor();
+        this.echoWaves.push(new EchoWave(this.player.pos.x, this.player.pos.y, waveRadius, 1.8, waveColor));
+
+        for (let i = 0; i < 16; i++) {
+            const angle = (Math.PI * 2 / 16) * i;
+            const speed = 120 + Math.random() * 100;
+            this.particles.push(new Particle(
+                this.player.pos.x,
+                this.player.pos.y,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                waveColor,
+                3,
+                0.6
+            ));
+        }
+    }
+
     triggerManualPulse() {
+        const activeCd = (this.currentLevelIndex === 1) ? 1.0 : CONFIG.PULSE_COOLDOWN;
         if (this.pulseCooldown > 0 || this.gameState !== 'PLAYING') return;
 
-        this.pulseCooldown = CONFIG.PULSE_COOLDOWN;
+        // Clear Level 2 Sonar tutorial glow highlight & hint text when Sonar is used
+        if (this.btnPulse) {
+            this.btnPulse.classList.remove('pulse-tutorial-glow');
+        }
+        if (this.currentLevelIndex === 1) {
+            this._fadeOutHintBanner();
+        }
+
+        this.pulseCooldown = activeCd;
         const waveRadius = Math.max(this.width, this.height) * 0.85;
         const waveColor = this.getWaveColor();
         this.echoWaves.push(new EchoWave(this.player.pos.x, this.player.pos.y, waveRadius, 1.8, waveColor));
@@ -2759,7 +2823,8 @@ class EchoBounceGame {
         if (this.pulseCooldown > 0) {
             this.pulseCooldown = Math.max(0, this.pulseCooldown - dt);
             if (this.elCooldownBar) {
-                const ratio = this.pulseCooldown / CONFIG.PULSE_COOLDOWN;
+                const activeCd = (this.currentLevelIndex === 1) ? 1.0 : CONFIG.PULSE_COOLDOWN;
+                const ratio = this.pulseCooldown / activeCd;
                 this.elCooldownBar.style.transform = `scaleX(${ratio})`;
             }
         }
@@ -2984,7 +3049,7 @@ class EchoBounceGame {
         }
 
         for (const wall of this.walls) {
-            wall.draw(this.ctx);
+            wall.draw(this.ctx, this);
         }
 
         for (const hazard of this.hazards) {
