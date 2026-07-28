@@ -587,8 +587,7 @@ class Particle {
         ctx.save();
         ctx.globalAlpha = progress;
         ctx.fillStyle = this.color;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = this.color;
+        // shadowBlur removed: extremely expensive on Android WebView GPUs
         ctx.beginPath();
         ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
         ctx.fill();
@@ -840,37 +839,39 @@ class Wall {
     draw(ctx) {
         if (!this.renderable) return;
 
-        // Subtle ambient glow by default + flash boost when echo wave hits
+        // Walls stay nearly invisible until an echo/sonar wave illuminates them
+        // (base 0.04 = essentially dark; flash lifts it up to full brightness)
         const flash = Math.max(this.illumination, this.flashTimer);
-        const alpha = Math.min(1, 0.35 + 0.65 * flash);
+        if (flash < 0.015) return; // skip draw if completely dark (perf win)
+        const alpha = Math.min(1, 0.04 + 0.96 * flash);
 
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.lineCap = 'round'; // Capsule rounded end-caps
+        ctx.lineCap = 'round';
 
-        // Dynamic Laser Rod Outer Glow
-        const glowAmount = 8 + 18 * flash;
+        // Only apply shadowBlur when actually flashing — expensive on mobile GPUs
+        const glowAmount = flash > 0.3 ? 8 + 18 * flash : 4;
         ctx.shadowBlur = glowAmount;
         ctx.shadowColor = flash > 0.3 ? '#ffffff' : this.color;
 
-        // Base Styled Neon Rod
+        // Base Neon Rod
         ctx.strokeStyle = flash > 0.3 ? '#ffffff' : this.color;
         ctx.lineWidth = 5.5;
-
         ctx.beginPath();
         ctx.moveTo(this.x1, this.y1);
         ctx.lineTo(this.x2, this.y2);
         ctx.stroke();
 
-        // Inner Bright Neon Core Line
-        ctx.shadowBlur = flash > 0.3 ? 12 : 0;
-        ctx.strokeStyle = flash > 0.3 ? '#ffffff' : 'rgba(255, 255, 255, 0.85)';
-        ctx.lineWidth = 2.0;
-
-        ctx.beginPath();
-        ctx.moveTo(this.x1, this.y1);
-        ctx.lineTo(this.x2, this.y2);
-        ctx.stroke();
+        // Inner bright core line — only when visibly lit
+        if (flash > 0.15) {
+            ctx.shadowBlur = flash > 0.3 ? 10 : 0;
+            ctx.strokeStyle = flash > 0.3 ? '#ffffff' : 'rgba(255, 255, 255, 0.85)';
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            ctx.moveTo(this.x1, this.y1);
+            ctx.lineTo(this.x2, this.y2);
+            ctx.stroke();
+        }
 
         ctx.restore();
     }
@@ -925,7 +926,10 @@ class Hazard {
 
     checkCollision(orb) {
         const dist = Math.hypot(orb.pos.x - this.x, orb.pos.y - this.y);
-        return dist < orb.radius + this.radius;
+        if (dist >= orb.radius + this.radius) return false;
+        // Only lethal from above: orb center must be at or above hazard's lower bound.
+        // This prevents false kills when the orb slides along the floor beneath a top-mounted triangle.
+        return orb.pos.y <= this.y + this.radius * 0.65;
     }
 
     draw(ctx) {
@@ -1219,36 +1223,41 @@ class PlayerOrb {
     }
 
     update(dt, gameInstance) {
-        this.vel.y += CONFIG.GRAVITY * dt;
-        this.vel.x *= CONFIG.AIR_FRICTION;
-        this.vel.y *= CONFIG.AIR_FRICTION;
-
-        this.pos.x += this.vel.x * dt;
-        this.pos.y += this.vel.y * dt;
+        // --- Sub-step physics to prevent tunneling at high speeds ---
+        const speed = this.vel.length();
+        // Max safe step: one sub-step should move at most half the orb radius
+        const MAX_STEP_DIST = this.radius * 0.55;
+        const numSteps = Math.max(1, Math.ceil(speed * dt / MAX_STEP_DIST));
+        const subDt = dt / numSteps;
 
         const wallWaveColor = gameInstance.getWaveColor();
 
-        for (const wall of gameInstance.walls) {
-            const impact = wall.checkCollision(this);
-            if (impact && impact.isRealBounce) {
-                this.bounces++;
-                haptic(15);
-                Audio.playBounce();
-                gameInstance.echoWaves.push(new EchoWave(impact.x, impact.y, 140, 0.9, wallWaveColor));
+        for (let step = 0; step < numSteps; step++) {
+            // Apply gravity & friction per sub-step
+            this.vel.y += CONFIG.GRAVITY * subDt;
+            this.vel.x *= Math.pow(CONFIG.AIR_FRICTION, subDt / (1 / 60));
+            this.vel.y *= Math.pow(CONFIG.AIR_FRICTION, subDt / (1 / 60));
 
-                
-                for (let i = 0; i < 8; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 40 + Math.random() * 100;
-                    gameInstance.particles.push(new Particle(
-                        impact.x,
-                        impact.y,
-                        Math.cos(angle) * speed,
-                        Math.sin(angle) * speed,
-                        wallWaveColor,
-                        2.5,
-                        0.4
-                    ));
+            this.pos.x += this.vel.x * subDt;
+            this.pos.y += this.vel.y * subDt;
+
+            for (const wall of gameInstance.walls) {
+                const impact = wall.checkCollision(this);
+                if (impact && impact.isRealBounce) {
+                    this.bounces++;
+                    haptic(15);
+                    Audio.playBounce();
+                    gameInstance.echoWaves.push(new EchoWave(impact.x, impact.y, 140, 0.9, wallWaveColor));
+
+                    for (let i = 0; i < 8; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const spd = 40 + Math.random() * 100;
+                        gameInstance.particles.push(new Particle(
+                            impact.x, impact.y,
+                            Math.cos(angle) * spd, Math.sin(angle) * spd,
+                            wallWaveColor, 2.5, 0.4
+                        ));
+                    }
                 }
             }
         }
@@ -1352,7 +1361,9 @@ class PlayerOrb {
 class EchoBounceGame {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
-        this.ctx = this.canvas.getContext('2d');
+        // desynchronized: true lets the browser skip compositor sync on Android,
+        // giving a meaningful FPS boost in Capacitor WebViews
+        this.ctx = this.canvas.getContext('2d', { desynchronized: true });
         
         this.dpr = window.devicePixelRatio || 1;
         this.width = 0;
@@ -3088,7 +3099,8 @@ class EchoBounceGame {
     loop(timestamp) {
         let dt = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
-        if (dt > 0.05) dt = 0.05;
+        // Cap dt to 33ms (30fps floor) — prevents huge jumps on lag spikes
+        if (dt > 0.033) dt = 0.033;
 
         this.update(dt);
         this.render();
