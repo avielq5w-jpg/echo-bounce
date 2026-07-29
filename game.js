@@ -1562,6 +1562,31 @@ class EchoBounceGame {
         return this.height - (safeBottom + 28);
     }
 
+    getTopSafetyMargin(portalRadius = 22) {
+        let safeTop = 0;
+        try {
+            const testEl = document.createElement('div');
+            testEl.style.paddingTop = 'env(safe-area-inset-top, 0px)';
+            testEl.style.position = 'fixed';
+            testEl.style.visibility = 'hidden';
+            document.body.appendChild(testEl);
+            const val = parseFloat(window.getComputedStyle(testEl).paddingTop);
+            if (!isNaN(val) && val > 0) safeTop = val;
+            document.body.removeChild(testEl);
+        } catch(e) {}
+
+        // Enforce top exclusion boundary: minimum 80px + env(safe-area-inset-top)
+        // so the Exit Portal & accretion disk strictly render below top HUD buttons (Pause & LVL badge)
+        return 80 + safeTop + portalRadius * 0.5;
+    }
+
+    createExitPortal(rawX, rawY, radius, baseColor, accentColor) {
+        const minY = this.getTopSafetyMargin(radius);
+        const clampedY = Math.max(rawY, minY);
+        const clampedX = Math.max(radius + 20, Math.min(this.width - radius - 20, rawX));
+        return new ExitPortal(clampedX, clampedY, radius, baseColor, accentColor);
+    }
+
     resize() {
         const rect = this.canvas.parentElement.getBoundingClientRect();
         this.width = rect.width;
@@ -1789,7 +1814,7 @@ class EchoBounceGame {
             // Level 1: Intro Tutorial (0 hazards)
             this.walls.push(new Wall(w * 0.25, h * 0.65, w, h * 0.65, wallColor));
             this.walls.push(new Wall(0, h * 0.42, w * 0.75, h * 0.42, wallColor));
-            this.portal = new ExitPortal(w * 0.5, h * 0.15, 24, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.5, h * 0.15, 24, portalBase, portalAccent);
 
         } else if (levelIndex === 1) {
             // Level 2: Intro Hazard (1 static spike)
@@ -1797,7 +1822,7 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.48, w * 0.65, h * 0.48, wallColor));
             this.walls.push(new Wall(w * 0.30, h * 0.30, w, h * 0.30, wallColor));
             this.hazards.push(new Hazard(w * 0.40, h * 0.48 - 18, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.85, h * 0.12, 22, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.85, h * 0.12, 22, portalBase, portalAccent);
 
         } else if (levelIndex === 2) {
             // Level 3: Void Labyrinth
@@ -1808,7 +1833,7 @@ class EchoBounceGame {
             this.hazards.push(new Hazard(w * 0.75, h * 0.78 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.25, h * 0.62 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.80, h * 0.46 - 18, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.20, h * 0.12, 20, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.20, h * 0.12, 20, portalBase, portalAccent);
 
         } else if (levelIndex === 3) {
             // Level 4: Precision Pulse
@@ -1820,7 +1845,7 @@ class EchoBounceGame {
             this.hazards.push(new Hazard(w * 0.50, h * 0.80 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.15, h * 0.60 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.85, h * 0.60 - 18, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 4) {
             // Level 5: Echo Core
@@ -1831,7 +1856,7 @@ class EchoBounceGame {
             this.hazards.push(new Hazard(w * 0.15, h * 0.82 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.85, h * 0.68 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.15, h * 0.54 - 18, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
 
         // --- WORLD 2: EMERALD ABYSS (Levels 6 to 10 - MOVING HAZARDS) ---
         } else if (levelIndex === 5) {
@@ -1840,7 +1865,7 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.35, h * 0.45, w, h * 0.45, wallColor));
             // 1 Moving Spike sliding left & right
             this.hazards.push(new MovingHazard(w * 0.15, h * 0.70 - 18, w * 0.55, h * 0.70 - 18, 110, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.20, h * 0.15, 22, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.20, h * 0.15, 22, portalBase, portalAccent);
 
         } else if (levelIndex === 6) {
             // Level 7: Sliding Blades
@@ -1849,7 +1874,7 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.25, h * 0.35, w, h * 0.35, wallColor));
             this.hazards.push(new MovingHazard(w * 0.30, h * 0.75 - 18, w * 0.85, h * 0.75 - 18, 140, 18, hazardColor));
             this.hazards.push(new MovingHazard(w * 0.10, h * 0.55 - 18, w * 0.65, h * 0.55 - 18, 160, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.80, h * 0.12, 20, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.80, h * 0.12, 20, portalBase, portalAccent);
 
         } else if (levelIndex === 7) {
             // Level 8: Double Gate
@@ -1859,7 +1884,7 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.30, w * 0.40, h * 0.30, wallColor));
             this.walls.push(new Wall(w * 0.60, h * 0.30, w, h * 0.30, wallColor));
             this.hazards.push(new MovingHazard(w * 0.25, h * 0.52 - 18, w * 0.75, h * 0.52 - 18, 180, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 8) {
             // Level 9: Serpent Pass
@@ -1870,7 +1895,7 @@ class EchoBounceGame {
             this.hazards.push(new MovingHazard(w * 0.30, h * 0.80 - 18, w * 0.90, h * 0.80 - 18, 150, 18, hazardColor));
             this.hazards.push(new MovingHazard(w * 0.05, h * 0.65 - 18, w * 0.65, h * 0.65 - 18, 170, 18, hazardColor));
             this.hazards.push(new MovingHazard(w * 0.30, h * 0.50 - 18, w * 0.90, h * 0.50 - 18, 190, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.15, h * 0.12, 18, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.15, h * 0.12, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 9) {
             // Level 10: Matrix Heart
@@ -1881,7 +1906,7 @@ class EchoBounceGame {
             this.hazards.push(new MovingHazard(w * 0.10, h * 0.82 - 18, w * 0.50, h * 0.82 - 18, 160, 18, hazardColor));
             this.hazards.push(new MovingHazard(w * 0.50, h * 0.66 - 18, w * 0.90, h * 0.66 - 18, 200, 18, hazardColor));
             this.hazards.push(new MovingHazard(w * 0.10, h * 0.50 - 18, w * 0.50, h * 0.50 - 18, 220, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
 
         // --- WORLD 3: SOLAR CORE (Levels 11 to 15 - PULSING HAZARDS) ---
         } else if (levelIndex === 10) {
@@ -1890,7 +1915,7 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.44, w * 0.80, h * 0.44, wallColor));
             // 1 Pulsing Hazard toggling ON/OFF
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.68 - 18, 1.4, 1.4, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.50, h * 0.12, 22, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.50, h * 0.12, 22, portalBase, portalAccent);
 
         } else if (levelIndex === 11) {
             // Level 12: Lava Choke
@@ -1902,7 +1927,7 @@ class EchoBounceGame {
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.76 - 18, 1.2, 1.2, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.30, h * 0.52 - 18, 1.5, 1.5, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.70, h * 0.52 - 18, 1.5, 1.5, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 12) {
             // Level 13: Flame Wave
@@ -1913,7 +1938,7 @@ class EchoBounceGame {
             this.hazards.push(new MovingHazard(w * 0.35, h * 0.80 - 18, w * 0.85, h * 0.80 - 18, 160, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.35, h * 0.62 - 18, 1.2, 1.2, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.44 - 18, 1.0, 1.0, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 13) {
             // Level 14: Infernal Chamber
@@ -1927,7 +1952,7 @@ class EchoBounceGame {
             this.hazards.push(new MovingHazard(w * 0.30, h * 0.64 - 18, w * 0.70, h * 0.64 - 18, 190, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.46 - 18, 0.9, 0.9, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.28 - 18, 1.3, 1.3, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.50, h * 0.10, 18, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 18, portalBase, portalAccent);
 
         } else {
             // Level 15: Core Apex (Master World 3 Boss Level)
@@ -1941,7 +1966,7 @@ class EchoBounceGame {
             this.hazards.push(new MovingHazard(w * 0.40, h * 0.56 - 18, w * 0.90, h * 0.56 - 18, 220, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.30, h * 0.42 - 18, 0.9, 0.9, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.60, h * 0.28 - 18, 0.8, 0.8, 18, hazardColor));
-            this.portal = new ExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
+            this.portal = this.createExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
         }
 
         const skin = this.saveSystem.data.orbSkin || 'cyan';
