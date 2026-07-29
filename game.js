@@ -1194,9 +1194,65 @@ class ExitPortal {
     }
 }
 
+// Per-Level Speed Boost Pad Configs (Level Index 0..32)
+// Defines explicit coordinates, directions, and balanced forces per level
+const LEVEL_BOOST_PADS = {
+    // World 3: Solar Core Boost Pad Placements
+    23: [ // Level 24 (Solar Flare)
+        { x: 0.40, y: 0.50, width: 0.20, height: 0.18, dirX: 0, dirY: -1, force: 650, color: '#FF9900' }
+    ],
+    24: [ // Level 25 (Thermal Launch)
+        { x: 0.05, y: 0.62, width: 0.18, height: 0.12, dirX: 1, dirY: 0, force: 700, color: '#FFE600' }
+    ],
+    25: [ // Level 26 (Dual Thruster Choke)
+        { x: 0.10, y: 0.60, width: 0.18, height: 0.16, dirX: 0, dirY: -1, force: 650, color: '#FF9900' },
+        { x: 0.72, y: 0.60, width: 0.18, height: 0.16, dirX: 0, dirY: -1, force: 650, color: '#FF9900' }
+    ],
+    26: [ // Level 27 (Solar Wave Overdrive)
+        { x: 0.05, y: 0.68, width: 0.20, height: 0.10, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
+        { x: 0.75, y: 0.50, width: 0.20, height: 0.10, dirX: -1, dirY: 0, force: 750, color: '#FF9900' }
+    ],
+    27: [ // Level 28 (Infernal Chamber Accelerator)
+        { x: 0.10, y: 0.70, width: 0.15, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
+        { x: 0.75, y: 0.70, width: 0.15, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
+        { x: 0.42, y: 0.34, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 750, color: '#FFE600' }
+    ],
+    28: [ // Level 29 (Plasma Vortex)
+        { x: 0.05, y: 0.74, width: 0.18, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FF9900' },
+        { x: 0.78, y: 0.58, width: 0.18, height: 0.08, dirX: -1, dirY: 0, force: 750, color: '#FF9900' },
+        { x: 0.05, y: 0.42, width: 0.18, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FFE600' }
+    ],
+    29: [ // Level 30 (Magma Chute)
+        { x: 0.42, y: 0.70, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
+        { x: 0.05, y: 0.50, width: 0.15, height: 0.10, dirX: 1, dirY: 0, force: 700, color: '#FFE600' },
+        { x: 0.80, y: 0.50, width: 0.15, height: 0.10, dirX: -1, dirY: 0, force: 700, color: '#FFE600' },
+        { x: 0.42, y: 0.32, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 800, color: '#FF9900' }
+    ],
+    30: [ // Level 31 (Solar Storm Catalyst)
+        { x: 0.05, y: 0.76, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 750, color: '#FF9900' },
+        { x: 0.78, y: 0.62, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 750, color: '#FF9900' },
+        { x: 0.05, y: 0.48, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
+        { x: 0.78, y: 0.34, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 800, color: '#FFE600' }
+    ],
+    31: [ // Level 32 (Fusion Accelerator)
+        { x: 0.42, y: 0.74, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 750, color: '#FF9900' },
+        { x: 0.05, y: 0.58, width: 0.15, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
+        { x: 0.80, y: 0.58, width: 0.15, height: 0.08, dirX: -1, dirY: 0, force: 750, color: '#FFE600' },
+        { x: 0.42, y: 0.42, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 850, color: '#FF9900' },
+        { x: 0.42, y: 0.26, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 900, color: '#FFE600' }
+    ],
+    32: [ // Level 33 (Ultimate Core Apex)
+        { x: 0.05, y: 0.78, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 800, color: '#FF9900' },
+        { x: 0.78, y: 0.64, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 800, color: '#FF9900' },
+        { x: 0.05, y: 0.50, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 850, color: '#FFE600' },
+        { x: 0.78, y: 0.36, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 900, color: '#FFE600' },
+        { x: 0.05, y: 0.22, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 950, color: '#FFE600' }
+    ]
+};
+
 // --- World 3: Speed Booster Zone (Directional Acceleration Fields) ---
 class SpeedBoosterZone {
-    constructor(x, y, width, height, dirX = 0, dirY = -1, boostForce = 1500, color = '#FF9900') {
+    constructor(x, y, width, height, dirX = 0, dirY = -1, boostForce = 700, color = '#FF9900') {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -1204,7 +1260,7 @@ class SpeedBoosterZone {
         const len = Math.hypot(dirX, dirY) || 1;
         this.dirX = dirX / len;
         this.dirY = dirY / len;
-        this.boostForce = boostForce;
+        this.boostForce = boostForce; // Controlled force (~55-60% lower for player control)
         this.color = color;
         this.animTimer = Math.random() * 10;
         this.illumination = 0.45;
@@ -2253,7 +2309,6 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.55, h * 0.72, w, h * 0.72, wallColor));
             this.walls.push(new Wall(w * 0.25, h * 0.46, w * 0.75, h * 0.46, wallColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.72 - 18, 1.4, 1.4, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.40, h * 0.50, w * 0.20, h * 0.18, 0, -1, 1600, '#FF9900'));
             this.portal = this.createExitPortal(w * 0.50, h * 0.12, 22, portalBase, portalAccent);
 
         } else if (levelIndex === 24) {
@@ -2263,7 +2318,6 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.25, h * 0.34, w, h * 0.34, wallColor));
             this.hazards.push(new MovingHazard(w * 0.30, h * 0.78 - 18, w * 0.85, h * 0.78 - 18, 160, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.20, h * 0.56 - 18, 1.2, 1.2, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.62, w * 0.18, h * 0.12, 1, 0, 1700, '#FFE600'));
             this.portal = this.createExitPortal(w * 0.85, h * 0.10, 20, portalBase, portalAccent);
 
         } else if (levelIndex === 25) {
@@ -2275,8 +2329,6 @@ class EchoBounceGame {
             this.walls.push(new Wall(w * 0.55, h * 0.32, w, h * 0.32, wallColor));
             this.hazards.push(new PulsingHazard(w * 0.30, h * 0.54 - 18, 1.3, 1.3, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.70, h * 0.54 - 18, 1.3, 1.3, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.10, h * 0.60, w * 0.18, h * 0.16, 0, -1, 1600, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.72, h * 0.60, w * 0.18, h * 0.16, 0, -1, 1600, '#FF9900'));
             this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 26) {
@@ -2288,8 +2340,6 @@ class EchoBounceGame {
             this.hazards.push(new MovingHazard(w * 0.35, h * 0.80 - 18, w * 0.85, h * 0.80 - 18, 170, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.35, h * 0.62 - 18, 1.2, 1.2, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.44 - 18, 1.0, 1.0, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.68, w * 0.20, h * 0.10, 1, 0, 1800, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.75, h * 0.50, w * 0.20, h * 0.10, -1, 0, 1800, '#FF9900'));
             this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 27) {
@@ -2303,9 +2353,6 @@ class EchoBounceGame {
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.82 - 18, 1.1, 1.1, 18, hazardColor));
             this.hazards.push(new MovingHazard(w * 0.30, h * 0.64 - 18, w * 0.70, h * 0.64 - 18, 200, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.46 - 18, 0.9, 0.9, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.10, h * 0.70, w * 0.15, h * 0.10, 0, -1, 1700, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.75, h * 0.70, w * 0.15, h * 0.10, 0, -1, 1700, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.42, h * 0.34, w * 0.16, h * 0.10, 0, -1, 1800, '#FFE600'));
             this.portal = this.createExitPortal(w * 0.50, h * 0.10, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 28) {
@@ -2318,9 +2365,6 @@ class EchoBounceGame {
             this.hazards.push(new PulsingHazard(w * 0.85, h * 0.84 - 18, 1.0, 1.0, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.15, h * 0.68 - 18, 1.0, 1.0, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.55, h * 0.68 - 18, 1.0, 1.0, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.74, w * 0.18, h * 0.08, 1, 0, 1900, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.78, h * 0.58, w * 0.18, h * 0.08, -1, 0, 1900, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.42, w * 0.18, h * 0.08, 1, 0, 1900, '#FFE600'));
             this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 29) {
@@ -2335,10 +2379,6 @@ class EchoBounceGame {
             this.hazards.push(new MovingHazard(w * 0.65, h * 0.44 - 18, w * 0.95, h * 0.44 - 18, 200, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.82 - 18, 0.9, 0.9, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.44 - 18, 0.9, 0.9, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.42, h * 0.70, w * 0.16, h * 0.10, 0, -1, 1800, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.50, w * 0.15, h * 0.10, 1, 0, 1800, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.80, h * 0.50, w * 0.15, h * 0.10, -1, 0, 1800, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.42, h * 0.32, w * 0.16, h * 0.10, 0, -1, 2000, '#FF9900'));
             this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 30) {
@@ -2355,10 +2395,6 @@ class EchoBounceGame {
             this.hazards.push(new PulsingHazard(w * 0.45, h * 0.84 - 18, 0.8, 0.8, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.55, h * 0.56 - 18, 0.8, 0.8, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.45, h * 0.28 - 18, 0.8, 0.8, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.76, w * 0.18, h * 0.07, 1, 0, 1900, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.78, h * 0.62, w * 0.18, h * 0.07, -1, 0, 1900, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.48, w * 0.18, h * 0.07, 1, 0, 1900, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.78, h * 0.34, w * 0.18, h * 0.07, -1, 0, 2000, '#FFE600'));
             this.portal = this.createExitPortal(w * 0.15, h * 0.12, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 31) {
@@ -2377,11 +2413,6 @@ class EchoBounceGame {
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.84 - 18, 0.8, 0.8, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.52 - 18, 0.8, 0.8, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.50, h * 0.36 - 18, 0.8, 0.8, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.42, h * 0.74, w * 0.16, h * 0.08, 0, -1, 1900, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.58, w * 0.15, h * 0.08, 1, 0, 1900, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.80, h * 0.58, w * 0.15, h * 0.08, -1, 0, 1900, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.42, h * 0.42, w * 0.16, h * 0.08, 0, -1, 2100, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.42, h * 0.26, w * 0.16, h * 0.08, 0, -1, 2200, '#FFE600'));
             this.portal = this.createExitPortal(w * 0.50, h * 0.10, 18, portalBase, portalAccent);
 
         } else {
@@ -2401,12 +2432,22 @@ class EchoBounceGame {
             this.hazards.push(new PulsingHazard(w * 0.85, h * 0.44 - 18, 0.7, 0.7, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.15, h * 0.30 - 18, 0.7, 0.7, 18, hazardColor));
             this.hazards.push(new PulsingHazard(w * 0.85, h * 0.16 - 18, 0.7, 0.7, 18, hazardColor));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.78, w * 0.18, h * 0.07, 1, 0, 2000, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.78, h * 0.64, w * 0.18, h * 0.07, -1, 0, 2000, '#FF9900'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.50, w * 0.18, h * 0.07, 1, 0, 2100, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.78, h * 0.36, w * 0.18, h * 0.07, -1, 0, 2200, '#FFE600'));
-            this.boosters.push(new SpeedBoosterZone(w * 0.05, h * 0.22, w * 0.18, h * 0.07, 1, 0, 2400, '#FFE600'));
             this.portal = this.createExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
+        }
+
+        // Dynamically instantiate per-level boost pads from LEVEL_BOOST_PADS configuration
+        const levelBoostPads = LEVEL_BOOST_PADS[levelIndex] || [];
+        for (const pad of levelBoostPads) {
+            this.boosters.push(new SpeedBoosterZone(
+                w * pad.x,
+                h * pad.y,
+                w * pad.width,
+                h * pad.height,
+                pad.dirX,
+                pad.dirY,
+                pad.force,
+                pad.color
+            ));
         }
 
         const skin = this.saveSystem.data.orbSkin || 'cyan';
