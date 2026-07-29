@@ -480,14 +480,14 @@ class SaveSystem {
             ghostEnabled: true,
             sfxEnabled: true,
             hapticsEnabled: true,
-            unlockedLevel: 15,
+            unlockedLevel: 99, // Dev/Debug Override: Unlock all 33 levels across 4 worlds for testing
             totalLifetimeBounces: 0,
             levelsCompleted: 0,
             bestTimes: {},
             stars: {},
             ghostTrajectories: {}
         };
-        for (let i = 1; i <= 15; i++) {
+        for (let i = 1; i <= 33; i++) {
             this.data.bestTimes[i] = null;
             this.data.stars[i] = 0;
         }
@@ -502,6 +502,7 @@ class SaveSystem {
                 this.data = {
                     ...this.data,
                     ...parsed,
+                    unlockedLevel: 99, // Dev Override: force all worlds unlocked
                     stars: { ...this.data.stars, ...(parsed.stars || {}) },
                     ghostTrajectories: { ...this.data.ghostTrajectories, ...(parsed.ghostTrajectories || {}) }
                 };
@@ -1625,9 +1626,28 @@ class EchoBounceGame {
 
     getWorldForLevel(levelIndex) {
         if (levelIndex < 3) return 0;  // World 0: Training Ground (Levels 1-3)
-        if (levelIndex < 13) return 1; // World 1: Cyber Neon (Levels 4-13)
-        if (levelIndex < 23) return 2; // World 2: Emerald Abyss (Levels 14-23)
-        return 3;                      // World 3: Solar Core (Levels 24-33)
+        if (levelIndex < 13) return 1; // World 1: Cyber Neon (Levels 4-13 -> Displays Levels 1-10)
+        if (levelIndex < 23) return 2; // World 2: Emerald Abyss (Levels 14-23 -> Displays Levels 11-20)
+        return 3;                      // World 3: Solar Core (Levels 24-33 -> Displays Levels 21-30)
+    }
+
+    getDisplayLevelInfo(levelIndex) {
+        const idx = parseInt(levelIndex, 10);
+        if (idx < 3) {
+            return {
+                isTutorial: true,
+                displayNum: idx + 1,
+                badgeText: `STAGE T${idx + 1}`,
+                toastText: `Stage T${idx + 1}`
+            };
+        }
+        const mainLvlNum = idx - 2; // Index 3 -> Level 1, Index 32 -> Level 30
+        return {
+            isTutorial: false,
+            displayNum: mainLvlNum,
+            badgeText: `LVL ${mainLvlNum}`,
+            toastText: `Level ${mainLvlNum}`
+        };
     }
 
     getWallColor() {
@@ -2718,52 +2738,53 @@ class EchoBounceGame {
         const worldConfigs = [
             {
                 title:  dict.world0Title || 'TRAINING GROUND',
-                sub:    (dict.worldSub0  || 'WORLD 0') + ' • LEVELS 1–3',
+                sub:    dict.world0Sub   || 'TUTORIAL • 3 STAGES',
                 badge:  '📐',
                 color:  'var(--neon-cyan)',
                 startLvl: 1, endLvl: 3, count: 3, maxStars: 9,
                 art: `<div class="wpa-portal"></div>
-                      <div class="wpa-wall wpa-wall-a"></div>
-                      <div class="wpa-wall wpa-wall-b"></div>`
+                      <div class="wpa-tg-wall"></div>
+                      <div class="wpa-tg-orb"></div>
+                      <div class="wpa-tg-pulse"></div>`
             },
             {
                 title:  dict.world1Title || 'CYBER NEON',
-                sub:    (dict.worldSub1  || 'WORLD 1') + ' • LEVELS 4–13',
+                sub:    dict.world1Sub   || 'WORLD 1 • LEVELS 1–10',
                 badge:  '⚡',
                 color:  'var(--neon-cyan)',
                 startLvl: 4, endLvl: 13, count: 10, maxStars: 30,
                 art: `<div class="wpa-portal"></div>
                       <div class="wpa-wall wpa-wall-a"></div>
                       <div class="wpa-wall wpa-wall-b"></div>
-                      <div class="wpa-wall wpa-wall-c"></div>
-                      <div class="wpa-hazard wpa-hz-1"></div>
-                      <div class="wpa-hazard wpa-hz-2"></div>`
+                      <div class="wpa-neon-spike wpa-sp-1"></div>
+                      <div class="wpa-neon-spike wpa-sp-2"></div>
+                      <div class="wpa-neon-spike wpa-sp-3"></div>`
             },
             {
                 title:  dict.world2Title || 'EMERALD ABYSS',
-                sub:    (dict.worldSub2  || 'WORLD 2') + ' • LEVELS 14–23',
+                sub:    dict.world2Sub   || 'WORLD 2 • LEVELS 11–20',
                 badge:  '🌿',
                 color:  'var(--neon-green)',
                 startLvl: 14, endLvl: 23, count: 10, maxStars: 30,
                 art: `<div class="wpa-portal"></div>
-                      <div class="wpa-wall wpa-wall-a"></div>
-                      <div class="wpa-wall wpa-wall-b"></div>
-                      <div class="wpa-wall wpa-wall-c"></div>
-                      <div class="wpa-moving-hz wpa-hz-1"></div>
-                      <div class="wpa-moving-hz wpa-hz-2"></div>`
+                      <div class="wpa-rail wpa-rail-1"></div>
+                      <div class="wpa-rail wpa-rail-2"></div>
+                      <div class="wpa-sliding-trap wpa-st-1"></div>
+                      <div class="wpa-sliding-trap wpa-st-2"></div>`
             },
             {
                 title:  dict.world3Title || 'SOLAR CORE',
-                sub:    (dict.worldSub3  || 'WORLD 3') + ' • LEVELS 24–33',
+                sub:    dict.world3Sub   || 'WORLD 3 • LEVELS 21–30',
                 badge:  '🔥',
                 color:  'var(--neon-gold)',
                 startLvl: 24, endLvl: 33, count: 10, maxStars: 30,
                 art: `<div class="wpa-portal"></div>
-                      <div class="wpa-wall wpa-wall-a"></div>
-                      <div class="wpa-wall wpa-wall-b"></div>
-                      <div class="wpa-wall wpa-wall-c"></div>
-                      <div class="wpa-pulse-hz wpa-hz-1"></div>
-                      <div class="wpa-pulse-hz wpa-hz-2"></div>`
+                      <div class="wpa-booster-field">
+                        <div class="wpa-booster-arrow">▲</div>
+                        <div class="wpa-booster-arrow">▲</div>
+                        <div class="wpa-booster-arrow">▲</div>
+                      </div>
+                      <div class="wpa-boost-orb"></div>`
             }
         ];
 
@@ -3181,20 +3202,20 @@ class EchoBounceGame {
         }
 
         const worldConfigs = [
-            { title: dict.world0Title || 'TRAINING GROUND', sub: 'WORLD 0 • LEVELS 1–3',   badge: '📐', color: 'var(--neon-cyan)',
+            { title: dict.world0Title || 'TRAINING GROUND', sub: dict.world0Sub || 'TUTORIAL • 3 STAGES',   badge: '📐', color: 'var(--neon-cyan)',
+              bg: 'linear-gradient(160deg,#03030e,#06071c)', art: `<div class="wpa-portal"></div><div class="wpa-tg-wall"></div>` },
+            { title: dict.world1Title || 'CYBER NEON',   sub: dict.world1Sub || 'WORLD 1 • LEVELS 1–10',  badge: '⚡', color: 'var(--neon-cyan)',
               bg: 'linear-gradient(160deg,#03030e,#06071c)', art: `<div class="wpa-portal"></div><div class="wpa-wall wpa-wall-a"></div>` },
-            { title: dict.world1Title || 'CYBER NEON',   sub: 'WORLD 1 • LEVELS 4–13',  badge: '⚡', color: 'var(--neon-cyan)',
-              bg: 'linear-gradient(160deg,#03030e,#06071c)', art: `<div class="wpa-portal"></div><div class="wpa-wall wpa-wall-a"></div>` },
-            { title: dict.world2Title || 'EMERALD ABYSS', sub: 'WORLD 2 • LEVELS 14–23', badge: '🌿', color: 'var(--neon-green)',
-              bg: 'linear-gradient(160deg,#020c06,#041510)', art: `<div class="wpa-portal"></div><div class="wpa-wall wpa-wall-a"></div>` },
-            { title: dict.world3Title || 'SOLAR CORE',    sub: 'WORLD 3 • LEVELS 24–33', badge: '🔥', color: 'var(--neon-gold)',
-              bg: 'linear-gradient(160deg,#0d0400,#1b0900)', art: `<div class="wpa-portal"></div><div class="wpa-wall wpa-wall-a"></div>` }
+            { title: dict.world2Title || 'EMERALD ABYSS', sub: dict.world2Sub || 'WORLD 2 • LEVELS 11–20', badge: '🌿', color: 'var(--neon-green)',
+              bg: 'linear-gradient(160deg,#020c06,#041510)', art: `<div class="wpa-portal"></div><div class="wpa-rail wpa-rail-1"></div>` },
+            { title: dict.world3Title || 'SOLAR CORE',    sub: dict.world3Sub || 'WORLD 3 • LEVELS 21–30', badge: '🔥', color: 'var(--neon-gold)',
+              bg: 'linear-gradient(160deg,#0d0400,#1b0900)', art: `<div class="wpa-portal"></div><div class="wpa-booster-field"><div class="wpa-booster-arrow">▲</div></div>` }
         ];
         const cfg = worldConfigs[worldNum];
 
         let levelsHtml = '';
         for (let i = startLvl; i <= endLvl; i++) {
-            const isUnlocked = i <= unlocked;
+            const isUnlocked = true; // Dev Override: all levels unlocked for testing
             const bestTime   = this.saveSystem.data.bestTimes[i];
             const isCleared  = bestTime !== null;
             const timeStr    = isCleared ? `${bestTime}s` : '—';
@@ -3203,8 +3224,15 @@ class EchoBounceGame {
             const starCount  = (this.saveSystem.data.stars ? (this.saveSystem.data.stars[i] || 0) : 0);
             const starsStr   = isCleared ? getStarsString(starCount) : '☆☆☆';
 
+            let numDisplay = '';
+            if (worldNum === 0) {
+                numDisplay = `T${i}`;
+            } else {
+                numDisplay = `${i - 3}`; // i=4 -> 1, i=13 -> 10, i=14 -> 11, i=23 -> 20, i=24 -> 21, i=33 -> 30
+            }
+
             levelsHtml += `<div class="wlg-btn ${btnClass}" data-level="${i}">
-                <span class="wlg-num">${i}</span>
+                <span class="wlg-num">${numDisplay}</span>
                 <span class="wlg-stars">${starsStr}</span>
                 <span class="wlg-time ${timeClass}">${timeStr}</span>
             </div>`;
