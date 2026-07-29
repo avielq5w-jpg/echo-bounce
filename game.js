@@ -1558,6 +1558,287 @@ class PlayerOrb {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// --- Automated Playtester Bot (Dev Tool) ---
+// ─────────────────────────────────────────────────────────────────
+class AutoPlayBot {
+    constructor() {
+        this.isRunning      = false;
+        this.fromLevel      = 0;
+        this.toLevel        = 32;
+        this.currentLevel   = 0;
+        this.results        = [];
+
+        // Per-level state
+        this.elapsedTime    = 0;
+        this.deathCount     = 0;
+        this.impulseCount   = 0;
+        this.impulseTimer   = 0;       // countdown to next impulse
+        this.IMPULSE_INTERVAL = 0.32;  // fire an impulse every ~320ms sim time
+        this.TIMEOUT        = 30;      // mark IMPOSSIBLE after 30s
+
+        // Unstuck detection
+        this.stuckTimer     = 0;
+        this.lastOrbPos     = { x: 0, y: 0 };
+        this.STUCK_WINDOW   = 1.8;     // seconds without moving 30px → fire escape impulse
+        this.STUCK_DIST     = 28;
+
+        // Internal flags to avoid double-counting
+        this._levelStarted  = false;
+        this._waitForReset  = false;   // true while DEATH animation plays
+    }
+
+    // Called by game to kick off the test run
+    start(game, fromLevel = 0, toLevel = 32) {
+        this.isRunning    = true;
+        this.fromLevel    = fromLevel;
+        this.toLevel      = toLevel;
+        this.currentLevel = fromLevel;
+        this.results      = [];
+        this._beginLevel(game);
+
+        // Show progress badge
+        this._ensureBadge(true);
+        this._updateBadge(fromLevel, toLevel);
+        console.log(`[AutoPlayBot] Starting run: levels ${fromLevel}–${toLevel}`);
+    }
+
+    stop(game) {
+        this.isRunning = false;
+        this._ensureBadge(false);
+        this.showReport();
+    }
+
+    // ── per-frame tick, called from game.update() ──
+    tick(dt, game) {
+        if (!this.isRunning) return;
+        if (game.gameState === 'DEATH') {
+            // During death animation wait flag — handled by hook in triggerDeath
+            return;
+        }
+        if (game.gameState !== 'PLAYING') return;
+
+        this.elapsedTime  += dt;
+        this.impulseTimer -= dt;
+        this.stuckTimer   += dt;
+
+        // ── timeout ──
+        if (this.elapsedTime >= this.TIMEOUT) {
+            this._recordResult('IMPOSSIBLE');
+            this._advanceLevel(game);
+            return;
+        }
+
+        // ── stuck detection ──
+        const orb = game.player;
+        if (!orb) return;
+        const distMoved = Math.hypot(orb.pos.x - this.lastOrbPos.x, orb.pos.y - this.lastOrbPos.y);
+        if (distMoved > this.STUCK_DIST) {
+            this.stuckTimer  = 0;
+            this.lastOrbPos  = { x: orb.pos.x, y: orb.pos.y };
+        }
+
+        // ── fire impulse ──
+        if (this.impulseTimer <= 0) {
+            const target = this._chooseTarget(game);
+            orb.applyImpulse(target.x, target.y, game);
+            this.impulseCount++;
+            this.impulseTimer = this.IMPULSE_INTERVAL;
+
+            // If stuck for too long, shoot upward to escape
+            if (this.stuckTimer > this.STUCK_WINDOW) {
+                orb.applyImpulse(orb.pos.x, orb.pos.y - 200, game);
+                this.stuckTimer = 0;
+            }
+        }
+    }
+
+    // Called by game.triggerDeath() when bot is running
+    onDeath(game) {
+        if (!this.isRunning) return;
+        this.deathCount++;
+        // Instantly reload level without the 750ms animation wait
+        game.loadLevel(game.currentLevelIndex);
+        game.switchState('PLAYING');
+    }
+
+    // Called by game.triggerAbsorption() when bot is running
+    onVictory(game) {
+        if (!this.isRunning) return;
+        const rating = this._rateLevel();
+        this._recordResult(rating);
+        this._advanceLevel(game);
+    }
+
+    // ── private helpers ──
+
+    _beginLevel(game) {
+        this.elapsedTime  = 0;
+        this.deathCount   = 0;
+        this.impulseCount = 0;
+        this.impulseTimer = 0.2;  // tiny delay before first impulse
+        this.stuckTimer   = 0;
+        this._levelStarted = true;
+
+        game.startGameAtLevel(this.currentLevel);
+        this._updateBadge(this.currentLevel, this.toLevel);
+        console.log(`[AutoPlayBot] Testing level index ${this.currentLevel}`);
+    }
+
+    _advanceLevel(game) {
+        if (this.currentLevel >= this.toLevel) {
+            this.stop(game);
+            return;
+        }
+        this.currentLevel++;
+        this._beginLevel(game);
+    }
+
+    _recordResult(rating) {
+        const info = { // safe read – game instance not needed here
+            levelIndex: this.currentLevel,
+            displayId:  this._displayId(this.currentLevel),
+            time:       parseFloat(this.elapsedTime.toFixed(2)),
+            deaths:     this.deathCount,
+            impulses:   this.impulseCount,
+            status:     rating === 'IMPOSSIBLE' ? 'FAILED' : 'PASSED',
+            rating
+        };
+        this.results.push(info);
+        console.log(`[AutoPlayBot] L${info.displayId} → ${info.status} | ${info.time}s | deaths:${info.deaths} | ${info.rating}`);
+    }
+
+    _rateLevel() {
+        const t = this.elapsedTime;
+        const d = this.deathCount;
+        if (t < 8  && d === 0) return 'EASY';
+        if (t < 15 && d <= 2)  return 'MEDIUM';
+        if (t < 25 && d <= 5)  return 'HARD';
+        return 'EXPERT';
+    }
+
+    _displayId(levelIndex) {
+        if (levelIndex < 3) return `T${levelIndex + 1}`;
+        return `${levelIndex - 2}`;
+    }
+
+    // Heuristic target selection with basic hazard avoidance
+    _chooseTarget(game) {
+        const orb    = game.player;
+        const portal = game.portal;
+        if (!orb || !portal) return { x: game.width / 2, y: game.height * 0.2 };
+
+        let tx = portal.x;
+        let ty = portal.y;
+
+        // Check if any hazard is within 90px along the direct path — if so, deflect ±90°
+        const dx = tx - orb.pos.x;
+        const dy = ty - orb.pos.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        const HAZARD_RADIUS = 90;
+        let deflect = 0;
+        for (const hz of game.hazards) {
+            const hx = (hz.x !== undefined ? hz.x : hz.pos?.x) ?? hz.cx ?? 0;
+            const hy = (hz.y !== undefined ? hz.y : hz.pos?.y) ?? hz.cy ?? 0;
+            // Project hazard onto direct path
+            const ax = hx - orb.pos.x;
+            const ay = hy - orb.pos.y;
+            const proj = ax * nx + ay * ny;
+            if (proj < 0 || proj > dist) continue; // behind or past portal
+            const perp = Math.abs(ax * ny - ay * nx); // perpendicular distance to path
+            if (perp < HAZARD_RADIUS) {
+                // Cross product sign tells us which side the hazard is on
+                deflect = (ax * ny - ay * nx) > 0 ? -1 : 1;
+                break;
+            }
+        }
+
+        if (deflect !== 0) {
+            // Rotate 70° away from hazard
+            const angle = deflect * (Math.PI * 0.4);
+            const cos   = Math.cos(angle);
+            const sin   = Math.sin(angle);
+            const rdx   = nx * cos - ny * sin;
+            const rdy   = nx * sin + ny * cos;
+            const LOOK  = 160; // project 160px ahead
+            tx = orb.pos.x + rdx * LOOK;
+            ty = orb.pos.y + rdy * LOOK;
+        }
+
+        return { x: tx, y: ty };
+    }
+
+    // ── DOM helpers ──
+
+    _ensureBadge(show) {
+        let badge = document.getElementById('bot-progress-badge');
+        if (show && !badge) {
+            badge = document.createElement('div');
+            badge.id = 'bot-progress-badge';
+            document.body.appendChild(badge);
+        }
+        if (badge) badge.style.display = show ? 'flex' : 'none';
+    }
+
+    _updateBadge(lvl, total) {
+        const badge = document.getElementById('bot-progress-badge');
+        if (!badge) return;
+        badge.textContent = `🤖 Testing L${this._displayId(lvl)} / L${this._displayId(total)}`;
+    }
+
+    showReport() {
+        // Remove old panel if exists
+        const old = document.getElementById('bot-report-panel');
+        if (old) old.remove();
+
+        const ratingColor = { EASY: '#00ff88', MEDIUM: '#ffe600', HARD: '#ff9900', EXPERT: '#ff007f', IMPOSSIBLE: '#ff2a2a' };
+        const statusIcon  = { PASSED: '✅', FAILED: '❌' };
+
+        const rows = this.results.map(r => `
+            <tr class="bot-row bot-row-${r.rating.toLowerCase()}">
+                <td class="bot-td bot-td-id">L${r.displayId}</td>
+                <td class="bot-td">${statusIcon[r.status] || '?'} ${r.status}</td>
+                <td class="bot-td">${r.time}s</td>
+                <td class="bot-td">${r.deaths}</td>
+                <td class="bot-td bot-td-rating" style="color:${ratingColor[r.rating] || '#fff'}">${r.rating}</td>
+            </tr>`).join('');
+
+        const panel = document.createElement('div');
+        panel.id = 'bot-report-panel';
+        panel.innerHTML = `
+            <div class="bot-report-header">
+                <span>🤖 Auto-Play Report — ${this.results.length} levels tested</span>
+                <button id="bot-close-btn" aria-label="Close report">✕</button>
+            </div>
+            <div class="bot-report-scroll">
+                <table class="bot-table">
+                    <thead>
+                        <tr>
+                            <th class="bot-th">Level</th>
+                            <th class="bot-th">Status</th>
+                            <th class="bot-th">Time</th>
+                            <th class="bot-th">Deaths</th>
+                            <th class="bot-th">Difficulty</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+        document.body.appendChild(panel);
+
+        document.getElementById('bot-close-btn')?.addEventListener('click', () => panel.remove());
+
+        // Also print to console
+        console.table(this.results.map(r => ({
+            Level: `L${r.displayId}`, Status: r.status,
+            Time: `${r.time}s`, Deaths: r.deaths, Difficulty: r.rating
+        })));
+    }
+}
+
 // --- Main Game Orchestrator ---
 class EchoBounceGame {
     constructor() {
@@ -1577,6 +1858,9 @@ class EchoBounceGame {
         this.player = null;
         this.walls = [];
         this.hazards = [];
+
+        // Automated Playtester Bot (Dev Tool)
+        this.bot = null;
         this.boosters = [];
         this.portal = null;
         this.echoWaves = [];
@@ -2658,6 +2942,24 @@ class EchoBounceGame {
         // Unlock Web Audio on any user interaction
         document.addEventListener('touchstart', () => Audio.unlock(), { once: true, passive: true });
         document.addEventListener('pointerdown', () => Audio.unlock(), { once: true, passive: true });
+
+        // ── Dev: Auto-Tester button (injected programmatically) ──
+        const btnBot = document.createElement('button');
+        btnBot.id = 'btn-bot-run';
+        btnBot.setAttribute('aria-label', 'Run AI Auto-Tester');
+        btnBot.innerHTML = '🤖';
+        document.body.appendChild(btnBot);
+        btnBot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.bot && this.bot.isRunning) {
+                this.bot.stop(this);
+                btnBot.classList.remove('bot-running');
+            } else {
+                this.bot = new AutoPlayBot();
+                this.bot.start(this, 0, this.totalLevels - 1);
+                btnBot.classList.add('bot-running');
+            }
+        });
     }
 
     bindSkinSelectorEvents() {
@@ -3068,6 +3370,13 @@ class EchoBounceGame {
 
     triggerDeath() {
         if (this.gameState !== 'PLAYING') return;
+
+        // ── AutoPlayBot hook: skip animation, instantly reset ──
+        if (this.bot && this.bot.isRunning) {
+            this.bot.onDeath(this);
+            return;
+        }
+
         this.switchState('DEATH');
         this.deathTimer = 0.75;     // 750ms satisfying shatter & fade timing
         this.shakeTimer = 0.22;     // 220ms Glitch Shake effect
@@ -3320,6 +3629,13 @@ class EchoBounceGame {
 
     triggerAbsorption() {
         if (this.gameState !== 'PLAYING') return;
+
+        // ── AutoPlayBot hook: skip absorption animation, instantly record victory ──
+        if (this.bot && this.bot.isRunning) {
+            this.bot.onVictory(this);
+            return;
+        }
+
         this.absorptionTimer = 0;
         if (this.player) {
             this.player.vel.x = 0;
@@ -3336,6 +3652,11 @@ class EchoBounceGame {
     }
 
     update(dt) {
+        // ── AutoPlayBot tick (runs first to intercept death/victory before render) ──
+        if (this.bot && this.bot.isRunning) {
+            this.bot.tick(dt, this);
+        }
+
         if (this.nexusStreams) {
             for (let i = 0; i < this.nexusStreams.length; i++) {
                 this.nexusStreams[i].update(dt, this.width, this.height);
