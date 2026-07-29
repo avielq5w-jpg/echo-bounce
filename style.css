@@ -2346,3 +2346,43 @@ body {
 
 .bot-row:hover { background: rgba(255,255,255,0.06) !important; }
 
+/* Summary chip bar */
+.bot-summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(0,229,255,0.1);
+    background: rgba(0,0,0,0.2);
+    flex-shrink: 0;
+}
+.bot-summary-chip {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+}
+.bot-chip-easy       { color: #00ff88; background: rgba(0,255,136,0.1); }
+.bot-chip-medium     { color: #ffe600; background: rgba(255,230,0,0.1); }
+.bot-chip-hard       { color: #ff9900; background: rgba(255,153,0,0.1); }
+.bot-chip-expert     { color: #ff007f; background: rgba(255,0,127,0.1); }
+.bot-chip-impossible { color: #ff2a2a; background: rgba(255,42,42,0.1); }
+.bot-chip-unsolvable { color: #ff2a2a; background: rgba(255,42,42,0.15); }
+
+/* Unsolvable note */
+.bot-unsolvable-note {
+    display: block;
+    font-size: 0.65rem;
+    color: rgba(255,42,42,0.7);
+    letter-spacing: 0.03em;
+    margin-top: 2px;
+}
+
+/* Unsolvable row distinct styling */
+.bot-row-unsolvable {
+    background: rgba(255,42,42,0.1);
+    border-left: 2px solid #ff2a2a;
+}

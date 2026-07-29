@@ -1561,285 +1561,526 @@ class PlayerOrb {
 // ─────────────────────────────────────────────────────────────────
 // --- Automated Playtester Bot (Dev Tool) ---
 // ─────────────────────────────────────────────────────────────────
-class AutoPlayBot {
-    constructor() {
-        this.isRunning      = false;
-        this.fromLevel      = 0;
-        this.toLevel        = 32;
-        this.currentLevel   = 0;
-        this.results        = [];
 
-        // Per-level state
-        this.elapsedTime    = 0;
-        this.deathCount     = 0;
-        this.impulseCount   = 0;
-        this.impulseTimer   = 0;       // countdown to next impulse
-        this.IMPULSE_INTERVAL = 0.32;  // fire an impulse every ~320ms sim time
-        this.TIMEOUT        = 30;      // mark IMPOSSIBLE after 30s
+// ── MinHeap for A* priority queue ─────────────────────────────
+class MinHeap {
+    constructor() { this._h = []; }
+    push(item) {
+        this._h.push(item);
+        let i = this._h.length - 1;
+        while (i > 0) {
+            const p = (i - 1) >> 1;
+            if (this._h[p].f <= this._h[i].f) break;
+            [this._h[p], this._h[i]] = [this._h[i], this._h[p]];
+            i = p;
+        }
+    }
+    pop() {
+        const top = this._h[0];
+        const last = this._h.pop();
+        if (this._h.length > 0) {
+            this._h[0] = last;
+            let i = 0;
+            for (;;) {
+                let s = i, l = 2*i+1, r = 2*i+2;
+                if (l < this._h.length && this._h[l].f < this._h[s].f) s = l;
+                if (r < this._h.length && this._h[r].f < this._h[s].f) s = r;
+                if (s === i) break;
+                [this._h[s], this._h[i]] = [this._h[i], this._h[s]];
+                i = s;
+            }
+        }
+        return top;
+    }
+    get size() { return this._h.length; }
+}
 
-        // Unstuck detection
-        this.stuckTimer     = 0;
-        this.lastOrbPos     = { x: 0, y: 0 };
-        this.STUCK_WINDOW   = 1.8;     // seconds without moving 30px → fire escape impulse
-        this.STUCK_DIST     = 28;
+// ── BotGrid — rasterises level geometry into a navigation grid ─
+class BotGrid {
+    constructor(game, extraBlockedHazards) {
+        extraBlockedHazards = extraBlockedHazards || [];
+        this.cs   = 20;  // cell size px
+        this.cols = Math.ceil(game.width  / this.cs);
+        this.rows = Math.ceil(game.height / this.cs);
+        this.blocked = Array.from({ length: this.rows }, () => new Uint8Array(this.cols));
 
-        // Internal flags to avoid double-counting
-        this._levelStarted  = false;
-        this._waitForReset  = false;   // true while DEATH animation plays
+        const ORB_R = (CONFIG.ORB_RADIUS || 14) + 4;
+        const PAD   = Math.ceil(ORB_R / this.cs);
+
+        // 1. Block boundary edges
+        for (let c = 0; c < this.cols; c++) {
+            for (let p = 0; p <= PAD; p++) {
+                this._block(p, c);
+                this._block(this.rows - 1 - p, c);
+            }
+        }
+        for (let r = 0; r < this.rows; r++) {
+            for (let p = 0; p <= PAD; p++) {
+                this._block(r, p);
+                this._block(r, this.cols - 1 - p);
+            }
+        }
+
+        // 2. Rasterise wall segments
+        for (const wall of game.walls) {
+            this._rasteriseSegment(wall.x1, wall.y1, wall.x2, wall.y2, PAD);
+        }
+
+        // 3. Block static hazard cells
+        for (const hz of game.hazards) {
+            if (hz instanceof MovingHazard) continue;
+            if (hz instanceof PulsingHazard && !hz.active) continue;
+            this._blockCircle(hz.x, hz.y, hz.radius + ORB_R + 6);
+        }
+
+        // 4. Extra dynamic obstacles (used during replanning)
+        for (const ob of extraBlockedHazards) {
+            this._blockCircle(ob.x, ob.y, ob.radius + ORB_R + 6);
+        }
     }
 
-    // Called by game to kick off the test run
-    start(game, fromLevel = 0, toLevel = 32) {
+    _block(r, c) {
+        if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) this.blocked[r][c] = 1;
+    }
+
+    _blockCircle(wx, wy, radiusPx) {
+        const cr = Math.ceil(radiusPx / this.cs);
+        const cc = this.worldToCell(wx, wy);
+        for (let dr = -cr; dr <= cr; dr++) {
+            for (let dc = -cr; dc <= cr; dc++) {
+                if (dr*dr + dc*dc <= cr*cr + 1) this._block(cc.r + dr, cc.c + dc);
+            }
+        }
+    }
+
+    _rasteriseSegment(x1, y1, x2, y2, pad) {
+        const len   = Math.hypot(x2-x1, y2-y1);
+        const steps = Math.max(1, Math.ceil(len / (this.cs / 2)));
+        for (let i = 0; i <= steps; i++) {
+            const t  = i / steps;
+            const {r, c} = this.worldToCell(x1 + (x2-x1)*t, y1 + (y2-y1)*t);
+            for (let dr = -pad; dr <= pad; dr++)
+                for (let dc = -pad; dc <= pad; dc++)
+                    this._block(r+dr, c+dc);
+        }
+    }
+
+    worldToCell(wx, wy) {
+        return { r: Math.floor(wy / this.cs), c: Math.floor(wx / this.cs) };
+    }
+
+    cellCenter(r, c) {
+        return { x: (c + 0.5) * this.cs, y: (r + 0.5) * this.cs };
+    }
+
+    isWalkable(r, c) {
+        return r >= 0 && r < this.rows && c >= 0 && c < this.cols && !this.blocked[r][c];
+    }
+}
+
+// ── A* solver (8-directional, returns world-space waypoints) ───
+function botAstar(grid, startWX, startWY, goalWX, goalWY) {
+    const {r: sr, c: sc} = grid.worldToCell(startWX, startWY);
+    let {r: gr, c: gc}   = grid.worldToCell(goalWX,  goalWY);
+
+    // If goal is blocked, expand search to nearby walkable cell
+    if (!grid.isWalkable(gr, gc)) {
+        let found = false;
+        outer:
+        for (let d = 1; d <= 3; d++) {
+            for (let dr = -d; dr <= d; dr++) {
+                for (let dc = -d; dc <= d; dc++) {
+                    if (Math.abs(dr)+Math.abs(dc) === d && grid.isWalkable(gr+dr, gc+dc)) {
+                        gr += dr; gc += dc; found = true; break outer;
+                    }
+                }
+            }
+        }
+        if (!found) return null;
+    }
+    if (!grid.isWalkable(sr, sc)) return null;
+
+    const ROWS = grid.rows, COLS = grid.cols;
+    const gCost  = new Float32Array(ROWS * COLS).fill(Infinity);
+    const parent = new Int32Array(ROWS * COLS).fill(-1);
+    const idx    = (r, c) => r * COLS + c;
+    gCost[idx(sr, sc)] = 0;
+
+    const heap = new MinHeap();
+    heap.push({ r: sr, c: sc, f: 0 });
+
+    const DIRS = [
+        [-1,0,1], [1,0,1], [0,-1,1], [0,1,1],
+        [-1,-1,1.414], [-1,1,1.414], [1,-1,1.414], [1,1,1.414]
+    ];
+
+    while (heap.size > 0) {
+        const { r, c } = heap.pop();
+        if (r === gr && c === gc) {
+            const path = [];
+            let nr = r, nc = c;
+            while (nr !== sr || nc !== sc) {
+                path.push(grid.cellCenter(nr, nc));
+                const p = parent[idx(nr, nc)];
+                nr = Math.floor(p / COLS);
+                nc = p % COLS;
+            }
+            path.reverse();
+            return path;
+        }
+        const currG = gCost[idx(r, c)];
+        for (const [dr, dc, cost] of DIRS) {
+            const nr = r+dr, nc = c+dc;
+            if (!grid.isWalkable(nr, nc)) continue;
+            const ng = currG + cost;
+            if (ng < gCost[idx(nr, nc)]) {
+                gCost[idx(nr, nc)]  = ng;
+                parent[idx(nr, nc)] = idx(r, c);
+                heap.push({ r: nr, c: nc, f: ng + Math.hypot(nr-gr, nc-gc) });
+            }
+        }
+    }
+    return null;
+}
+
+// ── Simplify path — remove collinear midpoints ─────────────────
+function botSimplifyPath(pts) {
+    if (pts.length <= 2) return pts;
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i++) {
+        const a = pts[i-1], b = pts[i], c = pts[i+1];
+        if (Math.abs((b.x-a.x)*(c.y-b.y) - (b.y-a.y)*(c.x-b.x)) > 20) out.push(b);
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+}
+
+// ── AutoPlayBot — main controller ──────────────────────────────
+class AutoPlayBot {
+    constructor() {
+        this.isRunning        = false;
+        this.fromLevel        = 0;
+        this.toLevel          = 32;
+        this.currentLevel     = 0;
+        this.results          = [];
+
+        // Per-level timing
+        this.elapsedTime      = 0;
+        this.deathCount       = 0;
+        this.impulseCount     = 0;
+        this.impulseTimer     = 0;
+        this.IMPULSE_INTERVAL = 0.30;
+        this.TIMEOUT          = 30;
+
+        // A* path
+        this.path             = [];
+        this.waypointIndex    = 0;
+        this.WAYPOINT_REACH   = 32;   // px
+        this.pathBuilt        = false;
+
+        // Moving hazard wait/replan
+        this.waitTimer        = 0;
+        this.MAX_WAIT         = 3.5;
+        this.MOVING_CLEAR_R   = 55;
+
+        // Stuck detection
+        this.stuckTimer       = 0;
+        this.stuckEscapeCount = 0;
+        this.lastOrbPos       = { x: 0, y: 0 };
+        this.STUCK_WINDOW     = 2.0;
+        this.STUCK_DIST       = 24;
+    }
+
+    // ─ Public API ───────────────────────────────────────────────
+
+    start(game, fromLevel, toLevel) {
+        fromLevel = fromLevel || 0;
+        toLevel   = (toLevel !== undefined) ? toLevel : 32;
         this.isRunning    = true;
         this.fromLevel    = fromLevel;
         this.toLevel      = toLevel;
         this.currentLevel = fromLevel;
         this.results      = [];
         this._beginLevel(game);
-
-        // Show progress badge
         this._ensureBadge(true);
         this._updateBadge(fromLevel, toLevel);
-        console.log(`[AutoPlayBot] Starting run: levels ${fromLevel}–${toLevel}`);
+        console.log('[AutoPlayBot v2] Starting A* run: L' + fromLevel + ' → L' + toLevel);
     }
 
     stop(game) {
         this.isRunning = false;
         this._ensureBadge(false);
         this.showReport();
+        const btn = document.getElementById('btn-bot-run');
+        if (btn) btn.classList.remove('bot-running');
     }
 
-    // ── per-frame tick, called from game.update() ──
+    // ─ Per-frame tick ────────────────────────────────────────────
+
     tick(dt, game) {
         if (!this.isRunning) return;
-        if (game.gameState === 'DEATH') {
-            // During death animation wait flag — handled by hook in triggerDeath
-            return;
-        }
-        if (game.gameState !== 'PLAYING') return;
+        if (game.gameState === 'DEATH' || game.gameState !== 'PLAYING') return;
 
         this.elapsedTime  += dt;
         this.impulseTimer -= dt;
-        this.stuckTimer   += dt;
 
-        // ── timeout ──
         if (this.elapsedTime >= this.TIMEOUT) {
             this._recordResult('IMPOSSIBLE');
             this._advanceLevel(game);
             return;
         }
 
-        // ── stuck detection ──
-        const orb = game.player;
-        if (!orb) return;
-        const distMoved = Math.hypot(orb.pos.x - this.lastOrbPos.x, orb.pos.y - this.lastOrbPos.y);
-        if (distMoved > this.STUCK_DIST) {
-            this.stuckTimer  = 0;
-            this.lastOrbPos  = { x: orb.pos.x, y: orb.pos.y };
+        const orb    = game.player;
+        const portal = game.portal;
+        if (!orb || !portal) return;
+
+        // Build A* path once per level load
+        if (!this.pathBuilt) {
+            this._buildPath(game, []);
+            return;
         }
 
-        // ── fire impulse ──
+        // Stuck detection
+        const moved = Math.hypot(orb.pos.x - this.lastOrbPos.x, orb.pos.y - this.lastOrbPos.y);
+        if (moved > this.STUCK_DIST) {
+            this.stuckTimer       = 0;
+            this.stuckEscapeCount = 0;
+            this.lastOrbPos       = { x: orb.pos.x, y: orb.pos.y };
+        } else {
+            this.stuckTimer += dt;
+        }
+
+        // All waypoints consumed — final direct approach
+        if (this.waypointIndex >= this.path.length) {
+            if (this.impulseTimer <= 0) {
+                this._fireAt(orb, portal.x, portal.y, game);
+                this.impulseTimer = this.IMPULSE_INTERVAL;
+            }
+            return;
+        }
+
+        const wp = this.path[this.waypointIndex];
+
+        // Moving hazard proximity check
+        let blocked = false;
+        for (const hz of game.hazards) {
+            if (!(hz instanceof MovingHazard)) continue;
+            if (Math.hypot(hz.x - wp.x, hz.y - wp.y) < this.MOVING_CLEAR_R + hz.radius) {
+                blocked = true; break;
+            }
+        }
+
+        if (blocked) {
+            this.waitTimer += dt;
+            if (this.waitTimer < this.MAX_WAIT) return;  // hold — wait for hazard to pass
+            // Replan with current moving hazard positions baked in as obstacles
+            const extras = game.hazards
+                .filter(h => h instanceof MovingHazard)
+                .map(h => ({ x: h.x, y: h.y, radius: h.radius }));
+            this._buildPath(game, extras);
+            this.waitTimer = 0;
+            return;
+        }
+        this.waitTimer = 0;
+
+        // Advance waypoint when reached
+        if (Math.hypot(orb.pos.x - wp.x, orb.pos.y - wp.y) < this.WAYPOINT_REACH) {
+            this.waypointIndex++;
+            return;
+        }
+
+        // Fire impulse toward current waypoint
         if (this.impulseTimer <= 0) {
-            const target = this._chooseTarget(game);
-            orb.applyImpulse(target.x, target.y, game);
-            this.impulseCount++;
+            this._fireAt(orb, wp.x, wp.y, game);
             this.impulseTimer = this.IMPULSE_INTERVAL;
 
-            // If stuck for too long, shoot upward to escape
+            // Stuck escape
             if (this.stuckTimer > this.STUCK_WINDOW) {
-                orb.applyImpulse(orb.pos.x, orb.pos.y - 200, game);
+                this.stuckEscapeCount++;
+                const side = this.stuckEscapeCount % 2 === 0 ? 220 : -220;
+                orb.applyImpulse(orb.pos.x + side, orb.pos.y - 120, game);
                 this.stuckTimer = 0;
+                if (this.stuckEscapeCount % 3 === 0) this._buildPath(game, []);
             }
         }
     }
 
-    // Called by game.triggerDeath() when bot is running
+    // ─ Game event hooks ──────────────────────────────────────────
+
     onDeath(game) {
         if (!this.isRunning) return;
         this.deathCount++;
-        // Instantly reload level without the 750ms animation wait
         game.loadLevel(game.currentLevelIndex);
         game.switchState('PLAYING');
+        this.pathBuilt     = false;
+        this.waypointIndex = 0;
+        this.path          = [];
+        this.impulseTimer  = 0.3;
+        this.stuckTimer    = 0;
     }
 
-    // Called by game.triggerAbsorption() when bot is running
     onVictory(game) {
         if (!this.isRunning) return;
-        const rating = this._rateLevel();
-        this._recordResult(rating);
+        this._recordResult(this._rateLevel());
         this._advanceLevel(game);
     }
 
-    // ── private helpers ──
+    // ─ Private helpers ───────────────────────────────────────────
+
+    _fireAt(orb, tx, ty, game) {
+        orb.applyImpulse(tx, ty, game);
+        this.impulseCount++;
+    }
+
+    _buildPath(game, extras) {
+        const orb    = game.player;
+        const portal = game.portal;
+        if (!orb || !portal) { this.pathBuilt = true; return; }
+
+        const t0   = performance.now();
+        const grid = new BotGrid(game, extras);
+        const raw  = botAstar(grid, orb.pos.x, orb.pos.y, portal.x, portal.y);
+        const ms   = (performance.now() - t0).toFixed(2);
+
+        if (!raw) {
+            console.warn('[AutoPlayBot v2] L' + this._displayId(this.currentLevel) + ': NO PATH — UNSOLVABLE (' + ms + 'ms)');
+            this._recordResult('UNSOLVABLE');
+            this._advanceLevel(game);
+            return;
+        }
+
+        this.path          = botSimplifyPath(raw);
+        this.waypointIndex = 0;
+        this.pathBuilt     = true;
+        console.log('[AutoPlayBot v2] L' + this._displayId(this.currentLevel) + ': ' + this.path.length + ' waypoints (' + ms + 'ms)');
+    }
 
     _beginLevel(game) {
-        this.elapsedTime  = 0;
-        this.deathCount   = 0;
-        this.impulseCount = 0;
-        this.impulseTimer = 0.2;  // tiny delay before first impulse
-        this.stuckTimer   = 0;
-        this._levelStarted = true;
-
+        this.elapsedTime      = 0;
+        this.deathCount       = 0;
+        this.impulseCount     = 0;
+        this.impulseTimer     = 0.4;
+        this.stuckTimer       = 0;
+        this.stuckEscapeCount = 0;
+        this.waitTimer        = 0;
+        this.path             = [];
+        this.waypointIndex    = 0;
+        this.pathBuilt        = false;
+        this.lastOrbPos       = { x: 0, y: 0 };
         game.startGameAtLevel(this.currentLevel);
         this._updateBadge(this.currentLevel, this.toLevel);
-        console.log(`[AutoPlayBot] Testing level index ${this.currentLevel}`);
+        console.log('[AutoPlayBot v2] Testing level index ' + this.currentLevel);
     }
 
     _advanceLevel(game) {
-        if (this.currentLevel >= this.toLevel) {
-            this.stop(game);
-            return;
-        }
+        if (this.currentLevel >= this.toLevel) { this.stop(game); return; }
         this.currentLevel++;
         this._beginLevel(game);
     }
 
     _recordResult(rating) {
-        const info = { // safe read – game instance not needed here
+        const failed = rating === 'IMPOSSIBLE' || rating === 'UNSOLVABLE';
+        const info = {
             levelIndex: this.currentLevel,
             displayId:  this._displayId(this.currentLevel),
             time:       parseFloat(this.elapsedTime.toFixed(2)),
             deaths:     this.deathCount,
             impulses:   this.impulseCount,
-            status:     rating === 'IMPOSSIBLE' ? 'FAILED' : 'PASSED',
+            waypoints:  this.path.length,
+            status:     failed ? 'FAILED' : 'PASSED',
             rating
         };
         this.results.push(info);
-        console.log(`[AutoPlayBot] L${info.displayId} → ${info.status} | ${info.time}s | deaths:${info.deaths} | ${info.rating}`);
+        console.log('[AutoPlayBot v2] L' + info.displayId + ' → ' + info.status + ' | ' + info.time + 's | deaths:' + info.deaths + ' | ' + info.rating);
     }
 
     _rateLevel() {
-        const t = this.elapsedTime;
-        const d = this.deathCount;
-        if (t < 8  && d === 0) return 'EASY';
-        if (t < 15 && d <= 2)  return 'MEDIUM';
-        if (t < 25 && d <= 5)  return 'HARD';
+        const t = this.elapsedTime, d = this.deathCount;
+        if (t <  8 && d === 0) return 'EASY';
+        if (t < 15 && d <=  2) return 'MEDIUM';
+        if (t < 25 && d <=  5) return 'HARD';
         return 'EXPERT';
     }
 
-    _displayId(levelIndex) {
-        if (levelIndex < 3) return `T${levelIndex + 1}`;
-        return `${levelIndex - 2}`;
+    _displayId(idx) {
+        return idx < 3 ? 'T' + (idx + 1) : '' + (idx - 2);
     }
 
-    // Heuristic target selection with basic hazard avoidance
-    _chooseTarget(game) {
-        const orb    = game.player;
-        const portal = game.portal;
-        if (!orb || !portal) return { x: game.width / 2, y: game.height * 0.2 };
-
-        let tx = portal.x;
-        let ty = portal.y;
-
-        // Check if any hazard is within 90px along the direct path — if so, deflect ±90°
-        const dx = tx - orb.pos.x;
-        const dy = ty - orb.pos.y;
-        const dist = Math.hypot(dx, dy) || 1;
-        const nx = dx / dist;
-        const ny = dy / dist;
-
-        const HAZARD_RADIUS = 90;
-        let deflect = 0;
-        for (const hz of game.hazards) {
-            const hx = (hz.x !== undefined ? hz.x : hz.pos?.x) ?? hz.cx ?? 0;
-            const hy = (hz.y !== undefined ? hz.y : hz.pos?.y) ?? hz.cy ?? 0;
-            // Project hazard onto direct path
-            const ax = hx - orb.pos.x;
-            const ay = hy - orb.pos.y;
-            const proj = ax * nx + ay * ny;
-            if (proj < 0 || proj > dist) continue; // behind or past portal
-            const perp = Math.abs(ax * ny - ay * nx); // perpendicular distance to path
-            if (perp < HAZARD_RADIUS) {
-                // Cross product sign tells us which side the hazard is on
-                deflect = (ax * ny - ay * nx) > 0 ? -1 : 1;
-                break;
-            }
-        }
-
-        if (deflect !== 0) {
-            // Rotate 70° away from hazard
-            const angle = deflect * (Math.PI * 0.4);
-            const cos   = Math.cos(angle);
-            const sin   = Math.sin(angle);
-            const rdx   = nx * cos - ny * sin;
-            const rdy   = nx * sin + ny * cos;
-            const LOOK  = 160; // project 160px ahead
-            tx = orb.pos.x + rdx * LOOK;
-            ty = orb.pos.y + rdy * LOOK;
-        }
-
-        return { x: tx, y: ty };
-    }
-
-    // ── DOM helpers ──
+    // ─ DOM helpers ───────────────────────────────────────────────
 
     _ensureBadge(show) {
-        let badge = document.getElementById('bot-progress-badge');
-        if (show && !badge) {
-            badge = document.createElement('div');
-            badge.id = 'bot-progress-badge';
-            document.body.appendChild(badge);
+        let b = document.getElementById('bot-progress-badge');
+        if (show && !b) {
+            b = document.createElement('div');
+            b.id = 'bot-progress-badge';
+            document.body.appendChild(b);
         }
-        if (badge) badge.style.display = show ? 'flex' : 'none';
+        if (b) b.style.display = show ? 'flex' : 'none';
     }
 
     _updateBadge(lvl, total) {
-        const badge = document.getElementById('bot-progress-badge');
-        if (!badge) return;
-        badge.textContent = `🤖 Testing L${this._displayId(lvl)} / L${this._displayId(total)}`;
+        const b = document.getElementById('bot-progress-badge');
+        if (b) b.textContent = '🤖 Testing L' + this._displayId(lvl) + ' / L' + this._displayId(total);
     }
 
     showReport() {
-        // Remove old panel if exists
         const old = document.getElementById('bot-report-panel');
         if (old) old.remove();
 
-        const ratingColor = { EASY: '#00ff88', MEDIUM: '#ffe600', HARD: '#ff9900', EXPERT: '#ff007f', IMPOSSIBLE: '#ff2a2a' };
-        const statusIcon  = { PASSED: '✅', FAILED: '❌' };
+        const COLOR = { EASY:'#00ff88', MEDIUM:'#ffe600', HARD:'#ff9900', EXPERT:'#ff007f', IMPOSSIBLE:'#ff2a2a', UNSOLVABLE:'#ff2a2a' };
+        const ICON  = { PASSED:'✅', FAILED:'❌' };
 
-        const rows = this.results.map(r => `
+        const counts = {};
+        for (const r of this.results) counts[r.rating] = (counts[r.rating] || 0) + 1;
+
+        const summaryHtml = Object.entries(counts).filter(([,n]) => n > 0)
+            .map(([k,n]) => `<span class="bot-summary-chip bot-chip-${k.toLowerCase()}">${k}: ${n}</span>`)
+            .join('');
+
+        const rows = this.results.map(r => {
+            const uns  = r.rating === 'UNSOLVABLE';
+            const note = uns ? '<span class="bot-unsolvable-note"> — No valid path found</span>' : '';
+            return `
             <tr class="bot-row bot-row-${r.rating.toLowerCase()}">
                 <td class="bot-td bot-td-id">L${r.displayId}</td>
-                <td class="bot-td">${statusIcon[r.status] || '?'} ${r.status}</td>
-                <td class="bot-td">${r.time}s</td>
-                <td class="bot-td">${r.deaths}</td>
-                <td class="bot-td bot-td-rating" style="color:${ratingColor[r.rating] || '#fff'}">${r.rating}</td>
-            </tr>`).join('');
+                <td class="bot-td">${ICON[r.status] || '?'} ${r.status}${note}</td>
+                <td class="bot-td">${uns ? '—' : r.time + 's'}</td>
+                <td class="bot-td">${uns ? '—' : r.deaths}</td>
+                <td class="bot-td bot-td-rating" style="color:${COLOR[r.rating]||'#fff'}">${r.rating}</td>
+            </tr>`;
+        }).join('');
 
         const panel = document.createElement('div');
         panel.id = 'bot-report-panel';
         panel.innerHTML = `
             <div class="bot-report-header">
-                <span>🤖 Auto-Play Report — ${this.results.length} levels tested</span>
+                <span>🤖 A* Auto-Play Report — ${this.results.length} levels</span>
                 <button id="bot-close-btn" aria-label="Close report">✕</button>
             </div>
+            <div class="bot-summary-bar">${summaryHtml}</div>
             <div class="bot-report-scroll">
                 <table class="bot-table">
-                    <thead>
-                        <tr>
-                            <th class="bot-th">Level</th>
-                            <th class="bot-th">Status</th>
-                            <th class="bot-th">Time</th>
-                            <th class="bot-th">Deaths</th>
-                            <th class="bot-th">Difficulty</th>
-                        </tr>
-                    </thead>
+                    <thead><tr>
+                        <th class="bot-th">Level</th><th class="bot-th">Status</th>
+                        <th class="bot-th">Time</th><th class="bot-th">Deaths</th>
+                        <th class="bot-th">Difficulty</th>
+                    </tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             </div>`;
         document.body.appendChild(panel);
-
         document.getElementById('bot-close-btn')?.addEventListener('click', () => panel.remove());
 
-        // Also print to console
         console.table(this.results.map(r => ({
-            Level: `L${r.displayId}`, Status: r.status,
-            Time: `${r.time}s`, Deaths: r.deaths, Difficulty: r.rating
+            Level: 'L' + r.displayId, Status: r.status,
+            Time: r.time + 's', Deaths: r.deaths,
+            Waypoints: r.waypoints, Difficulty: r.rating
         })));
     }
 }
 
 // --- Main Game Orchestrator ---
+
 class EchoBounceGame {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
