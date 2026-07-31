@@ -1194,171 +1194,6 @@ class ExitPortal {
     }
 }
 
-// Per-Level Speed Boost Pad Configs (Level Index 0..32)
-// Defines explicit coordinates, directions, and balanced forces per level
-const LEVEL_BOOST_PADS = {
-    // World 3: Solar Core Boost Pad Placements
-    23: [ // Level 24 (Solar Flare)
-        { x: 0.40, y: 0.50, width: 0.20, height: 0.18, dirX: 0, dirY: -1, force: 650, color: '#FF9900' }
-    ],
-    24: [ // Level 25 (Thermal Launch)
-        { x: 0.05, y: 0.62, width: 0.18, height: 0.12, dirX: 1, dirY: 0, force: 700, color: '#FFE600' }
-    ],
-    25: [ // Level 26 (Dual Thruster Choke)
-        { x: 0.10, y: 0.60, width: 0.18, height: 0.16, dirX: 0, dirY: -1, force: 650, color: '#FF9900' },
-        { x: 0.72, y: 0.60, width: 0.18, height: 0.16, dirX: 0, dirY: -1, force: 650, color: '#FF9900' }
-    ],
-    26: [ // Level 27 (Solar Wave Overdrive)
-        { x: 0.05, y: 0.68, width: 0.20, height: 0.10, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.75, y: 0.50, width: 0.20, height: 0.10, dirX: -1, dirY: 0, force: 750, color: '#FF9900' }
-    ],
-    27: [ // Level 28 (Infernal Chamber Accelerator)
-        { x: 0.10, y: 0.70, width: 0.15, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
-        { x: 0.75, y: 0.70, width: 0.15, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
-        { x: 0.42, y: 0.34, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 750, color: '#FFE600' }
-    ],
-    28: [ // Level 29 (Plasma Vortex)
-        { x: 0.05, y: 0.74, width: 0.18, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.78, y: 0.58, width: 0.18, height: 0.08, dirX: -1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.05, y: 0.42, width: 0.18, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FFE600' }
-    ],
-    29: [ // Level 30 (Magma Chute)
-        { x: 0.42, y: 0.70, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
-        { x: 0.05, y: 0.50, width: 0.15, height: 0.10, dirX: 1, dirY: 0, force: 700, color: '#FFE600' },
-        { x: 0.80, y: 0.50, width: 0.15, height: 0.10, dirX: -1, dirY: 0, force: 700, color: '#FFE600' },
-        { x: 0.42, y: 0.32, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 800, color: '#FF9900' }
-    ],
-    30: [ // Level 31 (Solar Storm Catalyst)
-        { x: 0.05, y: 0.76, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.78, y: 0.62, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.05, y: 0.48, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.78, y: 0.34, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 800, color: '#FFE600' }
-    ],
-    31: [ // Level 32 (Fusion Accelerator)
-        { x: 0.42, y: 0.74, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 750, color: '#FF9900' },
-        { x: 0.05, y: 0.58, width: 0.15, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.80, y: 0.58, width: 0.15, height: 0.08, dirX: -1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.42, y: 0.42, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 850, color: '#FF9900' },
-        { x: 0.42, y: 0.26, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 900, color: '#FFE600' }
-    ],
-    32: [ // Level 33 (Ultimate Core Apex)
-        { x: 0.05, y: 0.78, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 800, color: '#FF9900' },
-        { x: 0.78, y: 0.64, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 800, color: '#FF9900' },
-        { x: 0.05, y: 0.50, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 850, color: '#FFE600' },
-        { x: 0.78, y: 0.36, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 900, color: '#FFE600' },
-        { x: 0.05, y: 0.22, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 950, color: '#FFE600' }
-    ]
-};
-
-// --- World 3: Speed Booster Zone (Directional Acceleration Fields) ---
-class SpeedBoosterZone {
-    constructor(x, y, width, height, dirX = 0, dirY = -1, boostForce = 700, color = '#FF9900') {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        const len = Math.hypot(dirX, dirY) || 1;
-        this.dirX = dirX / len;
-        this.dirY = dirY / len;
-        this.boostForce = boostForce; // Controlled force (~55-60% lower for player control)
-        this.color = color;
-        this.animTimer = Math.random() * 10;
-        this.illumination = 0.45;
-    }
-
-    update(dt, gameInstance) {
-        this.animTimer += dt * 4.0;
-        this.illumination = Math.max(0.35, this.illumination - dt * 0.4);
-
-        for (const wave of gameInstance.echoWaves) {
-            const intensity = wave.getIlluminationAt(this.x + this.width / 2, this.y + this.height / 2);
-            if (intensity > this.illumination) {
-                this.illumination = Math.min(1.0, intensity * 1.5);
-            }
-        }
-
-        const orb = gameInstance.player;
-        if (orb && gameInstance.gameState === 'PLAYING') {
-            const inX = orb.pos.x >= this.x && orb.pos.x <= this.x + this.width;
-            const inY = orb.pos.y >= this.y && orb.pos.y <= this.y + this.height;
-
-            if (inX && inY) {
-                // Apply continuous directional acceleration inside field
-                orb.vel.x += this.dirX * this.boostForce * dt;
-                orb.vel.y += this.dirY * this.boostForce * dt;
-
-                this.illumination = 1.0;
-
-                // Spawn directional speed particles
-                if (Math.random() < 0.65) {
-                    const px = this.x + Math.random() * this.width;
-                    const py = this.y + Math.random() * this.height;
-                    gameInstance.particles.push(new Particle(
-                        px, py,
-                        this.dirX * 220 + (Math.random() - 0.5) * 40,
-                        this.dirY * 220 + (Math.random() - 0.5) * 40,
-                        this.color,
-                        2.5,
-                        0.35
-                    ));
-                }
-            }
-        }
-    }
-
-    draw(ctx) {
-        const baseAlpha = Math.min(1, 0.25 + 0.75 * this.illumination);
-        ctx.save();
-        ctx.globalAlpha = baseAlpha;
-
-        // Glassmorphic field outline & shadow glow
-        ctx.shadowBlur = 10 * this.illumination;
-        ctx.shadowColor = this.color;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2.0;
-
-        let hex = this.color.replace('#', '');
-        let r = parseInt(hex.substring(0, 2), 16) || 255;
-        let g = parseInt(hex.substring(2, 4), 16) || 153;
-        let b = parseInt(hex.substring(4, 6), 16) || 0;
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.15 + 0.15 * this.illumination})`;
-
-        // Rounded booster rectangle
-        const rx = this.x, ry = this.y, rw = this.width, rh = this.height, rad = 8;
-        ctx.beginPath();
-        ctx.moveTo(rx + rad, ry);
-        ctx.lineTo(rx + rw - rad, ry);
-        ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + rad);
-        ctx.lineTo(rx + rw, ry + rh - rad);
-        ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - rad, ry + rh);
-        ctx.lineTo(rx + rad, ry + rh);
-        ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - rad);
-        ctx.lineTo(rx, ry + rad);
-        ctx.quadraticCurveTo(rx, ry, rx + rad, ry);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw animated directional arrows / chevrons inside field
-        ctx.fillStyle = this.color;
-        ctx.shadowBlur = 8;
-        const arrowCount = 3;
-        const spacing = Math.min(rw, rh) / (arrowCount + 1);
-        for (let i = 1; i <= arrowCount; i++) {
-            const offset = (this.animTimer * 20 + i * spacing) % Math.min(rw, rh);
-            const cx = rx + rw / 2 + this.dirX * (offset - Math.min(rw, rh) / 2);
-            const cy = ry + rh / 2 + this.dirY * (offset - Math.min(rw, rh) / 2);
-
-            ctx.beginPath();
-            ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        ctx.restore();
-    }
-}
-
-// --- Player Light Orb ---
 class PlayerOrb {
     constructor(x, y, skinColor = 'cyan') {
         this.pos = new Vector2(x, y);
@@ -1577,7 +1412,6 @@ class EchoBounceGame {
         this.player = null;
         this.walls = [];
         this.hazards = [];
-        this.boosters = [];
         this.portal = null;
         this.echoWaves = [];
         this.particles = [];
@@ -2435,21 +2269,6 @@ class EchoBounceGame {
             this.portal = this.createExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
         }
 
-        // Dynamically instantiate per-level boost pads from LEVEL_BOOST_PADS configuration
-        const levelBoostPads = LEVEL_BOOST_PADS[levelIndex] || [];
-        for (const pad of levelBoostPads) {
-            this.boosters.push(new SpeedBoosterZone(
-                w * pad.x,
-                h * pad.y,
-                w * pad.width,
-                h * pad.height,
-                pad.dirX,
-                pad.dirY,
-                pad.force,
-                pad.color
-            ));
-        }
-
         const skin = this.saveSystem.data.orbSkin || 'cyan';
         const spawnY = floorY - CONFIG.ORB_RADIUS - 2;
         if (this.player) {
@@ -2813,24 +2632,28 @@ class EchoBounceGame {
                       <div class="wpa-sliding-trap wpa-st-1"></div>
                       <div class="wpa-sliding-trap wpa-st-2"></div>`
             },
-            {
+                        {
                 title:  dict.world3Title || 'SOLAR CORE',
                 sub:    dict.world3Sub   || 'WORLD 3 • LEVELS 21–30',
-                badge:  '🔥',
-                color:  'var(--neon-gold)',
+                badge:  '🔒',
+                color:  '#555',
                 startLvl: 24, endLvl: 33, count: 10, maxStars: 30,
-                art: `<div class="wpa-portal"></div>
-                      <div class="wpa-booster-field">
-                        <div class="wpa-booster-arrow">▲</div>
-                        <div class="wpa-booster-arrow">▲</div>
-                        <div class="wpa-booster-arrow">▲</div>
-                      </div>
-                      <div class="wpa-boost-orb"></div>`
+                locked: true,
+                art: `<div class="wpa-portal" style="filter: grayscale(1) opacity(0.5)"></div>`
+            },
+            {
+                title:  'ABYSSAL VOID',
+                sub:    'WORLD 4 • LEVELS 31–40',
+                badge:  '🔒',
+                color:  '#555',
+                startLvl: 34, endLvl: 43, count: 10, maxStars: 30,
+                locked: true,
+                art: `<div class="wpa-portal" style="filter: grayscale(1) opacity(0.5)"></div>`
             }
         ];
 
         let html = '';
-        for (let w = 0; w < 4; w++) {
+        for (let w = 0; w < worldConfigs.length; w++) {
             const cfg = worldConfigs[w];
             let worldStars = 0;
             let clearedCount = 0;
@@ -2847,13 +2670,13 @@ class EchoBounceGame {
                     <div class="world-card-top-row">
                         <div class="world-badge-group">
                             <span class="world-badge">${cfg.badge}</span>
-                            <span class="world-card-sub">${cfg.sub}</span>
+                            <span class="world-card-sub">${cfg.locked ? 'COMING SOON' : cfg.sub}</span>
                         </div>
-                        <div class="world-progress-badge${allClear ? ' all-clear' : ''}">
+                        ${!cfg.locked ? `<div class="world-progress-badge${allClear ? ' all-clear' : ''}">
                             ⭐ ${worldStars}/${cfg.maxStars}
-                        </div>
+                        </div>` : ''}
                     </div>
-                    <h3 class="world-card-title" style="color:${cfg.color}">${cfg.title}</h3>
+                    <h3 class="world-card-title" style="color:${cfg.color}">${cfg.locked ? 'COMING SOON' : cfg.title}</h3>
                 </div>
             </div>`;
         }
@@ -2864,7 +2687,7 @@ class EchoBounceGame {
         const dotsEl = document.getElementById('carousel-dots');
         if (dotsEl) {
             let dotsHtml = '';
-            for (let w = 0; w < 4; w++) {
+            for (let w = 0; w < worldConfigs.length; w++) {
                 dotsHtml += `<span class="dot${w === 0 ? ' active' : ''}" data-world="${w}"></span>`;
             }
             dotsEl.innerHTML = dotsHtml;
@@ -3216,6 +3039,7 @@ class EchoBounceGame {
     }
 
     _openWorldExpanded(worldNum) {
+        if (worldNum >= 3) return; // Locked worlds
         const overlay = document.getElementById('world-expanded-overlay');
         const card    = document.getElementById('world-expanded-card');
         if (!overlay || !card) return;
@@ -3525,10 +3349,6 @@ class EchoBounceGame {
             hazard.update(dt, this.echoWaves);
         }
 
-        for (const booster of this.boosters) {
-            booster.update(dt, this);
-        }
-
         if (this.portal) {
             this.portal.update(dt, this.echoWaves);
         }
@@ -3578,9 +3398,7 @@ class EchoBounceGame {
             wall.draw(this.ctx, this);
         }
 
-        for (const booster of this.boosters) {
-            booster.draw(this.ctx);
-        }
+        
 
         for (const hazard of this.hazards) {
             hazard.draw(this.ctx);
