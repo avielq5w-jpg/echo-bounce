@@ -1822,6 +1822,38 @@ class EchoBounceGame {
         ];
     }
 
+    // --- Geometry Helpers ---
+    addBox(cx, cy, width, height, color) {
+        const hw = width / 2;
+        const hh = height / 2;
+        this.walls.push(new Wall(cx - hw, cy - hh, cx + hw, cy - hh, color)); // Top
+        this.walls.push(new Wall(cx + hw, cy - hh, cx + hw, cy + hh, color)); // Right
+        this.walls.push(new Wall(cx + hw, cy + hh, cx - hw, cy + hh, color)); // Bottom
+        this.walls.push(new Wall(cx - hw, cy + hh, cx - hw, cy - hh, color)); // Left
+    }
+
+    addFunnel(x, y, widthTop, widthBottom, height, color) {
+        const hwT = widthTop / 2;
+        const hwB = widthBottom / 2;
+        // Left funnel wall
+        this.walls.push(new Wall(x - hwT, y, x - hwB, y + height, color));
+        // Right funnel wall
+        this.walls.push(new Wall(x + hwT, y, x + hwB, y + height, color));
+    }
+
+    addZigZag(x, y, width, height, segments, color) {
+        let curX = x - width / 2;
+        let curY = y;
+        const segH = height / segments;
+        for (let i = 0; i < segments; i++) {
+            const nextX = (i % 2 === 0) ? x + width / 2 : x - width / 2;
+            const nextY = curY + segH;
+            this.walls.push(new Wall(curX, curY, nextX, nextY, color));
+            curX = nextX;
+            curY = nextY;
+        }
+    }
+
     startGameAtLevel(levelIndex) {
         // Always coerce to integer — a string index causes all `=== N` checks
         // in loadLevel to silently fall through to the else (Level 15) branch.
@@ -1862,8 +1894,10 @@ class EchoBounceGame {
         // --- WORLD 0: TRAINING GROUND (Levels 1 to 3 - LevelIndex 0..2) ---
         if (levelIndex === 0) {
             // Level 1: Basic Movement Physics (0 hazards, Faint Blueprint Mode)
-            this.walls.push(new Wall(w * 0.25, h * 0.65, w, h * 0.65, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.75, h * 0.42, wallColor));
+            // Introduce a funnel shape forcing the ball to the center
+            this.addFunnel(w * 0.5, h * 0.5, w * 0.8, w * 0.3, h * 0.25, wallColor);
+            this.walls.push(new Wall(0, h * 0.45, w * 0.25, h * 0.45, wallColor));
+            this.walls.push(new Wall(w * 0.75, h * 0.45, w, h * 0.45, wallColor));
             this.portal = this.createExitPortal(w * 0.5, h * 0.15, 24, portalBase, portalAccent);
 
         } else if (levelIndex === 1) {
@@ -1883,31 +1917,34 @@ class EchoBounceGame {
 
         // --- WORLD 1: CYBER NEON (Levels 4 to 13 - LevelIndex 3..12 - 10 LEVELS) ---
         } else if (levelIndex === 3) {
-            // Level 4: Dual Spike Intro
-            this.walls.push(new Wall(0, h * 0.78, w * 0.60, h * 0.78, wallColor));
-            this.walls.push(new Wall(w * 0.40, h * 0.62, w, h * 0.62, wallColor));
-            this.walls.push(new Wall(0, h * 0.46, w * 0.65, h * 0.46, wallColor));
-            this.walls.push(new Wall(w * 0.35, h * 0.30, w, h * 0.30, wallColor));
-            this.hazards.push(new Hazard(w * 0.75, h * 0.78 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.25, h * 0.62 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.20, h * 0.12, 20, portalBase, portalAccent);
+            // Level 4: Vertical Ricochet Chute (Cyber Neon 1)
+            this.walls.push(new Wall(0, h * 0.8, w * 0.35, h * 0.8, wallColor));
+            this.walls.push(new Wall(w * 0.65, h * 0.8, w, h * 0.8, wallColor));
+            this.walls.push(new Wall(w * 0.35, h * 0.8, w * 0.35, h * 0.3, wallColor)); // Left chute wall
+            this.walls.push(new Wall(w * 0.65, h * 0.8, w * 0.65, h * 0.3, wallColor)); // Right chute wall
+            this.hazards.push(new Hazard(w * 0.35, h * 0.55, 18, hazardColor)); // Spikes on the chute wall
+            this.hazards.push(new Hazard(w * 0.65, h * 0.40, 18, hazardColor));
+            this.portal = this.createExitPortal(w * 0.50, h * 0.15, 20, portalBase, portalAccent);
 
         } else if (levelIndex === 4) {
-            // Level 5: Triple Threat
-            this.walls.push(new Wall(0, h * 0.80, w * 0.45, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.80, w, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.60, w * 0.75, h * 0.60, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.45, h * 0.42, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.42, w, h * 0.42, wallColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.80 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.60 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.60 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
+            // Level 5: Central CPU Block Puzzle
+            this.walls.push(new Wall(0, h * 0.82, w * 0.3, h * 0.82, wallColor));
+            this.walls.push(new Wall(w * 0.7, h * 0.82, w, h * 0.82, wallColor));
+            // Central block
+            this.addBox(w * 0.5, h * 0.5, w * 0.4, h * 0.25, wallColor);
+            this.hazards.push(new Hazard(w * 0.5, h * 0.625 + 18, 18, hazardColor)); // Below CPU
+            this.hazards.push(new Hazard(w * 0.3, h * 0.5, 18, hazardColor)); // Left side of CPU
+            this.hazards.push(new Hazard(w * 0.7, h * 0.5, 18, hazardColor)); // Right side of CPU
+            this.portal = this.createExitPortal(w * 0.50, h * 0.15, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 5) {
-            // Level 6: Narrow Pass
-            this.walls.push(new Wall(w * 0.30, h * 0.82, w, h * 0.82, wallColor));
-            this.walls.push(new Wall(0, h * 0.68, w * 0.70, h * 0.68, wallColor));
+            // Level 6: Zigzag Precision Setup
+            this.walls.push(new Wall(w * 0.2, h * 0.85, w, h * 0.85, wallColor));
+            this.addZigZag(w * 0.5, h * 0.3, w * 0.6, h * 0.4, 4, wallColor);
+            this.hazards.push(new Hazard(w * 0.2, h * 0.6, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.8, h * 0.5, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.2, h * 0.4, 18, hazardColor));
+            this.portal = this.createExitPortal(w * 0.80, h * 0.12, 18, portalBase, portalAccent);
             this.walls.push(new Wall(w * 0.30, h * 0.54, w, h * 0.54, wallColor));
             this.walls.push(new Wall(0, h * 0.40, w * 0.70, h * 0.40, wallColor));
             this.hazards.push(new Hazard(w * 0.15, h * 0.82 - 18, 18, hazardColor));
