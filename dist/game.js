@@ -1194,171 +1194,6 @@ class ExitPortal {
     }
 }
 
-// Per-Level Speed Boost Pad Configs (Level Index 0..32)
-// Defines explicit coordinates, directions, and balanced forces per level
-const LEVEL_BOOST_PADS = {
-    // World 3: Solar Core Boost Pad Placements
-    23: [ // Level 24 (Solar Flare)
-        { x: 0.40, y: 0.50, width: 0.20, height: 0.18, dirX: 0, dirY: -1, force: 650, color: '#FF9900' }
-    ],
-    24: [ // Level 25 (Thermal Launch)
-        { x: 0.05, y: 0.62, width: 0.18, height: 0.12, dirX: 1, dirY: 0, force: 700, color: '#FFE600' }
-    ],
-    25: [ // Level 26 (Dual Thruster Choke)
-        { x: 0.10, y: 0.60, width: 0.18, height: 0.16, dirX: 0, dirY: -1, force: 650, color: '#FF9900' },
-        { x: 0.72, y: 0.60, width: 0.18, height: 0.16, dirX: 0, dirY: -1, force: 650, color: '#FF9900' }
-    ],
-    26: [ // Level 27 (Solar Wave Overdrive)
-        { x: 0.05, y: 0.68, width: 0.20, height: 0.10, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.75, y: 0.50, width: 0.20, height: 0.10, dirX: -1, dirY: 0, force: 750, color: '#FF9900' }
-    ],
-    27: [ // Level 28 (Infernal Chamber Accelerator)
-        { x: 0.10, y: 0.70, width: 0.15, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
-        { x: 0.75, y: 0.70, width: 0.15, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
-        { x: 0.42, y: 0.34, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 750, color: '#FFE600' }
-    ],
-    28: [ // Level 29 (Plasma Vortex)
-        { x: 0.05, y: 0.74, width: 0.18, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.78, y: 0.58, width: 0.18, height: 0.08, dirX: -1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.05, y: 0.42, width: 0.18, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FFE600' }
-    ],
-    29: [ // Level 30 (Magma Chute)
-        { x: 0.42, y: 0.70, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 700, color: '#FF9900' },
-        { x: 0.05, y: 0.50, width: 0.15, height: 0.10, dirX: 1, dirY: 0, force: 700, color: '#FFE600' },
-        { x: 0.80, y: 0.50, width: 0.15, height: 0.10, dirX: -1, dirY: 0, force: 700, color: '#FFE600' },
-        { x: 0.42, y: 0.32, width: 0.16, height: 0.10, dirX: 0, dirY: -1, force: 800, color: '#FF9900' }
-    ],
-    30: [ // Level 31 (Solar Storm Catalyst)
-        { x: 0.05, y: 0.76, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.78, y: 0.62, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 750, color: '#FF9900' },
-        { x: 0.05, y: 0.48, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.78, y: 0.34, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 800, color: '#FFE600' }
-    ],
-    31: [ // Level 32 (Fusion Accelerator)
-        { x: 0.42, y: 0.74, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 750, color: '#FF9900' },
-        { x: 0.05, y: 0.58, width: 0.15, height: 0.08, dirX: 1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.80, y: 0.58, width: 0.15, height: 0.08, dirX: -1, dirY: 0, force: 750, color: '#FFE600' },
-        { x: 0.42, y: 0.42, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 850, color: '#FF9900' },
-        { x: 0.42, y: 0.26, width: 0.16, height: 0.08, dirX: 0, dirY: -1, force: 900, color: '#FFE600' }
-    ],
-    32: [ // Level 33 (Ultimate Core Apex)
-        { x: 0.05, y: 0.78, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 800, color: '#FF9900' },
-        { x: 0.78, y: 0.64, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 800, color: '#FF9900' },
-        { x: 0.05, y: 0.50, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 850, color: '#FFE600' },
-        { x: 0.78, y: 0.36, width: 0.18, height: 0.07, dirX: -1, dirY: 0, force: 900, color: '#FFE600' },
-        { x: 0.05, y: 0.22, width: 0.18, height: 0.07, dirX: 1, dirY: 0, force: 950, color: '#FFE600' }
-    ]
-};
-
-// --- World 3: Speed Booster Zone (Directional Acceleration Fields) ---
-class SpeedBoosterZone {
-    constructor(x, y, width, height, dirX = 0, dirY = -1, boostForce = 700, color = '#FF9900') {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        const len = Math.hypot(dirX, dirY) || 1;
-        this.dirX = dirX / len;
-        this.dirY = dirY / len;
-        this.boostForce = boostForce; // Controlled force (~55-60% lower for player control)
-        this.color = color;
-        this.animTimer = Math.random() * 10;
-        this.illumination = 0.45;
-    }
-
-    update(dt, gameInstance) {
-        this.animTimer += dt * 4.0;
-        this.illumination = Math.max(0.35, this.illumination - dt * 0.4);
-
-        for (const wave of gameInstance.echoWaves) {
-            const intensity = wave.getIlluminationAt(this.x + this.width / 2, this.y + this.height / 2);
-            if (intensity > this.illumination) {
-                this.illumination = Math.min(1.0, intensity * 1.5);
-            }
-        }
-
-        const orb = gameInstance.player;
-        if (orb && gameInstance.gameState === 'PLAYING') {
-            const inX = orb.pos.x >= this.x && orb.pos.x <= this.x + this.width;
-            const inY = orb.pos.y >= this.y && orb.pos.y <= this.y + this.height;
-
-            if (inX && inY) {
-                // Apply continuous directional acceleration inside field
-                orb.vel.x += this.dirX * this.boostForce * dt;
-                orb.vel.y += this.dirY * this.boostForce * dt;
-
-                this.illumination = 1.0;
-
-                // Spawn directional speed particles
-                if (Math.random() < 0.65) {
-                    const px = this.x + Math.random() * this.width;
-                    const py = this.y + Math.random() * this.height;
-                    gameInstance.particles.push(new Particle(
-                        px, py,
-                        this.dirX * 220 + (Math.random() - 0.5) * 40,
-                        this.dirY * 220 + (Math.random() - 0.5) * 40,
-                        this.color,
-                        2.5,
-                        0.35
-                    ));
-                }
-            }
-        }
-    }
-
-    draw(ctx) {
-        const baseAlpha = Math.min(1, 0.25 + 0.75 * this.illumination);
-        ctx.save();
-        ctx.globalAlpha = baseAlpha;
-
-        // Glassmorphic field outline & shadow glow
-        ctx.shadowBlur = 10 * this.illumination;
-        ctx.shadowColor = this.color;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2.0;
-
-        let hex = this.color.replace('#', '');
-        let r = parseInt(hex.substring(0, 2), 16) || 255;
-        let g = parseInt(hex.substring(2, 4), 16) || 153;
-        let b = parseInt(hex.substring(4, 6), 16) || 0;
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.15 + 0.15 * this.illumination})`;
-
-        // Rounded booster rectangle
-        const rx = this.x, ry = this.y, rw = this.width, rh = this.height, rad = 8;
-        ctx.beginPath();
-        ctx.moveTo(rx + rad, ry);
-        ctx.lineTo(rx + rw - rad, ry);
-        ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + rad);
-        ctx.lineTo(rx + rw, ry + rh - rad);
-        ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - rad, ry + rh);
-        ctx.lineTo(rx + rad, ry + rh);
-        ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - rad);
-        ctx.lineTo(rx, ry + rad);
-        ctx.quadraticCurveTo(rx, ry, rx + rad, ry);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw animated directional arrows / chevrons inside field
-        ctx.fillStyle = this.color;
-        ctx.shadowBlur = 8;
-        const arrowCount = 3;
-        const spacing = Math.min(rw, rh) / (arrowCount + 1);
-        for (let i = 1; i <= arrowCount; i++) {
-            const offset = (this.animTimer * 20 + i * spacing) % Math.min(rw, rh);
-            const cx = rx + rw / 2 + this.dirX * (offset - Math.min(rw, rh) / 2);
-            const cy = ry + rh / 2 + this.dirY * (offset - Math.min(rw, rh) / 2);
-
-            ctx.beginPath();
-            ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        ctx.restore();
-    }
-}
-
-// --- Player Light Orb ---
 class PlayerOrb {
     constructor(x, y, skinColor = 'cyan') {
         this.pos = new Vector2(x, y);
@@ -1572,12 +1407,11 @@ class EchoBounceGame {
 
         this.saveSystem = new SaveSystem();
         this.currentLevelIndex = 0; // 0 to 32 (33 Levels total, 4 Worlds)
-        this.totalLevels = 33;
+        this.totalLevels = 23;
 
         this.player = null;
         this.walls = [];
         this.hazards = [];
-        this.boosters = [];
         this.portal = null;
         this.echoWaves = [];
         this.particles = [];
@@ -1760,7 +1594,12 @@ class EchoBounceGame {
         if (!this.elLevel) return;
         const lang = this.saveSystem.data.language || 'en';
         const prefix = TRANSLATIONS[lang].hudLevelPrefix || 'LVL';
-        this.elLevel.textContent = `${prefix} ${this.currentLevelIndex + 1}/${this.totalLevels}`;
+        if (this.currentLevelIndex < 3) {
+            this.elLevel.textContent = `TUTORIAL ${this.currentLevelIndex + 1}/3`;
+        } else {
+            // First 3 are tutorial, next 20 are Worlds 1 and 2.
+            this.elLevel.textContent = `${prefix} ${this.currentLevelIndex - 2}/20`;
+        }
     }
 
     getBottomFloorY() {
@@ -1988,6 +1827,38 @@ class EchoBounceGame {
         ];
     }
 
+    // --- Geometry Helpers ---
+    addBox(cx, cy, width, height, color) {
+        const hw = width / 2;
+        const hh = height / 2;
+        this.walls.push(new Wall(cx - hw, cy - hh, cx + hw, cy - hh, color)); // Top
+        this.walls.push(new Wall(cx + hw, cy - hh, cx + hw, cy + hh, color)); // Right
+        this.walls.push(new Wall(cx + hw, cy + hh, cx - hw, cy + hh, color)); // Bottom
+        this.walls.push(new Wall(cx - hw, cy + hh, cx - hw, cy - hh, color)); // Left
+    }
+
+    addFunnel(x, y, widthTop, widthBottom, height, color) {
+        const hwT = widthTop / 2;
+        const hwB = widthBottom / 2;
+        // Left funnel wall
+        this.walls.push(new Wall(x - hwT, y, x - hwB, y + height, color));
+        // Right funnel wall
+        this.walls.push(new Wall(x + hwT, y, x + hwB, y + height, color));
+    }
+
+    addZigZag(x, y, width, height, segments, color) {
+        let curX = x - width / 2;
+        let curY = y;
+        const segH = height / segments;
+        for (let i = 0; i < segments; i++) {
+            const nextX = (i % 2 === 0) ? x + width / 2 : x - width / 2;
+            const nextY = curY + segH;
+            this.walls.push(new Wall(curX, curY, nextX, nextY, color));
+            curX = nextX;
+            curY = nextY;
+        }
+    }
+
     startGameAtLevel(levelIndex) {
         // Always coerce to integer — a string index causes all `=== N` checks
         // in loadLevel to silently fall through to the else (Level 15) branch.
@@ -2028,8 +1899,10 @@ class EchoBounceGame {
         // --- WORLD 0: TRAINING GROUND (Levels 1 to 3 - LevelIndex 0..2) ---
         if (levelIndex === 0) {
             // Level 1: Basic Movement Physics (0 hazards, Faint Blueprint Mode)
-            this.walls.push(new Wall(w * 0.25, h * 0.65, w, h * 0.65, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.75, h * 0.42, wallColor));
+            // Introduce a funnel shape forcing the ball to the center
+            this.addFunnel(w * 0.5, h * 0.5, w * 0.8, w * 0.3, h * 0.25, wallColor);
+            this.walls.push(new Wall(0, h * 0.45, w * 0.25, h * 0.45, wallColor));
+            this.walls.push(new Wall(w * 0.75, h * 0.45, w, h * 0.45, wallColor));
             this.portal = this.createExitPortal(w * 0.5, h * 0.15, 24, portalBase, portalAccent);
 
         } else if (levelIndex === 1) {
@@ -2049,134 +1922,118 @@ class EchoBounceGame {
 
         // --- WORLD 1: CYBER NEON (Levels 4 to 13 - LevelIndex 3..12 - 10 LEVELS) ---
         } else if (levelIndex === 3) {
-            // Level 4: Dual Spike Intro
-            this.walls.push(new Wall(0, h * 0.78, w * 0.60, h * 0.78, wallColor));
-            this.walls.push(new Wall(w * 0.40, h * 0.62, w, h * 0.62, wallColor));
-            this.walls.push(new Wall(0, h * 0.46, w * 0.65, h * 0.46, wallColor));
-            this.walls.push(new Wall(w * 0.35, h * 0.30, w, h * 0.30, wallColor));
-            this.hazards.push(new Hazard(w * 0.75, h * 0.78 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.25, h * 0.62 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.20, h * 0.12, 20, portalBase, portalAccent);
+            // Level 4: Vertical Ricochet Chute (Cyber Neon 1)
+            this.walls.push(new Wall(0, h * 0.8, w * 0.35, h * 0.8, wallColor));
+            this.walls.push(new Wall(w * 0.65, h * 0.8, w, h * 0.8, wallColor));
+            this.walls.push(new Wall(w * 0.35, h * 0.8, w * 0.35, h * 0.3, wallColor)); // Left chute wall
+            this.walls.push(new Wall(w * 0.65, h * 0.8, w * 0.65, h * 0.3, wallColor)); // Right chute wall
+            this.hazards.push(new Hazard(w * 0.35, h * 0.55, 18, hazardColor)); // Spikes on the chute wall
+            this.hazards.push(new Hazard(w * 0.65, h * 0.40, 18, hazardColor));
+            this.portal = this.createExitPortal(w * 0.50, h * 0.15, 20, portalBase, portalAccent);
 
         } else if (levelIndex === 4) {
-            // Level 5: Triple Threat
-            this.walls.push(new Wall(0, h * 0.80, w * 0.45, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.80, w, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.60, w * 0.75, h * 0.60, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.45, h * 0.42, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.42, w, h * 0.42, wallColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.80 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.60 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.60 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
+            // Level 5: Central CPU Block Puzzle
+            this.walls.push(new Wall(0, h * 0.82, w * 0.3, h * 0.82, wallColor));
+            this.walls.push(new Wall(w * 0.7, h * 0.82, w, h * 0.82, wallColor));
+            // Central block
+            this.addBox(w * 0.5, h * 0.5, w * 0.4, h * 0.25, wallColor);
+            this.hazards.push(new Hazard(w * 0.5, h * 0.625 + 18, 18, hazardColor)); // Below CPU
+            this.hazards.push(new Hazard(w * 0.3, h * 0.5, 18, hazardColor)); // Left side of CPU
+            this.hazards.push(new Hazard(w * 0.7, h * 0.5, 18, hazardColor)); // Right side of CPU
+            this.portal = this.createExitPortal(w * 0.50, h * 0.15, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 5) {
-            // Level 6: Narrow Pass
-            this.walls.push(new Wall(w * 0.30, h * 0.82, w, h * 0.82, wallColor));
-            this.walls.push(new Wall(0, h * 0.68, w * 0.70, h * 0.68, wallColor));
-            this.walls.push(new Wall(w * 0.30, h * 0.54, w, h * 0.54, wallColor));
-            this.walls.push(new Wall(0, h * 0.40, w * 0.70, h * 0.40, wallColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.82 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.68 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.54 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
+            // Level 6: Zigzag Precision Setup
+            this.walls.push(new Wall(w * 0.2, h * 0.85, w, h * 0.85, wallColor));
+            this.addZigZag(w * 0.5, h * 0.35, w * 0.6, h * 0.45, 4, wallColor);
+            this.hazards.push(new Hazard(w * 0.3, h * 0.6, 18, hazardColor)); // Moved to the right
+            this.hazards.push(new Hazard(w * 0.8, h * 0.5, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.2, h * 0.4, 18, hazardColor));
+            this.portal = this.createExitPortal(w * 0.80, h * 0.12, 18, portalBase, portalAccent);
 
         } else if (levelIndex === 6) {
-            // Level 7: Quad Corridor
-            this.walls.push(new Wall(0, h * 0.82, w * 0.50, h * 0.82, wallColor));
-            this.walls.push(new Wall(w * 0.50, h * 0.68, w, h * 0.68, wallColor));
-            this.walls.push(new Wall(0, h * 0.54, w * 0.50, h * 0.54, wallColor));
-            this.walls.push(new Wall(w * 0.50, h * 0.40, w, h * 0.40, wallColor));
-            this.hazards.push(new Hazard(w * 0.25, h * 0.82 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.75, h * 0.68 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.25, h * 0.54 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.75, h * 0.40 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.20, h * 0.12, 19, portalBase, portalAccent);
+            // Level 7: The Funnel Gate (Redesigned)
+            this.addFunnel(w * 0.5, h * 0.4, w * 0.9, w * 0.3, h * 0.4, wallColor);
+            this.hazards.push(new Hazard(w * 0.25, h * 0.6, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.75, h * 0.6, 18, hazardColor));
+            this.addBox(w * 0.5, h * 0.25, w * 0.2, h * 0.05, wallColor);
+            this.portal = this.createExitPortal(w * 0.50, h * 0.12, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 7) {
-            // Level 8: Funnel Gate
-            this.walls.push(new Wall(0, h * 0.80, w * 0.40, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.60, h * 0.80, w, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.20, h * 0.60, w * 0.80, h * 0.60, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.40, h * 0.42, wallColor));
-            this.walls.push(new Wall(w * 0.60, h * 0.42, w, h * 0.42, wallColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.80 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.30, h * 0.60 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.70, h * 0.60 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.42 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
-
-        } else if (levelIndex === 8) {
-            // Level 9: Zig-Zag Minefield
+            // Level 8: Zig-Zag Minefield
             this.walls.push(new Wall(w * 0.25, h * 0.84, w, h * 0.84, wallColor));
             this.walls.push(new Wall(0, h * 0.70, w * 0.75, h * 0.70, wallColor));
             this.walls.push(new Wall(w * 0.25, h * 0.56, w, h * 0.56, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.75, h * 0.42, wallColor));
+            this.walls.push(new Wall(0, h * 0.42, w * 0.75, h * 0.42, wallColor)); 
             this.hazards.push(new Hazard(w * 0.35, h * 0.84 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.85, h * 0.84 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.15, h * 0.70 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.65, h * 0.70 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.35, h * 0.56 - 18, 18, hazardColor));
+            // New Traps based on user feedback
+            this.hazards.push(new Hazard(w * 0.15, h * 0.42 - 18, 18, hazardColor)); // Below portal
+            this.hazards.push(new Hazard(w * 0.40, h * 0.42 - 18, 18, hazardColor)); // Middle
+            this.hazards.push(new Hazard(w * 0.35, h * 0.12, 18, hazardColor));      // Right of portal
             this.portal = this.createExitPortal(w * 0.15, h * 0.12, 18, portalBase, portalAccent);
 
-        } else if (levelIndex === 9) {
-            // Level 10: Choke Chamber
+        } else if (levelIndex === 8) {
+            // Level 9: Choke Chamber
             this.walls.push(new Wall(0, h * 0.82, w * 0.45, h * 0.82, wallColor));
             this.walls.push(new Wall(w * 0.55, h * 0.82, w, h * 0.82, wallColor));
             this.walls.push(new Wall(w * 0.20, h * 0.64, w * 0.80, h * 0.64, wallColor));
             this.walls.push(new Wall(0, h * 0.46, w * 0.45, h * 0.46, wallColor));
             this.walls.push(new Wall(w * 0.55, h * 0.46, w, h * 0.46, wallColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.82 - 18, 18, hazardColor));
+            // Removed trap blocking the gap at start
             this.hazards.push(new Hazard(w * 0.30, h * 0.64 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.70, h * 0.64 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.15, h * 0.46 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.85, h * 0.46 - 18, 18, hazardColor));
             this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
-        } else if (levelIndex === 10) {
-            // Level 11: Hexa Spike Corridor
+        } else if (levelIndex === 9) {
+            // Level 10: Hexa Spike Corridor -> Redesigned into a zigzag descent!
             this.walls.push(new Wall(0, h * 0.82, w * 0.60, h * 0.82, wallColor));
-            this.walls.push(new Wall(w * 0.40, h * 0.66, w, h * 0.66, wallColor));
-            this.walls.push(new Wall(0, h * 0.50, w * 0.60, h * 0.50, wallColor));
-            this.walls.push(new Wall(w * 0.40, h * 0.34, w, h * 0.34, wallColor));
+            this.addZigZag(w * 0.5, h * 0.40, w * 0.5, h * 0.35, 3, wallColor);
             this.hazards.push(new Hazard(w * 0.15, h * 0.82 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.45, h * 0.82 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.55, h * 0.66 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.66 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.50 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.45, h * 0.50 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.80, h * 0.60 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.20, h * 0.45 - 18, 18, hazardColor));
             this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
 
+        } else if (levelIndex === 10) {
+            // Level 11: Diamond Maze (Redesigned as vertical pinball drop)
+            this.addFunnel(w * 0.5, h * 0.6, w * 0.8, w * 0.2, h * 0.2, wallColor);
+            this.addFunnel(w * 0.5, h * 0.3, w * 0.2, w * 0.8, h * 0.2, wallColor);
+            this.hazards.push(new Hazard(w * 0.5, h * 0.75, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.25, h * 0.45, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.75, h * 0.45, 18, hazardColor));
+            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
+
         } else if (levelIndex === 11) {
-            // Level 12: Diamond Maze
-            this.walls.push(new Wall(0, h * 0.80, w * 0.45, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.80, w, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.62, w * 0.75, h * 0.62, wallColor));
-            this.walls.push(new Wall(0, h * 0.44, w * 0.45, h * 0.44, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.44, w, h * 0.44, wallColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.80 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.35, h * 0.62 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.65, h * 0.62 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.44 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.44 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.44 - 18, 18, hazardColor));
+            // Level 12: Cyber Core (New)
+            this.addBox(w * 0.5, h * 0.5, w * 0.6, h * 0.15, wallColor); 
+            this.walls.push(new Wall(0, h * 0.75, w * 0.3, h * 0.75, wallColor));
+            this.walls.push(new Wall(w * 0.7, h * 0.75, w, h * 0.75, wallColor));
+            this.walls.push(new Wall(w * 0.2, h * 0.25, w * 0.8, h * 0.25, wallColor));
+            this.hazards.push(new Hazard(w * 0.15, h * 0.75 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.85, h * 0.75 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.50, h * 0.65, 18, hazardColor)); 
+            this.hazards.push(new Hazard(w * 0.50, h * 0.35, 18, hazardColor)); 
             this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 12) {
-            // Level 13: World 1 Cyber Apex Master Level
+            // Level 13: Apex Master
             this.walls.push(new Wall(w * 0.30, h * 0.84, w, h * 0.84, wallColor));
-            this.walls.push(new Wall(0, h * 0.70, w * 0.70, h * 0.70, wallColor));
-            this.walls.push(new Wall(w * 0.30, h * 0.56, w, h * 0.56, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.70, h * 0.42, wallColor));
-            this.walls.push(new Wall(w * 0.30, h * 0.28, w, h * 0.28, wallColor));
+            this.walls.push(new Wall(0, h * 0.70, w * 0.60, h * 0.70, wallColor));
+            this.addBox(w * 0.5, h * 0.45, w * 0.3, h * 0.15, wallColor); 
+            this.walls.push(new Wall(w * 0.40, h * 0.25, w, h * 0.25, wallColor));
             this.hazards.push(new Hazard(w * 0.45, h * 0.84 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.85, h * 0.84 - 18, 18, hazardColor));
             this.hazards.push(new Hazard(w * 0.15, h * 0.70 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.55, h * 0.70 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.45, h * 0.56 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.85, h * 0.56 - 18, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.15, h * 0.42 - 18, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
+            this.hazards.push(new Hazard(w * 0.50, h * 0.60, 18, hazardColor)); 
+            this.hazards.push(new Hazard(w * 0.50, h * 0.30, 18, hazardColor)); 
+            this.hazards.push(new Hazard(w * 0.20, h * 0.45, 18, hazardColor)); 
+            this.hazards.push(new Hazard(w * 0.80, h * 0.45, 18, hazardColor)); 
+            this.portal = this.createExitPortal(w * 0.15, h * 0.10, 22, portalBase, portalAccent);
 
         // --- WORLD 2: EMERALD ABYSS (Levels 14 to 23 - LevelIndex 13..22 - 10 LEVELS) ---
         } else if (levelIndex === 13) {
@@ -2302,152 +2159,11 @@ class EchoBounceGame {
             this.hazards.push(new Hazard(w * 0.15, h * 0.28 - 18, 18, hazardColor));
             this.portal = this.createExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
 
-        // --- WORLD 3: SOLAR CORE (Levels 24 to 33 - LevelIndex 23..32 - SPEED BOOSTERS) ---
-        } else if (levelIndex === 23) {
-            // Level 24: Solar Flare (Intro Speed Booster Zone)
-            this.walls.push(new Wall(0, h * 0.72, w * 0.45, h * 0.72, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.72, w, h * 0.72, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.46, w * 0.75, h * 0.46, wallColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.72 - 18, 1.4, 1.4, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.12, 22, portalBase, portalAccent);
-
-        } else if (levelIndex === 24) {
-            // Level 25: Thermal Launch
-            this.walls.push(new Wall(w * 0.25, h * 0.78, w, h * 0.78, wallColor));
-            this.walls.push(new Wall(0, h * 0.56, w * 0.75, h * 0.56, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.34, w, h * 0.34, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.78 - 18, w * 0.85, h * 0.78 - 18, 160, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.20, h * 0.56 - 18, 1.2, 1.2, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.85, h * 0.10, 20, portalBase, portalAccent);
-
-        } else if (levelIndex === 25) {
-            // Level 26: Dual Thruster Choke
-            this.walls.push(new Wall(0, h * 0.80, w * 0.45, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.80, w, h * 0.80, wallColor));
-            this.walls.push(new Wall(w * 0.20, h * 0.54, w * 0.80, h * 0.54, wallColor));
-            this.walls.push(new Wall(0, h * 0.32, w * 0.45, h * 0.32, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.32, w, h * 0.32, wallColor));
-            this.hazards.push(new PulsingHazard(w * 0.30, h * 0.54 - 18, 1.3, 1.3, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.70, h * 0.54 - 18, 1.3, 1.3, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
-
-        } else if (levelIndex === 26) {
-            // Level 27: Solar Wave Overdrive
-            this.walls.push(new Wall(w * 0.30, h * 0.80, w, h * 0.80, wallColor));
-            this.walls.push(new Wall(0, h * 0.62, w * 0.70, h * 0.62, wallColor));
-            this.walls.push(new Wall(w * 0.30, h * 0.44, w, h * 0.44, wallColor));
-            this.walls.push(new Wall(0, h * 0.28, w * 0.70, h * 0.28, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.35, h * 0.80 - 18, w * 0.85, h * 0.80 - 18, 170, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.35, h * 0.62 - 18, 1.2, 1.2, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.44 - 18, 1.0, 1.0, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
-
-        } else if (levelIndex === 27) {
-            // Level 28: Infernal Chamber Accelerator
-            this.walls.push(new Wall(0, h * 0.82, w * 0.45, h * 0.82, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.82, w, h * 0.82, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.64, w * 0.75, h * 0.64, wallColor));
-            this.walls.push(new Wall(0, h * 0.46, w * 0.45, h * 0.46, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.46, w, h * 0.46, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.28, w * 0.75, h * 0.28, wallColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.82 - 18, 1.1, 1.1, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.64 - 18, w * 0.70, h * 0.64 - 18, 200, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.46 - 18, 0.9, 0.9, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 18, portalBase, portalAccent);
-
-        } else if (levelIndex === 28) {
-            // Level 29: Plasma Vortex
-            this.walls.push(new Wall(w * 0.25, h * 0.84, w, h * 0.84, wallColor));
-            this.walls.push(new Wall(0, h * 0.68, w * 0.75, h * 0.68, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.52, w, h * 0.52, wallColor));
-            this.walls.push(new Wall(0, h * 0.36, w * 0.75, h * 0.36, wallColor));
-            this.hazards.push(new PulsingHazard(w * 0.45, h * 0.84 - 18, 1.0, 1.0, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.85, h * 0.84 - 18, 1.0, 1.0, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.15, h * 0.68 - 18, 1.0, 1.0, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.55, h * 0.68 - 18, 1.0, 1.0, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.85, h * 0.10, 18, portalBase, portalAccent);
-
-        } else if (levelIndex === 29) {
-            // Level 30: Magma Chute
-            this.walls.push(new Wall(0, h * 0.82, w * 0.40, h * 0.82, wallColor));
-            this.walls.push(new Wall(w * 0.60, h * 0.82, w, h * 0.82, wallColor));
-            this.walls.push(new Wall(w * 0.20, h * 0.62, w * 0.80, h * 0.62, wallColor));
-            this.walls.push(new Wall(0, h * 0.44, w * 0.40, h * 0.44, wallColor));
-            this.walls.push(new Wall(w * 0.60, h * 0.44, w, h * 0.44, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.25, h * 0.62 - 18, w * 0.75, h * 0.62 - 18, 220, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.44 - 18, w * 0.35, h * 0.44 - 18, 200, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.65, h * 0.44 - 18, w * 0.95, h * 0.44 - 18, 200, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.82 - 18, 0.9, 0.9, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.44 - 18, 0.9, 0.9, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
-
-        } else if (levelIndex === 30) {
-            // Level 31: Solar Storm Catalyst
-            this.walls.push(new Wall(w * 0.25, h * 0.84, w, h * 0.84, wallColor));
-            this.walls.push(new Wall(0, h * 0.70, w * 0.75, h * 0.70, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.56, w, h * 0.56, wallColor));
-            this.walls.push(new Wall(0, h * 0.42, w * 0.75, h * 0.42, wallColor));
-            this.walls.push(new Wall(w * 0.25, h * 0.28, w, h * 0.28, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.84 - 18, w * 0.90, h * 0.84 - 18, 210, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.70 - 18, w * 0.65, h * 0.70 - 18, 230, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.30, h * 0.56 - 18, w * 0.90, h * 0.56 - 18, 250, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.42 - 18, w * 0.65, h * 0.42 - 18, 240, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.45, h * 0.84 - 18, 0.8, 0.8, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.55, h * 0.56 - 18, 0.8, 0.8, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.45, h * 0.28 - 18, 0.8, 0.8, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.15, h * 0.12, 18, portalBase, portalAccent);
-
-        } else if (levelIndex === 31) {
-            // Level 32: Fusion Accelerator
-            this.walls.push(new Wall(0, h * 0.84, w * 0.45, h * 0.84, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.84, w, h * 0.84, wallColor));
-            this.walls.push(new Wall(w * 0.20, h * 0.68, w * 0.80, h * 0.68, wallColor));
-            this.walls.push(new Wall(0, h * 0.52, w * 0.45, h * 0.52, wallColor));
-            this.walls.push(new Wall(w * 0.55, h * 0.52, w, h * 0.52, wallColor));
-            this.walls.push(new Wall(w * 0.20, h * 0.36, w * 0.80, h * 0.36, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.84 - 18, w * 0.40, h * 0.84 - 18, 220, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.60, h * 0.84 - 18, w * 0.95, h * 0.84 - 18, 220, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.25, h * 0.68 - 18, w * 0.75, h * 0.68 - 18, 250, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.52 - 18, w * 0.40, h * 0.52 - 18, 240, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.60, h * 0.52 - 18, w * 0.95, h * 0.52 - 18, 240, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.84 - 18, 0.8, 0.8, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.52 - 18, 0.8, 0.8, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.50, h * 0.36 - 18, 0.8, 0.8, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.50, h * 0.10, 18, portalBase, portalAccent);
-
+        // --- Worlds 3 and 4 levels have been removed. ---
         } else {
-            // Level 33: Ultimate Core Apex Master Level (33/33 Final Boss Level)
-            this.walls.push(new Wall(w * 0.35, h * 0.86, w, h * 0.86, wallColor));
-            this.walls.push(new Wall(0, h * 0.72, w * 0.65, h * 0.72, wallColor));
-            this.walls.push(new Wall(w * 0.35, h * 0.58, w, h * 0.58, wallColor));
-            this.walls.push(new Wall(0, h * 0.44, w * 0.65, h * 0.44, wallColor));
-            this.walls.push(new Wall(w * 0.35, h * 0.30, w, h * 0.30, wallColor));
-            this.hazards.push(new MovingHazard(w * 0.40, h * 0.86 - 18, w * 0.90, h * 0.86 - 18, 220, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.72 - 18, w * 0.60, h * 0.72 - 18, 240, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.40, h * 0.58 - 18, w * 0.90, h * 0.58 - 18, 260, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.44 - 18, w * 0.60, h * 0.44 - 18, 250, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.40, h * 0.30 - 18, w * 0.90, h * 0.30 - 18, 270, 18, hazardColor));
-            this.hazards.push(new MovingHazard(w * 0.05, h * 0.16 - 18, w * 0.60, h * 0.16 - 18, 260, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.15, h * 0.58 - 18, 0.7, 0.7, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.85, h * 0.44 - 18, 0.7, 0.7, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.15, h * 0.30 - 18, 0.7, 0.7, 18, hazardColor));
-            this.hazards.push(new PulsingHazard(w * 0.85, h * 0.16 - 18, 0.7, 0.7, 18, hazardColor));
-            this.portal = this.createExitPortal(w * 0.88, h * 0.10, 18, portalBase, portalAccent);
-        }
-
-        // Dynamically instantiate per-level boost pads from LEVEL_BOOST_PADS configuration
-        const levelBoostPads = LEVEL_BOOST_PADS[levelIndex] || [];
-        for (const pad of levelBoostPads) {
-            this.boosters.push(new SpeedBoosterZone(
-                w * pad.x,
-                h * pad.y,
-                w * pad.width,
-                h * pad.height,
-                pad.dirX,
-                pad.dirY,
-                pad.force,
-                pad.color
-            ));
+            // Fallback for any invalid level index
+            this.walls.push(new Wall(0, h * 0.8, w, h * 0.8, wallColor));
+            this.portal = this.createExitPortal(w * 0.5, h * 0.1, 20, portalBase, portalAccent);
         }
 
         const skin = this.saveSystem.data.orbSkin || 'cyan';
@@ -2654,6 +2370,9 @@ class EchoBounceGame {
         document.getElementById('btn-pause-menu').addEventListener('click', () => {
             this.switchState('MENU');
         });
+        document.getElementById('btn-pause-level-select').addEventListener('click', () => {
+            this.switchState('LEVEL_SELECT');
+        });
 
         // Unlock Web Audio on any user interaction
         document.addEventListener('touchstart', () => Audio.unlock(), { once: true, passive: true });
@@ -2813,24 +2532,28 @@ class EchoBounceGame {
                       <div class="wpa-sliding-trap wpa-st-1"></div>
                       <div class="wpa-sliding-trap wpa-st-2"></div>`
             },
-            {
+                        {
                 title:  dict.world3Title || 'SOLAR CORE',
                 sub:    dict.world3Sub   || 'WORLD 3 • LEVELS 21–30',
-                badge:  '🔥',
-                color:  'var(--neon-gold)',
+                badge:  '🔒',
+                color:  '#555',
                 startLvl: 24, endLvl: 33, count: 10, maxStars: 30,
-                art: `<div class="wpa-portal"></div>
-                      <div class="wpa-booster-field">
-                        <div class="wpa-booster-arrow">▲</div>
-                        <div class="wpa-booster-arrow">▲</div>
-                        <div class="wpa-booster-arrow">▲</div>
-                      </div>
-                      <div class="wpa-boost-orb"></div>`
+                locked: true,
+                art: `<div class="wpa-portal" style="filter: grayscale(1) opacity(0.5)"></div>`
+            },
+            {
+                title:  'ABYSSAL VOID',
+                sub:    'WORLD 4 • LEVELS 31–40',
+                badge:  '🔒',
+                color:  '#555',
+                startLvl: 34, endLvl: 43, count: 10, maxStars: 30,
+                locked: true,
+                art: `<div class="wpa-portal" style="filter: grayscale(1) opacity(0.5)"></div>`
             }
         ];
 
         let html = '';
-        for (let w = 0; w < 4; w++) {
+        for (let w = 0; w < worldConfigs.length; w++) {
             const cfg = worldConfigs[w];
             let worldStars = 0;
             let clearedCount = 0;
@@ -2847,13 +2570,13 @@ class EchoBounceGame {
                     <div class="world-card-top-row">
                         <div class="world-badge-group">
                             <span class="world-badge">${cfg.badge}</span>
-                            <span class="world-card-sub">${cfg.sub}</span>
+                            <span class="world-card-sub">${cfg.locked ? 'COMING SOON' : cfg.sub}</span>
                         </div>
-                        <div class="world-progress-badge${allClear ? ' all-clear' : ''}">
+                        ${!cfg.locked ? `<div class="world-progress-badge${allClear ? ' all-clear' : ''}">
                             ⭐ ${worldStars}/${cfg.maxStars}
-                        </div>
+                        </div>` : ''}
                     </div>
-                    <h3 class="world-card-title" style="color:${cfg.color}">${cfg.title}</h3>
+                    <h3 class="world-card-title" style="color:${cfg.color}">${cfg.locked ? 'COMING SOON' : cfg.title}</h3>
                 </div>
             </div>`;
         }
@@ -2864,7 +2587,7 @@ class EchoBounceGame {
         const dotsEl = document.getElementById('carousel-dots');
         if (dotsEl) {
             let dotsHtml = '';
-            for (let w = 0; w < 4; w++) {
+            for (let w = 0; w < worldConfigs.length; w++) {
                 dotsHtml += `<span class="dot${w === 0 ? ' active' : ''}" data-world="${w}"></span>`;
             }
             dotsEl.innerHTML = dotsHtml;
@@ -3216,6 +2939,7 @@ class EchoBounceGame {
     }
 
     _openWorldExpanded(worldNum) {
+        if (worldNum >= 3) return; // Locked worlds
         const overlay = document.getElementById('world-expanded-overlay');
         const card    = document.getElementById('world-expanded-card');
         if (!overlay || !card) return;
@@ -3525,10 +3249,6 @@ class EchoBounceGame {
             hazard.update(dt, this.echoWaves);
         }
 
-        for (const booster of this.boosters) {
-            booster.update(dt, this);
-        }
-
         if (this.portal) {
             this.portal.update(dt, this.echoWaves);
         }
@@ -3578,9 +3298,7 @@ class EchoBounceGame {
             wall.draw(this.ctx, this);
         }
 
-        for (const booster of this.boosters) {
-            booster.draw(this.ctx);
-        }
+        
 
         for (const hazard of this.hazards) {
             hazard.draw(this.ctx);
