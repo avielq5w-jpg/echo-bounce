@@ -61,6 +61,14 @@ class AudioManager {
             this._tone(f, f * 1.1, 0.14, 'sine', 0.1, i * 0.09)
         );
     }
+    playMilestone() {
+        if (!this._ready || (window.game && window.game.saveSystem.data.sfxEnabled === false)) return;
+        this._tone(440, 880, 0.12, 'sine', 0.11);
+        this._tone(660, 1320, 0.16, 'triangle', 0.08, 0.05);
+        [784, 988, 1175].forEach((f, i) =>
+            this._tone(f, f * 1.05, 0.12, 'sine', 0.09, 0.1 + i * 0.07)
+        );
+    }
 }
 
 const Audio = new AudioManager();
@@ -248,6 +256,8 @@ const TRANSLATIONS = {
         endlessGameOverDesc: "You fell behind the climb.",
         endlessDistance: "Distance",
         endlessBest: "Best",
+        milestoneReached: (m) => `${m}m REACHED!`,
+        milestoneNew: "NEW MILESTONE! 🎉",
         btnRetry: "TRY AGAIN",
         menuTutorial: "HOW TO PLAY",
         levelSelectTitle: "LEVEL SELECT",
@@ -324,6 +334,8 @@ const TRANSLATIONS = {
         endlessGameOverDesc: "נפלת מתחת למסך העולה.",
         endlessDistance: "מרחק",
         endlessBest: "שיא",
+        milestoneReached: (m) => `${m}מ׳ הושגו!`,
+        milestoneNew: "אבן דרך חדשה! 🎉",
         btnRetry: "נסה שוב",
         menuTutorial: "איך משחקים",
         levelSelectTitle: "בחירת שלב",
@@ -392,6 +404,8 @@ const TRANSLATIONS = {
         endlessGameOverDesc: "Caíste por debajo de la subida.",
         endlessDistance: "Distancia",
         endlessBest: "Mejor",
+        milestoneReached: (m) => `¡${m}m ALCANZADOS!`,
+        milestoneNew: "¡NUEVO HITO! 🎉",
         btnRetry: "REINTENTAR",
         menuTutorial: "CÓMO JUGAR",
         levelSelectTitle: "SELECCIÓN DE NIVEL",
@@ -460,6 +474,8 @@ const TRANSLATIONS = {
         endlessGameOverDesc: "Vous êtes tombé sous l'écran.",
         endlessDistance: "Distance",
         endlessBest: "Record",
+        milestoneReached: (m) => `${m}m ATTEINTS !`,
+        milestoneNew: "NOUVEAU PALIER ! 🎉",
         btnRetry: "RÉESSAYER",
         menuTutorial: "COMMENT JOUER",
         levelSelectTitle: "CHOIX DU NIVEAU",
@@ -528,6 +544,8 @@ const TRANSLATIONS = {
         endlessGameOverDesc: "画面の下に落ちました。",
         endlessDistance: "距離",
         endlessBest: "ベスト",
+        milestoneReached: (m) => `${m}m 到達！`,
+        milestoneNew: "マイルストーン！🎉",
         btnRetry: "リトライ",
         menuTutorial: "遊び方",
         levelSelectTitle: "ステージ選択",
@@ -924,7 +942,7 @@ class Vector2 {
 
 // --- Particle System ---
 class Particle {
-    constructor(x, y, vx, vy, color, size, maxLife) {
+    constructor(x, y, vx, vy, color, size, maxLife, opts = null) {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -933,29 +951,91 @@ class Particle {
         this.size = size;
         this.life = maxLife;
         this.maxLife = maxLife;
+        this.gravity = opts && opts.gravity != null ? opts.gravity : 0;
+        this.confetti = !!(opts && opts.confetti);
+        this.angle = Math.random() * Math.PI * 2;
+        this.spin = (Math.random() - 0.5) * 10;
     }
 
     update(dt) {
         this.x += this.vx * dt;
         this.y += this.vy * dt;
-        this.vx *= 0.95;
-        this.vy *= 0.95;
+        this.vy += this.gravity * dt;
+        this.vx *= this.confetti ? 0.985 : 0.95;
+        this.vy *= this.confetti ? 0.99 : 0.95;
+        if (this.confetti) this.angle += this.spin * dt;
         this.life -= dt;
     }
 
     draw(ctx) {
         if (this.life <= 0) return;
         const progress = Math.max(0, this.life / this.maxLife);
-        const radius = Math.max(0, this.size * progress);
-        if (radius <= 0) return;
+        if (progress <= 0) return;
 
         ctx.save();
         ctx.globalAlpha = progress;
         ctx.fillStyle = this.color;
-        // shadowBlur removed: extremely expensive on Android WebView GPUs
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
-        ctx.fill();
+        if (this.confetti) {
+            const w = Math.max(1.2, this.size * (0.7 + progress * 0.6));
+            const h = Math.max(1, this.size * 0.45);
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle);
+            ctx.fillRect(-w * 0.5, -h * 0.5, w, h);
+        } else {
+            const radius = Math.max(0, this.size * progress);
+            if (radius > 0) {
+                // shadowBlur removed: extremely expensive on Android WebView GPUs
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        ctx.restore();
+    }
+}
+
+class FloatingMilestoneText {
+    constructor(main, sub, x, y) {
+        this.main = main;
+        this.sub = sub;
+        this.x = x;
+        this.y = y;
+        this.life = 1.75;
+        this.maxLife = 1.75;
+        this.vy = -55;
+        this.scale = 0.7;
+    }
+
+    update(dt) {
+        this.y += this.vy * dt;
+        this.vy *= 0.96;
+        this.life -= dt;
+        const t = 1 - Math.max(0, this.life / this.maxLife);
+        // Pop in, then settle
+        this.scale = t < 0.15 ? 0.7 + (t / 0.15) * 0.45 : 1.05 - Math.min(0.05, (t - 0.15) * 0.1);
+    }
+
+    draw(ctx) {
+        if (this.life <= 0) return;
+        const t = this.life / this.maxLife;
+        const fade = t > 0.35 ? 1 : t / 0.35;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(this.scale, this.scale);
+        ctx.globalAlpha = fade;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '800 28px "Segoe UI", system-ui, sans-serif';
+        ctx.fillStyle = '#b8ffe0';
+        ctx.shadowColor = 'rgba(0, 255, 136, 0.75)';
+        ctx.shadowBlur = 16;
+        ctx.fillText(this.main, 0, -8);
+        if (this.sub) {
+            ctx.shadowBlur = 10;
+            ctx.font = '700 13px "Segoe UI", system-ui, sans-serif';
+            ctx.fillStyle = '#ffe66a';
+            ctx.fillText(this.sub, 0, 18);
+        }
         ctx.restore();
     }
 }
@@ -1835,6 +1915,10 @@ class EchoBounceGame {
         this.endlessHasMoved = false;
         this.endlessTouchedPlatform = false;
         this._endlessGameOverLatched = false;
+        this.endlessMilestonesHit = new Set();
+        this.milestoneFloaters = [];
+        this.milestoneFlashTimer = 0;
+        this.milestonePulseTimer = 0;
         this.devGodMode = false;
         this.isDevBuild = isDevMode();
 
@@ -2019,6 +2103,81 @@ class EchoBounceGame {
         this.elDistance.textContent = `${Math.floor(this.endlessDistanceM)}m`;
     }
 
+    _endlessMilestonesForDistance(meters) {
+        const d = Math.floor(meters);
+        const list = [];
+        if (d >= 20) list.push(20);
+        for (let m = 50; m <= d; m += 50) list.push(m);
+        return list;
+    }
+
+    _checkEndlessMilestones() {
+        if (!this.isEndless || this.gameState !== 'PLAYING') return;
+        const pending = this._endlessMilestonesForDistance(this.endlessDistanceM)
+            .filter(m => !this.endlessMilestonesHit.has(m));
+        if (pending.length === 0) return;
+        // Mark all crossed; celebrate the highest so jumps don't spam FX
+        for (const m of pending) this.endlessMilestonesHit.add(m);
+        this._triggerEndlessMilestone(pending[pending.length - 1]);
+    }
+
+    _triggerEndlessMilestone(meters) {
+        const lang = this.saveSystem.data.language || 'en';
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+        const main = typeof dict.milestoneReached === 'function'
+            ? dict.milestoneReached(meters)
+            : `${meters}m REACHED!`;
+        const sub = dict.milestoneNew || 'NEW MILESTONE! 🎉';
+
+        this.milestoneFloaters.push(new FloatingMilestoneText(
+            main, sub, this.width * 0.5, this.height * 0.28
+        ));
+
+        this.milestoneFlashTimer = 0.28;
+        this.milestonePulseTimer = 0.55;
+
+        // Confetti / neon burst from the orb
+        const ox = this.player ? this.player.pos.x : this.width * 0.5;
+        const oy = this.player ? this.player.pos.y : this.camera.y;
+        const palette = [
+            CONFIG.COLOR_CYAN, CONFIG.COLOR_GREEN, CONFIG.COLOR_GOLD,
+            CONFIG.COLOR_PINK, CONFIG.COLOR_PURPLE, '#ffffff', '#7cffd4'
+        ];
+        for (let i = 0; i < 42; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 140 + Math.random() * 320;
+            this.particles.push(new Particle(
+                ox, oy,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed - 80,
+                palette[Math.floor(Math.random() * palette.length)],
+                2.2 + Math.random() * 3.2,
+                0.7 + Math.random() * 0.55,
+                { confetti: true, gravity: 420 }
+            ));
+        }
+
+        // Secondary burst along the top of the viewport
+        const viewTop = this.camera.y - (this.height * 0.5) / (this.camera.scale || 1);
+        for (let i = 0; i < 28; i++) {
+            const x = (this.width * 0.08) + Math.random() * this.width * 0.84;
+            const speed = 60 + Math.random() * 180;
+            this.particles.push(new Particle(
+                x, viewTop + 8 + Math.random() * 24,
+                (Math.random() - 0.5) * 160,
+                speed,
+                palette[Math.floor(Math.random() * palette.length)],
+                2 + Math.random() * 2.8,
+                0.85 + Math.random() * 0.5,
+                { confetti: true, gravity: 380 }
+            ));
+        }
+
+        Audio.playMilestone();
+        // Heavy celebratory tick when haptics are enabled
+        haptic([35, 40, 70, 35, 90]);
+    }
+
     _syncDevEndlessOverlay() {
         if (!this.elDevEndlessOverlay) return;
         const show = this.isDevBuild && this.isEndless && this.gameState === 'PLAYING';
@@ -2068,6 +2227,7 @@ class EchoBounceGame {
         }
         this._cullEndlessGeometry();
         this._updateEndlessDistanceHud();
+        this._checkEndlessMilestones();
     }
 
     _toggleDevGodMode() {
@@ -2249,6 +2409,10 @@ class EchoBounceGame {
         this.endlessScrollActive = false;
         this.endlessHasMoved = false;
         this.endlessTouchedPlatform = false;
+        this.endlessMilestonesHit = new Set();
+        this.milestoneFloaters = [];
+        this.milestoneFlashTimer = 0;
+        this.milestonePulseTimer = 0;
         // Frame spawn near lower third; pressure scroll waits for first move + first step
         this.endlessScrollY = floorY - this.height * 0.42;
         this.camera.x = w / 2;
@@ -2354,6 +2518,7 @@ class EchoBounceGame {
         }
 
         this._updateEndlessDistanceHud();
+        this._checkEndlessMilestones();
 
         // Spawn more chunks as the camera approaches the top of generated content
         const viewTop = this.camera.y - (this.height * 0.5) / (this.camera.scale || 1);
@@ -3951,6 +4116,20 @@ class EchoBounceGame {
         if (this.redFlashTimer > 0) {
             this.redFlashTimer = Math.max(0, this.redFlashTimer - dt);
         }
+        if (this.milestoneFlashTimer > 0) {
+            this.milestoneFlashTimer = Math.max(0, this.milestoneFlashTimer - dt);
+        }
+        if (this.milestonePulseTimer > 0) {
+            this.milestonePulseTimer = Math.max(0, this.milestonePulseTimer - dt);
+        }
+        if (this.milestoneFloaters && this.milestoneFloaters.length) {
+            for (let i = this.milestoneFloaters.length - 1; i >= 0; i--) {
+                this.milestoneFloaters[i].update(dt);
+                if (this.milestoneFloaters[i].life <= 0) {
+                    this.milestoneFloaters.splice(i, 1);
+                }
+            }
+        }
 
         if (this.gameState === 'DEATH') {
             this.deathTimer -= dt;
@@ -4215,6 +4394,30 @@ class EchoBounceGame {
             this.ctx.restore();
         }
 
+        // Endless milestone neon flash (screen-space)
+        if (this.milestoneFlashTimer > 0) {
+            this.ctx.save();
+            const t = this.milestoneFlashTimer / 0.28;
+            this.ctx.globalAlpha = Math.min(0.28, t * 0.28);
+            const grad = this.ctx.createRadialGradient(
+                this.width * 0.5, this.height * 0.35, 20,
+                this.width * 0.5, this.height * 0.4, this.height * 0.7
+            );
+            grad.addColorStop(0, 'rgba(0, 255, 170, 0.85)');
+            grad.addColorStop(0.45, 'rgba(0, 243, 255, 0.35)');
+            grad.addColorStop(1, 'transparent');
+            this.ctx.fillStyle = grad;
+            this.ctx.fillRect(0, 0, this.width, this.height);
+            this.ctx.restore();
+        }
+
+        // Floating milestone banners (screen-space, above gameplay)
+        if (this.milestoneFloaters && this.milestoneFloaters.length) {
+            for (let i = 0; i < this.milestoneFloaters.length; i++) {
+                this.milestoneFloaters[i].draw(this.ctx);
+            }
+        }
+
         // Black fade overlay for portal exit (replaces green flash)
         if (this.camera.blackFadeAlpha > 0) {
             this.ctx.save();
@@ -4267,9 +4470,14 @@ class EchoBounceGame {
         const theme = WORLD_THEMES[worldId] || WORLD_THEMES[1];
 
         this.ctx.save();
-        this.ctx.globalAlpha = 0.065;
+        let gridAlpha = 0.065;
+        if (this.milestonePulseTimer > 0) {
+            const pulse = this.milestonePulseTimer / 0.55;
+            gridAlpha = 0.065 + pulse * 0.2;
+        }
+        this.ctx.globalAlpha = gridAlpha;
         this.ctx.strokeStyle = theme.wall;
-        this.ctx.lineWidth = 1;
+        this.ctx.lineWidth = this.milestonePulseTimer > 0 ? 1.35 : 1;
 
         const gridSize = 40;
         const s = this.camera.scale || 1;
