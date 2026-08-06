@@ -53,6 +53,13 @@
             <div id="stat-distance" class="distance-meter hidden" aria-live="polite">0m</div>
         </header>
 
+        <!-- Dev-only Endless camera / god-mode controls (hidden unless isDevMode) -->
+        <div id="dev-endless-overlay" class="dev-endless-overlay hidden" aria-hidden="true">
+            <button type="button" id="dev-cam-up" class="dev-endless-btn" title="Shift camera +50m">▲ +50m</button>
+            <button type="button" id="dev-cam-down" class="dev-endless-btn" title="Shift camera -50m">▼ -50m</button>
+            <button type="button" id="dev-god-mode" class="dev-endless-btn dev-god-btn" title="Ignore trap collisions">God Mode</button>
+        </div>
+
         <!-- Dynamic On-Screen Level Tutorial Hint Banner -->
         <div id="level-hint-banner" class="hint-banner hidden">
             <span id="hint-text">Tap anywhere to bounce. Reach the portal!</span>
@@ -83,17 +90,53 @@
                     <h1 class="hero-title">ECHO<span class="highlight">BOUNCE</span></h1>
                     <p class="hero-subtitle" data-i18n="heroSubtitle">NAVIGATE THE DARKNESS</p>
                 </div>
-                <div class="menu-buttons">
-                    <button id="btn-menu-play" class="btn-menu btn-primary-menu" data-i18n="menuPlay">PLAY GAME</button>
-                    <button id="btn-menu-endless" class="btn-menu btn-endless-style" data-i18n="menuEndless">ENDLESS MODE</button>
-                    <button id="btn-menu-levels" class="btn-menu" data-i18n="menuLevels">LEVEL SELECT</button>
-                    <button id="btn-menu-profile" class="btn-menu" data-i18n="menuProfile">PROFILE &amp; SKINS</button>
-                    <button id="btn-menu-settings" class="btn-menu btn-settings-style">
-                        <svg class="menu-inline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+                <div class="menu-modes">
+                    <button type="button" id="btn-menu-campaign" class="mode-card mode-card-campaign">
+                        <div class="mode-card-text">
+                            <span class="mode-card-title" data-i18n="menuCampaign">CAMPAIGN MODE</span>
+                            <span class="mode-card-sub" data-i18n="menuCampaignSub">Story worlds &amp; levels</span>
+                        </div>
+                        <span class="mode-card-chevron" aria-hidden="true">›</span>
+                    </button>
+
+                    <button type="button" id="btn-menu-endless" class="mode-card mode-card-endless">
+                        <div class="mode-card-text">
+                            <span class="mode-card-title" data-i18n="menuEndless">ENDLESS MODE</span>
+                            <span class="mode-card-sub" data-i18n="menuEndlessSub">Climb until you fall</span>
+                        </div>
+                        <div class="mode-best-badge" aria-live="polite">
+                            <span class="mode-best-label" data-i18n="endlessBest">Best</span>
+                            <span id="menu-endless-best" class="mode-best-value">0m</span>
+                        </div>
+                    </button>
+                </div>
+
+                <button type="button" id="btn-menu-leaderboard" class="btn-menu btn-leaderboard">
+                    <svg class="menu-inline-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M8 21h8"></path>
+                        <path d="M12 17v4"></path>
+                        <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path>
+                        <path d="M17 9a3 3 0 0 0 3-3V4h-3"></path>
+                        <path d="M7 9a3 3 0 0 1-3-3V4h3"></path>
+                    </svg>
+                    <span data-i18n="menuLeaderboard">LEADERBOARD</span>
+                </button>
+
+                <div class="menu-secondary">
+                    <button type="button" id="btn-menu-profile" class="menu-icon-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span data-i18n="menuProfileShort">Profile</span>
+                    </button>
+                    <button type="button" id="btn-menu-settings" class="menu-icon-btn menu-icon-settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
-                        SETTINGS
+                        <span data-i18n="menuSettings">Settings</span>
                     </button>
                 </div>
             </div>

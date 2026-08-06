@@ -96,8 +96,29 @@ const CONFIG = {
     ENDLESS_SCROLL_BASE: 28,       // comfortable start once pressure engages
     ENDLESS_SCROLL_ACCEL: 0.85,    // subtle per-meter increase
     ENDLESS_SCROLL_MAX: 160,
-    ENDLESS_FALL_MARGIN: 28
+    ENDLESS_FALL_MARGIN: 28,
+    // Set false before App Store / Play release — enables Endless camera overlay on device too
+    DEV_TOOLS: true
 };
+
+/** Dev tools: CONFIG.DEV_TOOLS, ?dev=1, localStorage, or local browser. */
+function isDevMode() {
+    try {
+        if (CONFIG.DEV_TOOLS === true) return true;
+        const params = new URLSearchParams(window.location.search || '');
+        const q = params.get('dev');
+        if (q === '1' || q === 'true') return true;
+        if (q === '0' || q === 'false') return false;
+        if (localStorage.getItem('echo_bounce_dev') === '1') return true;
+        const native = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function'
+            && window.Capacitor.isNativePlatform());
+        if (native) return false;
+        const host = window.location.hostname || '';
+        return host === 'localhost' || host === '127.0.0.1' || window.location.protocol === 'file:';
+    } catch (e) {
+        return false;
+    }
+}
 
 // Strict 4-Color Palettes per World
 const WORLD_THEMES = {
@@ -213,9 +234,16 @@ const TRANSLATIONS = {
         langLabel: "🇬🇧 EN",
         heroSubtitle: "NAVIGATE THE DARKNESS",
         menuPlay: "PLAY GAME",
+        menuCampaign: "CAMPAIGN MODE",
+        menuCampaignSub: "Story worlds & levels",
         menuEndless: "ENDLESS MODE",
+        menuEndlessSub: "Climb until you fall",
         menuLevels: "LEVEL SELECT",
+        menuLeaderboard: "LEADERBOARD",
+        leaderboardSoon: "Leaderboard coming soon",
         menuProfile: "PROFILE & SKINS",
+        menuProfileShort: "Profile",
+        menuSettings: "Settings",
         endlessGameOverTitle: "RUN OVER",
         endlessGameOverDesc: "You fell behind the climb.",
         endlessDistance: "Distance",
@@ -282,9 +310,16 @@ const TRANSLATIONS = {
         langLabel: "🇮🇱 HE",
         heroSubtitle: "נווט בחשיכה",
         menuPlay: "התחל למשחק",
+        menuCampaign: "מצב קמפיין",
+        menuCampaignSub: "עולמות ושלבי סיפור",
         menuEndless: "מצב אינסופי",
+        menuEndlessSub: "טפס עד שתיפול",
         menuLevels: "בחירת שלב",
+        menuLeaderboard: "טבלת שיאים",
+        leaderboardSoon: "טבלת השיאים בקרוב",
         menuProfile: "פרופיל וערכות נושא",
+        menuProfileShort: "פרופיל",
+        menuSettings: "הגדרות",
         endlessGameOverTitle: "הריצה הסתיימה",
         endlessGameOverDesc: "נפלת מתחת למסך העולה.",
         endlessDistance: "מרחק",
@@ -343,9 +378,16 @@ const TRANSLATIONS = {
         langLabel: "🇪🇸 ES",
         heroSubtitle: "NAVEGA EN LA OSCURIDAD",
         menuPlay: "JUGAR",
+        menuCampaign: "MODO CAMPAÑA",
+        menuCampaignSub: "Mundos e historia",
         menuEndless: "MODO INFINITO",
+        menuEndlessSub: "Sube hasta caer",
         menuLevels: "NIVELES",
+        menuLeaderboard: "CLASIFICACIÓN",
+        leaderboardSoon: "Clasificación pronto",
         menuProfile: "PERFIL Y SKINS",
+        menuProfileShort: "Perfil",
+        menuSettings: "Ajustes",
         endlessGameOverTitle: "FIN DE LA CARRERA",
         endlessGameOverDesc: "Caíste por debajo de la subida.",
         endlessDistance: "Distancia",
@@ -404,9 +446,16 @@ const TRANSLATIONS = {
         langLabel: "🇫🇷 FR",
         heroSubtitle: "NAVIGUEZ DANS L'OBSCURITÉ",
         menuPlay: "JOUER",
+        menuCampaign: "MODE CAMPAGNE",
+        menuCampaignSub: "Mondes & niveaux",
         menuEndless: "MODE SANS FIN",
+        menuEndlessSub: "Grimpez jusqu'à la chute",
         menuLevels: "NIVEAUX",
+        menuLeaderboard: "CLASSEMENT",
+        leaderboardSoon: "Classement bientôt",
         menuProfile: "PROFIL ET SKINS",
+        menuProfileShort: "Profil",
+        menuSettings: "Réglages",
         endlessGameOverTitle: "COURSE TERMINÉE",
         endlessGameOverDesc: "Vous êtes tombé sous l'écran.",
         endlessDistance: "Distance",
@@ -465,9 +514,16 @@ const TRANSLATIONS = {
         langLabel: "🇯🇵 JA",
         heroSubtitle: "暗闇をナビゲート",
         menuPlay: "プレイ",
+        menuCampaign: "キャンペーン",
+        menuCampaignSub: "ストーリーワールド",
         menuEndless: "エンドレス",
+        menuEndlessSub: "落ちるまで登れ",
         menuLevels: "ステージ選択",
+        menuLeaderboard: "リーダーボード",
+        leaderboardSoon: "リーダーボードは近日公開",
         menuProfile: "プロフィール",
+        menuProfileShort: "プロフィール",
+        menuSettings: "設定",
         endlessGameOverTitle: "ラン終了",
         endlessGameOverDesc: "画面の下に落ちました。",
         endlessDistance: "距離",
@@ -1779,6 +1835,8 @@ class EchoBounceGame {
         this.endlessHasMoved = false;
         this.endlessTouchedPlatform = false;
         this._endlessGameOverLatched = false;
+        this.devGodMode = false;
+        this.isDevBuild = isDevMode();
 
         // DOM Screen Elements
         this.elMenuScreen = document.getElementById('menu-screen');
@@ -1794,6 +1852,10 @@ class EchoBounceGame {
         this.elVictoryModal = document.getElementById('victory-modal');
         this.elHintBanner = document.getElementById('level-hint-banner');
         this.elHintText = document.getElementById('hint-text');
+        this.elDevEndlessOverlay = document.getElementById('dev-endless-overlay');
+        this.btnDevCamUp = document.getElementById('dev-cam-up');
+        this.btnDevCamDown = document.getElementById('dev-cam-down');
+        this.btnDevGodMode = document.getElementById('dev-god-mode');
 
         // i18n — managed via Settings modal pill
         this.btnLangToggle = document.getElementById('btn-lang-toggle'); // null in Phase 13
@@ -1914,10 +1976,19 @@ class EchoBounceGame {
         });
 
         this.updateHudLevelBadge();
+        this._syncMainMenu();
 
         if (this.gameState === 'LEVEL_SELECT') this.renderLevelSelect();
         if (this.gameState === 'PROFILE') this.renderProfile();
         if (this.gameState === 'PLAYING') this.updateOnScreenHint();
+    }
+
+    _syncMainMenu() {
+        const elBest = document.getElementById('menu-endless-best');
+        if (elBest) {
+            const best = Math.floor(this.saveSystem.data.endlessBestDistance || 0);
+            elBest.textContent = `${best}m`;
+        }
     }
 
     updateHudLevelBadge() {
@@ -1946,6 +2017,63 @@ class EchoBounceGame {
     _updateEndlessDistanceHud() {
         if (!this.elDistance || !this.isEndless) return;
         this.elDistance.textContent = `${Math.floor(this.endlessDistanceM)}m`;
+    }
+
+    _syncDevEndlessOverlay() {
+        if (!this.elDevEndlessOverlay) return;
+        const show = this.isDevBuild && this.isEndless && this.gameState === 'PLAYING';
+        this.elDevEndlessOverlay.classList.toggle('hidden', !show);
+        this.elDevEndlessOverlay.setAttribute('aria-hidden', show ? 'false' : 'true');
+        if (this.btnDevGodMode) {
+            this.btnDevGodMode.classList.toggle('active', !!this.devGodMode);
+            this.btnDevGodMode.textContent = this.devGodMode ? 'God Mode ON' : 'God Mode';
+        }
+    }
+
+    /** Instantly shift Endless camera + ball by ±meters for high-altitude chunk testing. */
+    _devShiftEndlessMeters(deltaM) {
+        if (!this.isDevBuild || !this.isEndless || !this.player) return;
+        if (this.gameState !== 'PLAYING') return;
+
+        const px = deltaM * CONFIG.ENDLESS_PX_PER_METER;
+        // World Y decreases upward; +meters ⇒ move up (negative Y)
+        let dy = -px;
+
+        // Clamp so we never drop the orb below the spawn floor line
+        const maxPlayerY = this.endlessSpawnY;
+        if (this.player.pos.y + dy > maxPlayerY) {
+            dy = maxPlayerY - this.player.pos.y;
+        }
+
+        if (Math.abs(dy) < 0.5) return;
+
+        this.player.pos.y += dy;
+        this.player.vel.x = 0;
+        this.player.vel.y = 0;
+        this.camera.y += dy;
+        this.endlessScrollY += dy;
+
+        // Distance tracks test altitude (not lifetime peak) so −50m can step tiers down
+        this.endlessMinPlayerY = this.player.pos.y;
+        this.endlessDistanceM = Math.max(0, (this.endlessSpawnY - this.endlessMinPlayerY) / CONFIG.ENDLESS_PX_PER_METER);
+
+        // Engage pressure so auto-scroll / spawn logic stays active while scouting
+        this.endlessHasMoved = true;
+        this.endlessTouchedPlatform = true;
+        this.endlessScrollActive = true;
+
+        const viewTop = this.camera.y - (this.height * 0.5) / (this.camera.scale || 1);
+        while (this.endlessNextChunkY > viewTop - this.height) {
+            this._spawnEndlessChunk();
+        }
+        this._cullEndlessGeometry();
+        this._updateEndlessDistanceHud();
+    }
+
+    _toggleDevGodMode() {
+        if (!this.isDevBuild || !this.isEndless) return;
+        this.devGodMode = !this.devGodMode;
+        this._syncDevEndlessOverlay();
     }
 
     screenToWorld(sx, sy) {
@@ -2152,11 +2280,13 @@ class EchoBounceGame {
         this.levelStartTime = performance.now();
         this._updateEndlessDistanceHud();
         this.switchState('PLAYING');
+        this._syncDevEndlessOverlay();
         this.echoWaves.push(new EchoWave(w * 0.5, this.endlessSpawnY, 180, 1.1, theme.wall));
     }
 
     triggerEndlessGameOver() {
         if (!this.isEndless || this._endlessGameOverLatched) return;
+        if (this.devGodMode) return;
         if (this.gameState !== 'PLAYING' && this.gameState !== 'PAUSED') return;
         this._endlessGameOverLatched = true;
 
@@ -2233,8 +2363,8 @@ class EchoBounceGame {
 
         this._cullEndlessGeometry();
 
-        // Kill line only after pressure scroll has started
-        if (this.endlessScrollActive) {
+        // Kill line only after pressure scroll has started (skipped in God Mode)
+        if (this.endlessScrollActive && !this.devGodMode) {
             const viewBottom = this.camera.y + (this.height * 0.5) / (this.camera.scale || 1) - CONFIG.ENDLESS_FALL_MARGIN;
             if (this.player.pos.y > viewBottom) {
                 this.triggerEndlessGameOver();
@@ -2329,6 +2459,7 @@ class EchoBounceGame {
         this.elVictoryModal.classList.add('hidden');
         if (this.elHintBanner) this.elHintBanner.classList.add('hidden');
         if (this.elSettingsModal) this.elSettingsModal.classList.add('hidden');
+        if (this.elDevEndlessOverlay) this.elDevEndlessOverlay.classList.add('hidden');
 
         switch (newState) {
             case 'MENU':
@@ -2337,6 +2468,7 @@ class EchoBounceGame {
                 this.elMenuScreen.classList.remove('hidden');
                 this.createAmbientMenuWaves();
                 this._syncPlayHudMode();
+                this._syncMainMenu();
                 break;
 
             case 'LEVEL_SELECT':
@@ -2376,6 +2508,7 @@ class EchoBounceGame {
                 this.elGameHud.classList.remove('hidden');
                 if (!this.isEndless) this.elGameActionBar.classList.remove('hidden');
                 this._syncPlayHudMode();
+                this._syncDevEndlessOverlay();
                 this.updateOnScreenHint();
                 this._firstTapDone = false;
                 break;
@@ -2885,21 +3018,48 @@ class EchoBounceGame {
         }
 
         // Main Menu Buttons
-        document.getElementById('btn-menu-play').addEventListener('click', () => {
-            this.isEndless = false;
-            const resumeIdx = parseInt(this.saveSystem.data.unlockedLevel, 10) - 1;
-            this.startGameAtLevel(resumeIdx);
-        });
+        const btnCampaign = document.getElementById('btn-menu-campaign');
+        if (btnCampaign) {
+            btnCampaign.addEventListener('click', () => {
+                this.isEndless = false;
+                this.switchState('LEVEL_SELECT');
+            });
+        }
         const btnEndless = document.getElementById('btn-menu-endless');
         if (btnEndless) {
             btnEndless.addEventListener('click', () => this.startEndlessMode());
         }
-        document.getElementById('btn-menu-levels').addEventListener('click', () => {
-            this.switchState('LEVEL_SELECT');
-        });
-        document.getElementById('btn-menu-profile').addEventListener('click', () => {
-            this.switchState('PROFILE');
-        });
+        const btnLeaderboard = document.getElementById('btn-menu-leaderboard');
+        if (btnLeaderboard) {
+            btnLeaderboard.addEventListener('click', () => {
+                const lang = this.saveSystem.data.language || 'en';
+                const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+                this._showLockToast(dict.leaderboardSoon || 'Leaderboard coming soon');
+            });
+        }
+
+        // Dev Endless overlay (only wired when isDevMode)
+        if (this.isDevBuild) {
+            const bindDevBtn = (el, fn) => {
+                if (!el) return;
+                el.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fn();
+                });
+            };
+            bindDevBtn(this.btnDevCamUp, () => this._devShiftEndlessMeters(50));
+            bindDevBtn(this.btnDevCamDown, () => this._devShiftEndlessMeters(-50));
+            bindDevBtn(this.btnDevGodMode, () => this._toggleDevGodMode());
+        }
+        const btnProfile = document.getElementById('btn-menu-profile');
+        if (btnProfile) {
+            btnProfile.addEventListener('click', () => this.switchState('PROFILE'));
+        }
 
         // Settings button
         const btnSettings = document.getElementById('btn-menu-settings');
@@ -3496,6 +3656,7 @@ class EchoBounceGame {
 
     triggerDeath() {
         if (this.gameState !== 'PLAYING') return;
+        if (this.devGodMode) return;
         if (this.isEndless) {
             this.triggerEndlessGameOver();
             return;
@@ -3900,10 +4061,12 @@ class EchoBounceGame {
                 }
             }
 
-            for (const hazard of this.hazards) {
-                if (hazard.checkCollision(this.player)) {
-                    this.triggerDeath();
-                    break;
+            if (!this.devGodMode) {
+                for (const hazard of this.hazards) {
+                    if (hazard.checkCollision(this.player)) {
+                        this.triggerDeath();
+                        break;
+                    }
                 }
             }
 
