@@ -90,7 +90,13 @@ const CONFIG = {
     COLOR_GOLD: '#ffe600',
     COLOR_GREEN: '#00ff88',
     COLOR_PURPLE: '#a100ff',
-    COLOR_RED: '#ff2a2a'
+    COLOR_RED: '#ff2a2a',
+    // Endless Mode
+    ENDLESS_PX_PER_METER: 40,
+    ENDLESS_SCROLL_BASE: 40,
+    ENDLESS_SCROLL_ACCEL: 1.8,
+    ENDLESS_SCROLL_MAX: 220,
+    ENDLESS_FALL_MARGIN: 28
 };
 
 // Strict 4-Color Palettes per World
@@ -207,8 +213,14 @@ const TRANSLATIONS = {
         langLabel: "🇬🇧 EN",
         heroSubtitle: "NAVIGATE THE DARKNESS",
         menuPlay: "PLAY GAME",
+        menuEndless: "ENDLESS MODE",
         menuLevels: "LEVEL SELECT",
         menuProfile: "PROFILE & SKINS",
+        endlessGameOverTitle: "RUN OVER",
+        endlessGameOverDesc: "You fell behind the climb.",
+        endlessDistance: "Distance",
+        endlessBest: "Best",
+        btnRetry: "TRY AGAIN",
         menuTutorial: "HOW TO PLAY",
         levelSelectTitle: "LEVEL SELECT",
         levelSelectSub: "Tap world card to view stages",
@@ -270,8 +282,14 @@ const TRANSLATIONS = {
         langLabel: "🇮🇱 HE",
         heroSubtitle: "נווט בחשיכה",
         menuPlay: "התחל למשחק",
+        menuEndless: "מצב אינסופי",
         menuLevels: "בחירת שלב",
         menuProfile: "פרופיל וערכות נושא",
+        endlessGameOverTitle: "הריצה הסתיימה",
+        endlessGameOverDesc: "נפלת מתחת למסך העולה.",
+        endlessDistance: "מרחק",
+        endlessBest: "שיא",
+        btnRetry: "נסה שוב",
         menuTutorial: "איך משחקים",
         levelSelectTitle: "בחירת שלב",
         levelSelectSub: "הקש על כרטיס העולם לצפייה בשלבים",
@@ -325,8 +343,14 @@ const TRANSLATIONS = {
         langLabel: "🇪🇸 ES",
         heroSubtitle: "NAVEGA EN LA OSCURIDAD",
         menuPlay: "JUGAR",
+        menuEndless: "MODO INFINITO",
         menuLevels: "NIVELES",
         menuProfile: "PERFIL Y SKINS",
+        endlessGameOverTitle: "FIN DE LA CARRERA",
+        endlessGameOverDesc: "Caíste por debajo de la subida.",
+        endlessDistance: "Distancia",
+        endlessBest: "Mejor",
+        btnRetry: "REINTENTAR",
         menuTutorial: "CÓMO JUGAR",
         levelSelectTitle: "SELECCIÓN DE NIVEL",
         levelSelectSub: "Toca la tarjeta del mundo para ver etapas",
@@ -380,8 +404,14 @@ const TRANSLATIONS = {
         langLabel: "🇫🇷 FR",
         heroSubtitle: "NAVIGUEZ DANS L'OBSCURITÉ",
         menuPlay: "JOUER",
+        menuEndless: "MODE SANS FIN",
         menuLevels: "NIVEAUX",
         menuProfile: "PROFIL ET SKINS",
+        endlessGameOverTitle: "COURSE TERMINÉE",
+        endlessGameOverDesc: "Vous êtes tombé sous l'écran.",
+        endlessDistance: "Distance",
+        endlessBest: "Record",
+        btnRetry: "RÉESSAYER",
         menuTutorial: "COMMENT JOUER",
         levelSelectTitle: "CHOIX DU NIVEAU",
         levelSelectSub: "Sélectionnez un niveau déverrouillé",
@@ -435,8 +465,14 @@ const TRANSLATIONS = {
         langLabel: "🇯🇵 JA",
         heroSubtitle: "暗闇をナビゲート",
         menuPlay: "プレイ",
+        menuEndless: "エンドレス",
         menuLevels: "ステージ選択",
         menuProfile: "プロフィール",
+        endlessGameOverTitle: "ラン終了",
+        endlessGameOverDesc: "画面の下に落ちました。",
+        endlessDistance: "距離",
+        endlessBest: "ベスト",
+        btnRetry: "リトライ",
         menuTutorial: "遊び方",
         levelSelectTitle: "ステージ選択",
         levelSelectSub: "ワールドカードをタップしてステージを表示",
@@ -505,7 +541,8 @@ class SaveSystem {
             levelsCompleted: 0,
             bestTimes: {},
             stars: {},
-            ghostTrajectories: {}
+            ghostTrajectories: {},
+            endlessBestDistance: 0
         };
         for (let i = 1; i <= 33; i++) {
             this.data.bestTimes[i] = null;
@@ -524,12 +561,24 @@ class SaveSystem {
                     ...parsed,
                     unlockedLevel: 99, // Dev Override: force all worlds unlocked
                     stars: { ...this.data.stars, ...(parsed.stars || {}) },
-                    ghostTrajectories: { ...this.data.ghostTrajectories, ...(parsed.ghostTrajectories || {}) }
+                    ghostTrajectories: { ...this.data.ghostTrajectories, ...(parsed.ghostTrajectories || {}) },
+                    endlessBestDistance: Math.max(0, parsed.endlessBestDistance || 0)
                 };
             }
         } catch (e) {
             console.warn('Could not load saved data from localStorage', e);
         }
+    }
+
+    recordEndlessRun(distanceM) {
+        const dist = Math.max(0, Math.floor(distanceM));
+        const prev = this.data.endlessBestDistance || 0;
+        const isNewBest = dist > prev;
+        if (isNewBest) {
+            this.data.endlessBestDistance = dist;
+            this.save();
+        }
+        return { distance: dist, best: this.data.endlessBestDistance || 0, isNewBest };
     }
 
     save() {
@@ -580,6 +629,211 @@ class SaveSystem {
         return { stars: newStars, isNewBest };
     }
 }
+
+// --- Endless Mode: hand-authored passable chunks (world Y grows upward = decreasing y) ---
+const ENDLESS_CHUNKS = [
+    // --- EASY: wide gaps, few/no traps (0–100m exclusive) ---
+    {
+        id: 'easy_open_center',
+        tier: 'easy',
+        height: 260,
+        build(game, yTop, w, colors) {
+            const y = yTop + 130;
+            const gap = 150;
+            game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
+            game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
+        }
+    },
+    {
+        id: 'easy_left_lane',
+        tier: 'easy',
+        height: 250,
+        build(game, yTop, w, colors) {
+            const y = yTop + 125;
+            game._endlessAddWall(w * 0.42, y, w, y, colors.wall);
+        }
+    },
+    {
+        id: 'easy_right_lane',
+        tier: 'easy',
+        height: 250,
+        build(game, yTop, w, colors) {
+            const y = yTop + 125;
+            game._endlessAddWall(0, y, w * 0.58, y, colors.wall);
+        }
+    },
+    {
+        id: 'easy_soft_steps',
+        tier: 'easy',
+        height: 280,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(0, yTop + 90, w * 0.62, yTop + 90, colors.wall);
+            game._endlessAddWall(w * 0.38, yTop + 200, w, yTop + 200, colors.wall);
+        }
+    },
+    {
+        id: 'easy_wide_shelf',
+        tier: 'easy',
+        height: 240,
+        build(game, yTop, w, colors) {
+            const y = yTop + 120;
+            game._endlessAddWall(0, y, w * 0.28, y, colors.wall);
+            game._endlessAddWall(w * 0.72, y, w, y, colors.wall);
+        }
+    },
+    // --- MEDIUM ---
+    {
+        id: 'center_gap',
+        tier: 'medium',
+        height: 280,
+        build(game, yTop, w, colors) {
+            const y = yTop + 140;
+            const gap = 100;
+            game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
+            game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
+            game._endlessAddHazard(w * 0.2, y - 18, 16, colors.hazard);
+        }
+    },
+    {
+        id: 'left_corridor',
+        tier: 'medium',
+        height: 270,
+        build(game, yTop, w, colors) {
+            const y = yTop + 135;
+            game._endlessAddWall(w * 0.34, y, w, y, colors.wall);
+            game._endlessAddHazard(w * 0.6, y - 18, 16, colors.hazard);
+        }
+    },
+    {
+        id: 'right_corridor',
+        tier: 'medium',
+        height: 270,
+        build(game, yTop, w, colors) {
+            const y = yTop + 135;
+            game._endlessAddWall(0, y, w * 0.66, y, colors.wall);
+            game._endlessAddHazard(w * 0.4, y - 18, 16, colors.hazard);
+        }
+    },
+    {
+        id: 'staggered_shelves',
+        tier: 'medium',
+        height: 300,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(0, yTop + 80, w * 0.55, yTop + 80, colors.wall);
+            game._endlessAddHazard(w * 0.28, yTop + 80 - 18, 15, colors.hazard);
+            game._endlessAddWall(w * 0.45, yTop + 200, w, yTop + 200, colors.wall);
+        }
+    },
+    {
+        id: 'side_windows',
+        tier: 'medium',
+        height: 270,
+        build(game, yTop, w, colors) {
+            const y = yTop + 135;
+            game._endlessAddWall(w * 0.22, y, w * 0.78, y, colors.wall);
+            game._endlessAddHazard(w * 0.5, y - 18, 15, colors.hazard);
+        }
+    },
+    // --- HARD ---
+    {
+        id: 'dual_gates',
+        tier: 'hard',
+        height: 300,
+        build(game, yTop, w, colors) {
+            const y1 = yTop + 100;
+            const y2 = yTop + 210;
+            game._endlessAddWall(0, y1, w * 0.38, y1, colors.wall);
+            game._endlessAddWall(w * 0.62, y1, w, y1, colors.wall);
+            game._endlessAddHazard(w * 0.5, y1 + 40, 16, colors.hazard);
+            game._endlessAddWall(w * 0.22, y2, w, y2, colors.wall);
+            game._endlessAddHazard(w * 0.7, y2 - 18, 16, colors.hazard);
+        }
+    },
+    {
+        id: 'zigzag_ledges',
+        tier: 'hard',
+        height: 320,
+        build(game, yTop, w, colors) {
+            const y1 = yTop + 90;
+            const y2 = yTop + 200;
+            game._endlessAddWall(0, y1, w * 0.58, y1, colors.wall);
+            game._endlessAddHazard(w * 0.35, y1 - 18, 16, colors.hazard);
+            game._endlessAddWall(w * 0.42, y2, w, y2, colors.wall);
+            game._endlessAddHazard(w * 0.7, y2 - 18, 16, colors.hazard);
+        }
+    },
+    {
+        id: 'funnel_ascent',
+        tier: 'hard',
+        height: 290,
+        build(game, yTop, w, colors) {
+            const yMid = yTop + 160;
+            game._endlessAddWall(w * 0.08, yTop + 40, w * 0.38, yMid, colors.wall);
+            game._endlessAddWall(w * 0.92, yTop + 40, w * 0.62, yMid, colors.wall);
+            game._endlessAddWall(0, yMid + 70, w * 0.35, yMid + 70, colors.wall);
+            game._endlessAddWall(w * 0.65, yMid + 70, w, yMid + 70, colors.wall);
+            game._endlessAddHazard(w * 0.5, yMid + 20, 15, colors.hazard);
+        }
+    },
+    {
+        id: 'moving_patrol',
+        tier: 'hard',
+        height: 280,
+        build(game, yTop, w, colors) {
+            const y = yTop + 145;
+            const gap = 100;
+            game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
+            game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
+            game.hazards.push(new MovingHazard(
+                w * 0.12, y - 18,
+                w * 0.5 - gap * 0.5 - 20, y - 18,
+                90, 16, colors.hazard
+            ));
+            game.hazards[game.hazards.length - 1]._endlessCull = true;
+        }
+    },
+    {
+        id: 'offset_steps',
+        tier: 'hard',
+        height: 300,
+        build(game, yTop, w, colors) {
+            const y1 = yTop + 80;
+            const y2 = yTop + 170;
+            const y3 = yTop + 250;
+            game._endlessAddWall(w * 0.25, y1, w, y1, colors.wall);
+            game._endlessAddHazard(w * 0.6, y1 - 18, 15, colors.hazard);
+            game._endlessAddWall(0, y2, w * 0.72, y2, colors.wall);
+            game._endlessAddHazard(w * 0.3, y2 - 18, 15, colors.hazard);
+            game._endlessAddWall(w * 0.28, y3, w, y3, colors.wall);
+        }
+    },
+    {
+        id: 'squeeze_ladder',
+        tier: 'hard',
+        height: 310,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(0, yTop + 70, w * 0.48, yTop + 70, colors.wall);
+            game._endlessAddHazard(w * 0.3, yTop + 70 - 18, 15, colors.hazard);
+            game._endlessAddWall(w * 0.52, yTop + 160, w, yTop + 160, colors.wall);
+            game._endlessAddHazard(w * 0.72, yTop + 160 - 18, 15, colors.hazard);
+            game._endlessAddWall(0, yTop + 250, w * 0.48, yTop + 250, colors.wall);
+            game._endlessAddHazard(w * 0.22, yTop + 250 - 18, 15, colors.hazard);
+        }
+    },
+    {
+        id: 'twin_ledges',
+        tier: 'hard',
+        height: 290,
+        build(game, yTop, w, colors) {
+            const y = yTop + 145;
+            game._endlessAddWall(0, y, w * 0.3, y, colors.wall);
+            game._endlessAddWall(w * 0.7, y, w, y, colors.wall);
+            game._endlessAddHazard(w * 0.15, y - 18, 15, colors.hazard);
+            game._endlessAddHazard(w * 0.85, y - 18, 15, colors.hazard);
+            game._endlessAddWall(w * 0.2, yTop + 240, w * 0.8, yTop + 240, colors.wall);
+        }
+    }
+];
 
 // --- Vector Math Utility ---
 class Vector2 {
@@ -1472,6 +1726,21 @@ class EchoBounceGame {
         this.lastTapTime = 0;
         this.lastTapPos = { x: 0, y: 0 };
 
+        // Endless Mode state
+        this.isEndless = false;
+        this.endlessScrollY = 0;
+        this.endlessScrollSpeed = CONFIG.ENDLESS_SCROLL_BASE;
+        this.endlessSpawnY = 0;
+        this.endlessMinPlayerY = 0;
+        this.endlessDistanceM = 0;
+        this.endlessNextChunkY = 0;
+        this.endlessLastChunkId = null;
+        this.endlessChunks = [];
+        this.endlessColors = null;
+        this.endlessFloorY = 0;
+        this.endlessScrollGrace = 0;
+        this._endlessGameOverLatched = false;
+
         // DOM Screen Elements
         this.elMenuScreen = document.getElementById('menu-screen');
         this.elLevelSelectScreen = document.getElementById('level-select-screen');
@@ -1481,6 +1750,7 @@ class EchoBounceGame {
         this.elGameHud = document.getElementById('game-hud');
         this.elGameActionBar = document.getElementById('game-action-bar');
         this.elPauseModal = document.getElementById('pause-modal');
+        this.elEndlessGameOverModal = document.getElementById('endless-gameover-modal');
         this.elDeathBanner = document.getElementById('death-banner');
         this.elVictoryModal = document.getElementById('victory-modal');
         this.elHintBanner = document.getElementById('level-hint-banner');
@@ -1492,6 +1762,7 @@ class EchoBounceGame {
 
         // HUD Elements
         this.elLevel = document.getElementById('stat-level');
+        this.elDistance = document.getElementById('stat-distance');
         this.btnPulse = document.getElementById('btn-pulse');
         this.elCooldownBar = document.getElementById('pulse-cooldown-bar');
         this.btnReset = document.getElementById('btn-reset');
@@ -1620,6 +1891,234 @@ class EchoBounceGame {
             // First 3 are tutorial, next 20 are Worlds 1 and 2.
             this.elLevel.textContent = `${prefix} ${this.currentLevelIndex - 2}/20`;
         }
+        this._syncPlayHudMode();
+        this._updateEndlessDistanceHud();
+    }
+
+    _syncPlayHudMode() {
+        if (this.elLevel) this.elLevel.classList.toggle('hidden', !!this.isEndless);
+        if (this.elDistance) this.elDistance.classList.toggle('hidden', !this.isEndless);
+        // Endless: keep the screen clear — no radar/retry action bar
+        if (this.elGameActionBar && this.isEndless) {
+            this.elGameActionBar.classList.add('hidden');
+        }
+    }
+
+    _updateEndlessDistanceHud() {
+        if (!this.elDistance || !this.isEndless) return;
+        this.elDistance.textContent = `${Math.floor(this.endlessDistanceM)}m`;
+    }
+
+    screenToWorld(sx, sy) {
+        const s = this.camera.scale || 1;
+        return {
+            x: this.camera.x + (sx - this.width / 2) / s,
+            y: this.camera.y + (sy - this.height / 2) / s
+        };
+    }
+
+    _endlessAddWall(x1, y1, x2, y2, color) {
+        const wall = new Wall(x1, y1, x2, y2, color);
+        wall._endlessCull = true;
+        this.walls.push(wall);
+        return wall;
+    }
+
+    _endlessAddHazard(x, y, r, color) {
+        const h = new Hazard(x, y, r, color);
+        h._endlessCull = true;
+        this.hazards.push(h);
+        return h;
+    }
+
+    _refreshEndlessSideWalls() {
+        this.walls = this.walls.filter(w => !w._endlessSide);
+        const w = this.width;
+        const color = (this.endlessColors && this.endlessColors.wall) || this.getWallColor();
+        const yTop = this.endlessNextChunkY - this.height;
+        const yBot = this.endlessFloorY + this.height;
+        const left = new Wall(0, yTop, 0, yBot, color);
+        const right = new Wall(w, yTop, w, yBot, color);
+        left._endlessSide = true;
+        right._endlessSide = true;
+        this.walls.push(left, right);
+    }
+
+    _getEndlessChunkPool() {
+        const d = this.endlessDistanceM || 0;
+        let tiers;
+        if (d < 100) tiers = ['easy'];
+        else if (d < 200) tiers = ['easy', 'medium'];
+        else if (d < 320) tiers = ['medium', 'hard'];
+        else tiers = ['medium', 'hard'];
+
+        let pool = ENDLESS_CHUNKS.filter(c => tiers.includes(c.tier) && c.id !== this.endlessLastChunkId);
+        if (pool.length === 0) {
+            pool = ENDLESS_CHUNKS.filter(c => tiers.includes(c.tier));
+        }
+        if (pool.length === 0) pool = ENDLESS_CHUNKS.slice();
+        return pool;
+    }
+
+    _spawnEndlessChunk() {
+        const pool = this._getEndlessChunkPool();
+        const chunk = pool[Math.floor(Math.random() * pool.length)] || ENDLESS_CHUNKS[0];
+        const yTop = this.endlessNextChunkY - chunk.height;
+        chunk.build(this, yTop, this.width, this.endlessColors);
+        this.endlessChunks.push({ id: chunk.id, tier: chunk.tier, yTop, yBottom: this.endlessNextChunkY });
+        this.endlessLastChunkId = chunk.id;
+        this.endlessNextChunkY = yTop;
+        this._refreshEndlessSideWalls();
+    }
+
+    _cullEndlessGeometry() {
+        // Drop geometry fully below the bottom of the moving viewport
+        const cullLine = this.camera.y + (this.height * 0.5) / (this.camera.scale || 1) + 80;
+        this.walls = this.walls.filter(wall => {
+            if (wall._endlessSide || wall._endlessFloor) return true;
+            if (!wall._endlessCull) return true;
+            const minY = Math.min(wall.y1, wall.y2);
+            return minY < cullLine;
+        });
+        this.hazards = this.hazards.filter(h => {
+            if (!h._endlessCull) return true;
+            return h.y < cullLine;
+        });
+        this.endlessChunks = this.endlessChunks.filter(c => c.yTop < cullLine);
+    }
+
+    startEndlessMode() {
+        this.isEndless = true;
+        this._endlessGameOverLatched = false;
+        this.portal = null;
+        this.walls = [];
+        this.hazards = [];
+        this.echoWaves = [];
+        this.particles = [];
+        this.ghostData = null;
+        this.ghostPos = null;
+        this.currentTrajectory = [];
+
+        const theme = WORLD_THEMES[1];
+        this.endlessColors = theme;
+        const w = this.width;
+        const floorY = this.getBottomFloorY();
+        this.endlessFloorY = floorY;
+
+        const floor = new Wall(0, floorY, w, floorY, theme.wall);
+        floor._endlessFloor = true;
+        this.walls.push(floor);
+
+        this.endlessSpawnY = floorY - CONFIG.ORB_RADIUS - 2;
+        this.endlessMinPlayerY = this.endlessSpawnY;
+        this.endlessDistanceM = 0;
+        this.endlessLastChunkId = null;
+        this.endlessChunks = [];
+        this.endlessNextChunkY = floorY - 180;
+        this.endlessScrollSpeed = CONFIG.ENDLESS_SCROLL_BASE;
+        this.endlessScrollGrace = 1.6;
+        // Frame spawn near lower third so the player has room before the kill line rises
+        this.endlessScrollY = floorY - this.height * 0.42;
+        this.camera.x = w / 2;
+        this.camera.y = this.endlessScrollY;
+        this.camera.scale = 1.0;
+        this.camera.targetScale = 1.0;
+        this._zoomOutEntry = false;
+
+        this._refreshEndlessSideWalls();
+        for (let i = 0; i < 3; i++) this._spawnEndlessChunk();
+
+        const skin = this.saveSystem.data.orbSkin || 'cyan';
+        if (!this.player) {
+            this.player = new PlayerOrb(w * 0.5, this.endlessSpawnY, skin);
+        } else {
+            this.player.reset(w * 0.5, this.endlessSpawnY);
+            this.player.setSkin(skin);
+        }
+
+        this.levelStartTime = performance.now();
+        this._updateEndlessDistanceHud();
+        this.switchState('PLAYING');
+        this.echoWaves.push(new EchoWave(w * 0.5, this.endlessSpawnY, 180, 1.1, theme.wall));
+    }
+
+    triggerEndlessGameOver() {
+        if (!this.isEndless || this._endlessGameOverLatched) return;
+        if (this.gameState !== 'PLAYING' && this.gameState !== 'PAUSED') return;
+        this._endlessGameOverLatched = true;
+
+        this.shakeTimer = 0.22;
+        this.redFlashTimer = 0.22;
+        haptic([40, 30, 40]);
+        Audio.playDeath();
+
+        const orbX = this.player ? this.player.pos.x : this.width / 2;
+        const orbY = this.player ? this.player.pos.y : this.height / 2;
+        const shatterColors = [CONFIG.COLOR_RED, '#ff5500', '#ffaa00', '#ff007f', '#ffffff'];
+        for (let i = 0; i < 36; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 100 + Math.random() * 240;
+            this.particles.push(new Particle(
+                orbX, orbY,
+                Math.cos(angle) * speed, Math.sin(angle) * speed,
+                shatterColors[Math.floor(Math.random() * shatterColors.length)],
+                2.5 + Math.random() * 3, 0.55 + Math.random() * 0.25
+            ));
+        }
+
+        const result = this.saveSystem.recordEndlessRun(this.endlessDistanceM);
+        const lang = this.saveSystem.data.language || 'en';
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+        const desc = document.getElementById('endless-go-desc');
+        if (desc) {
+            desc.textContent = result.isNewBest
+                ? `${dict.endlessGameOverDesc || ''} ★`
+                : (dict.endlessGameOverDesc || '');
+        }
+        const elDist = document.getElementById('endless-go-distance');
+        const elBest = document.getElementById('endless-go-best');
+        if (elDist) elDist.textContent = `${result.distance}m`;
+        if (elBest) elBest.textContent = `${result.best}m`;
+
+        this.switchState('ENDLESS_GAME_OVER');
+    }
+
+    updateEndless(dt) {
+        if (!this.isEndless || this.gameState !== 'PLAYING' || !this.player) return;
+
+        this.endlessMinPlayerY = Math.min(this.endlessMinPlayerY, this.player.pos.y);
+        this.endlessDistanceM = Math.max(0, (this.endlessSpawnY - this.endlessMinPlayerY) / CONFIG.ENDLESS_PX_PER_METER);
+
+        if (this.endlessScrollGrace > 0) {
+            this.endlessScrollGrace = Math.max(0, this.endlessScrollGrace - dt);
+        } else {
+            this.endlessScrollSpeed = Math.min(
+                CONFIG.ENDLESS_SCROLL_MAX,
+                CONFIG.ENDLESS_SCROLL_BASE + this.endlessDistanceM * CONFIG.ENDLESS_SCROLL_ACCEL
+            );
+            this.endlessScrollY -= this.endlessScrollSpeed * dt;
+        }
+
+        // Camera follows upward progress but never scrolls back down
+        const followY = Math.min(this.endlessScrollY, this.player.pos.y);
+        this.camera.x = this.width / 2;
+        this.camera.y = Math.min(this.camera.y, followY);
+
+        this._updateEndlessDistanceHud();
+
+        // Spawn more chunks as the camera approaches the top of generated content
+        const viewTop = this.camera.y - (this.height * 0.5) / (this.camera.scale || 1);
+        while (this.endlessNextChunkY > viewTop - this.height) {
+            this._spawnEndlessChunk();
+        }
+
+        this._cullEndlessGeometry();
+
+        const viewBottom = this.camera.y + (this.height * 0.5) / (this.camera.scale || 1) - CONFIG.ENDLESS_FALL_MARGIN;
+        if (this.player.pos.y > viewBottom) {
+            this.triggerEndlessGameOver();
+        }
     }
 
     getBottomFloorY() {
@@ -1704,6 +2203,7 @@ class EchoBounceGame {
         this.elGameHud.classList.add('hidden');
         this.elGameActionBar.classList.add('hidden');
         this.elPauseModal.classList.add('hidden');
+        if (this.elEndlessGameOverModal) this.elEndlessGameOverModal.classList.add('hidden');
         if (this.elDeathBanner) this.elDeathBanner.classList.add('hidden');
         this.elVictoryModal.classList.add('hidden');
         if (this.elHintBanner) this.elHintBanner.classList.add('hidden');
@@ -1711,9 +2211,11 @@ class EchoBounceGame {
 
         switch (newState) {
             case 'MENU':
+                this.isEndless = false;
                 this.resetCamera();
                 this.elMenuScreen.classList.remove('hidden');
                 this.createAmbientMenuWaves();
+                this._syncPlayHudMode();
                 break;
 
             case 'LEVEL_SELECT':
@@ -1737,40 +2239,46 @@ class EchoBounceGame {
                 break;
 
             case 'PLAYING':
-                // Zoom-out entry: start slightly zoomed in, ease back to 1.0
-                this.camera.x = this.width / 2;
-                this.camera.y = this.height / 2;
-                this.camera.scale = 1.18;       // start zoomed in
-                this.camera.targetScale = 1.0;  // ease out to normal
-                this.camera.flashAlpha = 0.0;
-                this.camera.blackFadeAlpha = 0.0;
-                this._zoomOutEntry = true;       // flag for smooth easing
+                if (!this.isEndless) {
+                    // Zoom-out entry: start slightly zoomed in, ease back to 1.0
+                    this.camera.x = this.width / 2;
+                    this.camera.y = this.height / 2;
+                    this.camera.scale = 1.18;
+                    this.camera.targetScale = 1.0;
+                    this.camera.flashAlpha = 0.0;
+                    this.camera.blackFadeAlpha = 0.0;
+                    this._zoomOutEntry = true;
+                } else {
+                    this.camera.flashAlpha = 0.0;
+                    this.camera.blackFadeAlpha = 0.0;
+                }
                 this.elGameHud.classList.remove('hidden');
-                this.elGameActionBar.classList.remove('hidden');
+                if (!this.isEndless) this.elGameActionBar.classList.remove('hidden');
+                this._syncPlayHudMode();
                 this.updateOnScreenHint();
-                this._firstTapDone = false; // reset first-tap flag for tutorial
+                this._firstTapDone = false;
                 break;
 
             case 'PORTAL_ANIMATION':
                 this.elGameHud.classList.remove('hidden');
-                this.elGameActionBar.classList.remove('hidden');
+                if (!this.isEndless) this.elGameActionBar.classList.remove('hidden');
                 break;
 
             case 'ABSORBING':
                 this.elGameHud.classList.remove('hidden');
-                this.elGameActionBar.classList.remove('hidden');
+                if (!this.isEndless) this.elGameActionBar.classList.remove('hidden');
                 break;
 
             case 'PAUSED':
                 this.elGameHud.classList.remove('hidden');
-                this.elGameActionBar.classList.remove('hidden');
+                if (!this.isEndless) this.elGameActionBar.classList.remove('hidden');
                 this.elPauseModal.classList.remove('hidden');
                 this._syncPauseUI();
                 break;
 
             case 'DEATH':
                 this.elGameHud.classList.remove('hidden');
-                this.elGameActionBar.classList.remove('hidden');
+                if (!this.isEndless) this.elGameActionBar.classList.remove('hidden');
                 break;
 
             case 'ONBOARDING': {
@@ -1789,11 +2297,21 @@ class EchoBounceGame {
                 // Victory is now handled by seamless fade — keep modal hidden
                 // (modal kept for fallback; finishVictorySequence skips it)
                 break;
+
+            case 'ENDLESS_GAME_OVER':
+                this.elGameHud.classList.remove('hidden');
+                if (this.elEndlessGameOverModal) this.elEndlessGameOverModal.classList.remove('hidden');
+                this._syncPlayHudMode();
+                break;
         }
     }
 
     updateOnScreenHint() {
         if (!this.elHintBanner || !this.elHintText) return;
+        if (this.isEndless) {
+            this.elHintBanner.classList.add('hidden');
+            return;
+        }
         const lang = this.saveSystem.data.language || 'en';
         const dict = TRANSLATIONS[lang] || TRANSLATIONS['en'];
 
@@ -1883,6 +2401,7 @@ class EchoBounceGame {
     startGameAtLevel(levelIndex) {
         // Always coerce to integer — a string index causes all `=== N` checks
         // in loadLevel to silently fall through to the else (Level 15) branch.
+        this.isEndless = false;
         const idx = parseInt(levelIndex, 10);
         if (isNaN(idx)) { console.error('startGameAtLevel: invalid levelIndex', levelIndex); return; }
         const clamped = Math.max(0, Math.min(idx, this.totalLevels - 1));
@@ -2246,9 +2765,14 @@ class EchoBounceGame {
 
         // Main Menu Buttons
         document.getElementById('btn-menu-play').addEventListener('click', () => {
+            this.isEndless = false;
             const resumeIdx = parseInt(this.saveSystem.data.unlockedLevel, 10) - 1;
             this.startGameAtLevel(resumeIdx);
         });
+        const btnEndless = document.getElementById('btn-menu-endless');
+        if (btnEndless) {
+            btnEndless.addEventListener('click', () => this.startEndlessMode());
+        }
         document.getElementById('btn-menu-levels').addEventListener('click', () => {
             this.switchState('LEVEL_SELECT');
         });
@@ -2383,15 +2907,33 @@ class EchoBounceGame {
             this.switchState('PLAYING');
         });
         document.getElementById('btn-pause-restart').addEventListener('click', () => {
-            this.resetLevel();
-            this.switchState('PLAYING');
+            if (this.isEndless) {
+                this.startEndlessMode();
+            } else {
+                this.resetLevel();
+                this.switchState('PLAYING');
+            }
         });
         document.getElementById('btn-pause-menu').addEventListener('click', () => {
+            this.isEndless = false;
             this.switchState('MENU');
         });
         document.getElementById('btn-pause-level-select').addEventListener('click', () => {
+            this.isEndless = false;
             this.switchState('LEVEL_SELECT');
         });
+
+        const btnEndlessRetry = document.getElementById('btn-endless-retry');
+        if (btnEndlessRetry) {
+            btnEndlessRetry.addEventListener('click', () => this.startEndlessMode());
+        }
+        const btnEndlessMenu = document.getElementById('btn-endless-menu');
+        if (btnEndlessMenu) {
+            btnEndlessMenu.addEventListener('click', () => {
+                this.isEndless = false;
+                this.switchState('MENU');
+            });
+        }
 
         const togglePauseSound = document.getElementById('toggle-pause-sound');
         if (togglePauseSound) {
@@ -2468,6 +3010,7 @@ class EchoBounceGame {
             const rect = this.canvas.getBoundingClientRect();
             const tapX = clientX - rect.left;
             const tapY = clientY - rect.top;
+            const world = this.screenToWorld(tapX, tapY);
 
             const now = performance.now();
             const timeDiff = now - this.lastTapTime;
@@ -2476,7 +3019,7 @@ class EchoBounceGame {
             if (timeDiff < 300 && distDiff < 50) {
                 this.triggerManualPulse();
             } else {
-                this.player.applyImpulse(tapX, tapY, this);
+                this.player.applyImpulse(world.x, world.y, this);
             }
 
             this.lastTapTime = now;
@@ -2498,7 +3041,8 @@ class EchoBounceGame {
         if (this.btnReset) {
             this.btnReset.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.resetLevel();
+                if (this.isEndless) this.startEndlessMode();
+                else this.resetLevel();
             });
         }
 
@@ -2831,6 +3375,10 @@ class EchoBounceGame {
 
     triggerDeath() {
         if (this.gameState !== 'PLAYING') return;
+        if (this.isEndless) {
+            this.triggerEndlessGameOver();
+            return;
+        }
         this.switchState('DEATH');
         this.deathTimer = 0.75;     // 750ms satisfying shatter & fade timing
         this.shakeTimer = 0.22;     // 220ms Glitch Shake effect
@@ -3173,7 +3721,12 @@ class EchoBounceGame {
 
             this.player.update(dt, this);
 
-            // Trajectory recording for Ghost Replay
+            if (this.isEndless) {
+                this.updateEndless(dt);
+            }
+
+            // Trajectory recording for Ghost Replay (campaign only)
+            if (!this.isEndless) {
             this.recordTimer += dt;
             if (this.recordTimer >= 0.04) {
                 this.recordTimer = 0;
@@ -3183,9 +3736,10 @@ class EchoBounceGame {
                     Math.round(this.player.pos.y * 10) / 10
                 ]);
             }
+            }
 
             // Ghost Orb Playback Update
-            if (this.saveSystem.data.ghostEnabled !== false && this.ghostData && this.ghostData.length > 1) {
+            if (!this.isEndless && this.saveSystem.data.ghostEnabled !== false && this.ghostData && this.ghostData.length > 1) {
                 this.ghostTime += dt;
                 const sampleIndex = this.ghostTime / 0.04;
                 const idx = Math.floor(sampleIndex);
@@ -3207,7 +3761,7 @@ class EchoBounceGame {
             }
 
             // Gravitational portal pull — slower suck when very close (< 60px)
-            if (this.portal) {
+            if (!this.isEndless && this.portal) {
                 const pdx = this.portal.x - this.player.pos.x;
                 const pdy = this.portal.y - this.player.pos.y;
                 const pdist = Math.hypot(pdx, pdy);
@@ -3232,7 +3786,7 @@ class EchoBounceGame {
                 }
             }
 
-            if (this.gameState === 'PLAYING' && this.portal && this.portal.checkCollision(this.player)) {
+            if (!this.isEndless && this.gameState === 'PLAYING' && this.portal && this.portal.checkCollision(this.player)) {
                 this.triggerAbsorption();
             }
         }
@@ -3305,7 +3859,7 @@ class EchoBounceGame {
     render() {
         this.ctx.save();
 
-        const worldId = this.getWorldForLevel(this.currentLevelIndex);
+        const worldId = this.isEndless ? 1 : this.getWorldForLevel(this.currentLevelIndex);
         const theme = WORLD_THEMES[worldId] || WORLD_THEMES[1];
 
         this.ctx.fillStyle = theme.bg;
@@ -3361,7 +3915,7 @@ class EchoBounceGame {
             this.drawGhostOrb(this.ctx);
         }
 
-        if (this.player && this.gameState !== 'DEATH' && this.gameState !== 'MENU') {
+        if (this.player && this.gameState !== 'DEATH' && this.gameState !== 'MENU' && this.gameState !== 'ENDLESS_GAME_OVER') {
             this.player.draw(this.ctx);
         }
 
@@ -3425,7 +3979,7 @@ class EchoBounceGame {
     }
 
     renderGrid() {
-        const worldId = this.getWorldForLevel(this.currentLevelIndex);
+        const worldId = this.isEndless ? 1 : this.getWorldForLevel(this.currentLevelIndex);
         const theme = WORLD_THEMES[worldId] || WORLD_THEMES[1];
 
         this.ctx.save();
@@ -3434,16 +3988,41 @@ class EchoBounceGame {
         this.ctx.lineWidth = 1;
 
         const gridSize = 40;
-        for (let x = 0; x < this.width; x += gridSize) {
+        const s = this.camera.scale || 1;
+        const camActive = this.camera.scale !== 1.0
+            || this.camera.x !== this.width / 2
+            || this.camera.y !== this.height / 2;
+
+        // When the camera transform is active, tile across the visible world rect
+        // so the neon grid never runs out as endless mode scrolls upward.
+        let x0, y0, x1, y1;
+        if (camActive) {
+            const halfW = this.width / (2 * s);
+            const halfH = this.height / (2 * s);
+            x0 = this.camera.x - halfW - gridSize;
+            x1 = this.camera.x + halfW + gridSize;
+            y0 = this.camera.y - halfH - gridSize;
+            y1 = this.camera.y + halfH + gridSize;
+        } else {
+            x0 = 0;
+            y0 = 0;
+            x1 = this.width;
+            y1 = this.height;
+        }
+
+        const startX = Math.floor(x0 / gridSize) * gridSize;
+        const startY = Math.floor(y0 / gridSize) * gridSize;
+
+        for (let x = startX; x <= x1; x += gridSize) {
             this.ctx.beginPath();
-            this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, this.height);
+            this.ctx.moveTo(x, y0);
+            this.ctx.lineTo(x, y1);
             this.ctx.stroke();
         }
-        for (let y = 0; y < this.height; y += gridSize) {
+        for (let y = startY; y <= y1; y += gridSize) {
             this.ctx.beginPath();
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(this.width, y);
+            this.ctx.moveTo(x0, y);
+            this.ctx.lineTo(x1, y);
             this.ctx.stroke();
         }
         this.ctx.restore();

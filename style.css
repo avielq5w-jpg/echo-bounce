@@ -150,6 +150,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     pointer-events: auto;
+    z-index: 2;
 }
 
 .btn-icon-hud {
@@ -191,6 +192,50 @@ body {
     pointer-events: auto;
     box-shadow: 0 0 10px rgba(0, 243, 255, 0.15);
     line-height: 1;
+}
+
+.distance-meter {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 5.5rem;
+    height: 2.55rem;
+    padding: 0 1.15rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #b8ffe0;
+    background: rgba(8, 20, 16, 0.82);
+    border: 1.5px solid rgba(0, 255, 136, 0.55);
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+        0 0 18px rgba(0, 255, 136, 0.35),
+        0 0 4px rgba(0, 255, 136, 0.5) inset;
+    text-shadow: 0 0 12px rgba(0, 255, 136, 0.75);
+    line-height: 1;
+    pointer-events: none;
+}
+
+[dir="rtl"] .distance-meter {
+    transform: translateX(-50%);
+}
+
+.btn-endless-style {
+    border-color: rgba(0, 255, 136, 0.35);
+    color: rgba(180, 255, 220, 0.95);
+}
+.btn-endless-style:hover, .btn-endless-style:active {
+    background: rgba(0, 255, 136, 0.12);
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    box-shadow: 0 4px 16px rgba(0, 255, 136, 0.22);
 }
 
 /* Dynamic On-Screen Level Tutorial Hint Banner — lower third, away from portal */

@@ -50,6 +50,7 @@
                 </button>
                 <span id="stat-level" class="level-badge">LVL 1/15</span>
             </div>
+            <div id="stat-distance" class="distance-meter hidden" aria-live="polite">0m</div>
         </header>
 
         <!-- Dynamic On-Screen Level Tutorial Hint Banner -->
@@ -84,6 +85,7 @@
                 </div>
                 <div class="menu-buttons">
                     <button id="btn-menu-play" class="btn-menu btn-primary-menu" data-i18n="menuPlay">PLAY GAME</button>
+                    <button id="btn-menu-endless" class="btn-menu btn-endless-style" data-i18n="menuEndless">ENDLESS MODE</button>
                     <button id="btn-menu-levels" class="btn-menu" data-i18n="menuLevels">LEVEL SELECT</button>
                     <button id="btn-menu-profile" class="btn-menu" data-i18n="menuProfile">PROFILE &amp; SKINS</button>
                     <button id="btn-menu-settings" class="btn-menu btn-settings-style">
@@ -341,6 +343,28 @@
                             <div class="toggle-thumb"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Endless Game Over Modal -->
+        <div id="endless-gameover-modal" class="modal-overlay pause-overlay hidden">
+            <div class="modal-card pause-card">
+                <h2 class="modal-title pause-title" data-i18n="endlessGameOverTitle">RUN OVER</h2>
+                <p class="modal-desc" id="endless-go-desc">You fell behind the climb.</p>
+                <div class="modal-stats" style="margin-top: 1rem;">
+                    <div class="modal-stat">
+                        <span class="m-label" data-i18n="endlessDistance">Distance</span>
+                        <span class="m-val" id="endless-go-distance">0m</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span class="m-label" data-i18n="endlessBest">Best</span>
+                        <span class="m-val" id="endless-go-best">0m</span>
+                    </div>
+                </div>
+                <div class="pause-buttons" style="margin-top: 1.25rem;">
+                    <button id="btn-endless-retry" class="btn-primary" data-i18n="btnRetry">TRY AGAIN</button>
+                    <button id="btn-endless-menu" class="btn-menu" style="width: 100%;" data-i18n="btnMainMenu">MAIN MENU</button>
                 </div>
             </div>
         </div>
