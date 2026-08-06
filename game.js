@@ -169,14 +169,48 @@ const SKINS = {
     purple: '#a100ff'
 };
 
-// Unified Theme Presets: each sets orbSkin + trailSkin together
+function hexToRgba(hex, alpha) {
+    const h = String(hex || '').replace('#', '');
+    if (h.length < 6) return `rgba(0, 243, 255, ${alpha})`;
+    const r = parseInt(h.slice(0, 2), 16) || 0;
+    const g = parseInt(h.slice(2, 4), 16) || 0;
+    const b = parseInt(h.slice(4, 6), 16) || 0;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Unified Orb Theme presets.
+ * `env` (optional): full environment palette — ball, bg, grid, wall, hazard, portal, UI accents.
+ * Themes without `env` fall back to the active world palette + ball skin color.
+ */
 const THEMES = {
-    cyber:   { color: 'cyan',   trail: 'standard', label: 'Cyber Neon' },
-    solar:   { color: 'gold',   trail: 'fire',      label: 'Solar Fire' },
-    arctic:  { color: 'cyan',   trail: 'ice',       label: 'Arctic Ice'  },
-    volt:    { color: 'purple', trail: 'electric',  label: 'Volt Electric' },
-    emerald: { color: 'green',  trail: 'standard',  label: 'Emerald Abyss' },
-    crimson: { color: 'pink',   trail: 'fire',      label: 'Crimson Storm' }
+    cyber: {
+        color: 'cyan',
+        trail: 'standard',
+        label: 'Cyber Neon'
+        // env omitted → world theme fallback
+    },
+    solar: {
+        color: 'gold',
+        trail: 'fire',
+        label: 'Solar Fire',
+        env: {
+            ball: '#FFE600',
+            bg: '#160806',
+            grid: '#6B1A10',
+            wall: '#FF8A1A',
+            hazard: '#FF1F1F',
+            portalBase: '#4A1400',
+            portalAccent: '#FFB020',
+            uiAccent: '#FF8A1A',
+            uiGlow: 'rgba(255, 138, 26, 0.42)',
+            uiSecondary: '#FFE600'
+        }
+    },
+    arctic:  { color: 'cyan',   trail: 'ice',      label: 'Arctic Ice' },
+    volt:    { color: 'purple', trail: 'electric', label: 'Volt Electric' },
+    emerald: { color: 'green',  trail: 'standard', label: 'Emerald Abyss' },
+    crimson: { color: 'pink',   trail: 'fire',     label: 'Crimson Storm' }
 };
 
 // 3-Star Rating Target Thresholds per Level { time: maxSec, bounces: maxBounces }
@@ -2121,6 +2155,9 @@ class EchoBounceGame {
         // Apply saved language & RTL settings
         this.setLanguage(this.saveSystem.data.language || 'en');
 
+        // Restore env/HUD colors for the saved Orb Theme
+        this.applyActiveTheme();
+
         // First-launch onboarding check
         const isFirstLaunch = !localStorage.getItem('echo_bounce_onboarded');
         if (isFirstLaunch) {
@@ -2159,16 +2196,108 @@ class EchoBounceGame {
         };
     }
 
+    /** Active environment palette: orb theme env override, else world colors + ball skin. */
+    getEnvPalette() {
+        const themeKey = (this.saveSystem && this.saveSystem.data.theme) || 'cyber';
+        const preset = THEMES[themeKey] || THEMES.cyber;
+        const worldId = this.isEndless ? 1 : this.getWorldForLevel(this.currentLevelIndex);
+        const world = WORLD_THEMES[worldId] || WORLD_THEMES[1];
+        const ball = (preset.env && preset.env.ball) || SKINS[preset.color] || SKINS.cyan;
+
+        if (preset.env) {
+            const e = preset.env;
+            return {
+                key: themeKey,
+                ball,
+                bg: e.bg || world.bg,
+                grid: e.grid || e.wall || world.wall,
+                wall: e.wall || world.wall,
+                hazard: e.hazard || world.hazard,
+                portalBase: e.portalBase || world.portalBase,
+                portalAccent: e.portalAccent || world.portalAccent,
+                uiAccent: e.uiAccent || e.wall || world.wall,
+                uiGlow: e.uiGlow || hexToRgba(e.uiAccent || e.wall || world.wall, 0.4),
+                uiSecondary: e.uiSecondary || e.ball || ball,
+                hasEnvOverride: true
+            };
+        }
+
+        return {
+            key: themeKey,
+            ball,
+            bg: world.bg,
+            grid: world.wall,
+            wall: world.wall,
+            hazard: world.hazard,
+            portalBase: world.portalBase,
+            portalAccent: world.portalAccent,
+            uiAccent: null,
+            uiGlow: null,
+            uiSecondary: null,
+            hasEnvOverride: false
+        };
+    }
+
+    _applyThemeCss(palette) {
+        const root = document.documentElement;
+        if (palette && palette.hasEnvOverride && palette.uiAccent) {
+            root.style.setProperty('--neon-cyan', palette.uiAccent);
+            root.style.setProperty('--neon-cyan-glow', palette.uiGlow || hexToRgba(palette.uiAccent, 0.4));
+            root.style.setProperty('--bg-dark', palette.bg);
+            if (palette.uiSecondary) {
+                root.style.setProperty('--neon-gold', palette.uiSecondary);
+            }
+            // Keep pink/red accents aligned with fiery hazards for HUD flashes
+            if (palette.hazard) {
+                root.style.setProperty('--neon-red', palette.hazard);
+                root.style.setProperty('--neon-red-glow', hexToRgba(palette.hazard, 0.5));
+                root.style.setProperty('--neon-pink', palette.hazard);
+                root.style.setProperty('--neon-pink-glow', hexToRgba(palette.hazard, 0.4));
+            }
+        } else {
+            [
+                '--neon-cyan', '--neon-cyan-glow', '--bg-dark', '--neon-gold',
+                '--neon-red', '--neon-red-glow', '--neon-pink', '--neon-pink-glow'
+            ].forEach(v => root.style.removeProperty(v));
+        }
+    }
+
+    /** Recolor live geometry + CSS accents when the player picks an Orb Theme. */
+    applyActiveTheme() {
+        const palette = this.getEnvPalette();
+        this._applyThemeCss(palette);
+
+        const skinKey = (THEMES[palette.key] && THEMES[palette.key].color) || this.saveSystem.data.orbSkin || 'cyan';
+        if (this.player) this.player.setSkin(skinKey);
+
+        if (this.walls) {
+            for (const wall of this.walls) wall.color = palette.wall;
+        }
+        if (this.hazards) {
+            for (const h of this.hazards) h.color = palette.hazard;
+        }
+        if (this.portal) {
+            this.portal.baseColor = palette.portalBase;
+            this.portal.accentColor = palette.portalAccent;
+        }
+        if (this.isEndless) {
+            this.endlessColors = {
+                bg: palette.bg,
+                wall: palette.wall,
+                hazard: palette.hazard,
+                portalBase: palette.portalBase,
+                portalAccent: palette.portalAccent
+            };
+        }
+        return palette;
+    }
+
     getWallColor() {
-        const world = this.getWorldForLevel(this.currentLevelIndex);
-        const theme = WORLD_THEMES[world] || WORLD_THEMES[1];
-        return theme.wall;
+        return this.getEnvPalette().wall;
     }
 
     getWaveColor() {
-        const world = this.getWorldForLevel(this.currentLevelIndex);
-        const theme = WORLD_THEMES[world] || WORLD_THEMES[1];
-        return theme.wall;
+        return this.getEnvPalette().wall;
     }
 
     resetCamera() {
@@ -2737,8 +2866,14 @@ class EchoBounceGame {
         this.ghostPos = null;
         this.currentTrajectory = [];
 
-        const theme = WORLD_THEMES[1];
-        this.endlessColors = theme;
+        const theme = this.getEnvPalette();
+        this.endlessColors = {
+            bg: theme.bg,
+            wall: theme.wall,
+            hazard: theme.hazard,
+            portalBase: theme.portalBase,
+            portalAccent: theme.portalAccent
+        };
         const w = this.width;
         const floorY = this.getBottomFloorY();
         this.endlessFloorY = floorY;
@@ -3199,8 +3334,7 @@ class EchoBounceGame {
         const h = this.height;
 
         this.resetCamera();
-        const world = this.getWorldForLevel(levelIndex);
-        const theme = WORLD_THEMES[world] || WORLD_THEMES[1];
+        const theme = this.getEnvPalette();
         const wallColor = theme.wall;
         const hazardColor = theme.hazard;
         const portalBase = theme.portalBase;
@@ -3789,7 +3923,7 @@ class EchoBounceGame {
             });
         }
 
-        // Unified Theme Presets
+        // Unified Theme Presets — ball + full environment palette when available
         const themeContainer = document.getElementById('theme-presets');
         if (themeContainer) {
             themeContainer.querySelectorAll('.theme-preset').forEach(card => {
@@ -3803,7 +3937,7 @@ class EchoBounceGame {
                     this.saveSystem.save();
                     themeContainer.querySelectorAll('.theme-preset').forEach(c => c.classList.remove('active'));
                     card.classList.add('active');
-                    if (this.player) this.player.setSkin(theme.color);
+                    this.applyActiveTheme();
                 });
             });
         }
@@ -4689,8 +4823,7 @@ class EchoBounceGame {
     render() {
         this.ctx.save();
 
-        const worldId = this.isEndless ? 1 : this.getWorldForLevel(this.currentLevelIndex);
-        const theme = WORLD_THEMES[worldId] || WORLD_THEMES[1];
+        const theme = this.getEnvPalette();
 
         this.ctx.fillStyle = theme.bg;
         this.ctx.fillRect(0, 0, this.width, this.height);
@@ -4833,17 +4966,16 @@ class EchoBounceGame {
     }
 
     renderGrid() {
-        const worldId = this.isEndless ? 1 : this.getWorldForLevel(this.currentLevelIndex);
-        const theme = WORLD_THEMES[worldId] || WORLD_THEMES[1];
+        const theme = this.getEnvPalette();
 
         this.ctx.save();
-        let gridAlpha = 0.065;
+        let gridAlpha = theme.hasEnvOverride ? 0.09 : 0.065;
         if (this.milestonePulseTimer > 0) {
             const pulse = this.milestonePulseTimer / 0.55;
-            gridAlpha = 0.065 + pulse * 0.2;
+            gridAlpha = gridAlpha + pulse * 0.2;
         }
         this.ctx.globalAlpha = gridAlpha;
-        this.ctx.strokeStyle = theme.wall;
+        this.ctx.strokeStyle = theme.grid;
         this.ctx.lineWidth = this.milestonePulseTimer > 0 ? 1.35 : 1;
 
         const gridSize = 40;
