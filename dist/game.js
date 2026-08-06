@@ -93,9 +93,9 @@ const CONFIG = {
     COLOR_RED: '#ff2a2a',
     // Endless Mode
     ENDLESS_PX_PER_METER: 40,
-    ENDLESS_SCROLL_BASE: 40,
-    ENDLESS_SCROLL_ACCEL: 1.8,
-    ENDLESS_SCROLL_MAX: 220,
+    ENDLESS_SCROLL_BASE: 28,       // comfortable start once pressure engages
+    ENDLESS_SCROLL_ACCEL: 0.85,    // subtle per-meter increase
+    ENDLESS_SCROLL_MAX: 160,
     ENDLESS_FALL_MARGIN: 28
 };
 
@@ -631,206 +631,210 @@ class SaveSystem {
 }
 
 // --- Endless Mode: hand-authored passable chunks (world Y grows upward = decreasing y) ---
+// Endless chunk bands by distance (meters)
 const ENDLESS_CHUNKS = [
-    // --- EASY: wide gaps, few/no traps (0–100m exclusive) ---
+    // 0–50m Warmup — wide platforms, no traps
     {
-        id: 'easy_open_center',
-        tier: 'easy',
+        id: 'warmup_open',
+        band: 'warmup',
         height: 260,
         build(game, yTop, w, colors) {
             const y = yTop + 130;
-            const gap = 150;
+            const gap = 160;
             game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
             game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
         }
     },
     {
-        id: 'easy_left_lane',
-        tier: 'easy',
+        id: 'warmup_left',
+        band: 'warmup',
         height: 250,
         build(game, yTop, w, colors) {
-            const y = yTop + 125;
-            game._endlessAddWall(w * 0.42, y, w, y, colors.wall);
+            game._endlessAddWall(w * 0.4, yTop + 125, w, yTop + 125, colors.wall);
         }
     },
     {
-        id: 'easy_right_lane',
-        tier: 'easy',
+        id: 'warmup_right',
+        band: 'warmup',
         height: 250,
         build(game, yTop, w, colors) {
-            const y = yTop + 125;
-            game._endlessAddWall(0, y, w * 0.58, y, colors.wall);
+            game._endlessAddWall(0, yTop + 125, w * 0.6, yTop + 125, colors.wall);
         }
     },
     {
-        id: 'easy_soft_steps',
-        tier: 'easy',
+        id: 'warmup_steps',
+        band: 'warmup',
         height: 280,
         build(game, yTop, w, colors) {
-            game._endlessAddWall(0, yTop + 90, w * 0.62, yTop + 90, colors.wall);
-            game._endlessAddWall(w * 0.38, yTop + 200, w, yTop + 200, colors.wall);
+            game._endlessAddWall(0, yTop + 90, w * 0.65, yTop + 90, colors.wall);
+            game._endlessAddWall(w * 0.35, yTop + 200, w, yTop + 200, colors.wall);
         }
     },
+    // 50–100m — occasional static mid-air traps
     {
-        id: 'easy_wide_shelf',
-        tier: 'easy',
-        height: 240,
+        id: 'static_air_left',
+        band: 'staticTraps',
+        height: 270,
         build(game, yTop, w, colors) {
-            const y = yTop + 120;
-            game._endlessAddWall(0, y, w * 0.28, y, colors.wall);
-            game._endlessAddWall(w * 0.72, y, w, y, colors.wall);
+            game._endlessAddWall(w * 0.35, yTop + 135, w, yTop + 135, colors.wall);
+            game._endlessAddHazard(w * 0.22, yTop + 70, 15, colors.hazard);
         }
     },
-    // --- MEDIUM ---
     {
-        id: 'center_gap',
-        tier: 'medium',
+        id: 'static_air_right',
+        band: 'staticTraps',
+        height: 270,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(0, yTop + 135, w * 0.65, yTop + 135, colors.wall);
+            game._endlessAddHazard(w * 0.78, yTop + 70, 15, colors.hazard);
+        }
+    },
+    {
+        id: 'static_center_shelf',
+        band: 'staticTraps',
         height: 280,
         build(game, yTop, w, colors) {
             const y = yTop + 140;
+            const gap = 110;
+            game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
+            game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
+            if (Math.random() < 0.55) {
+                game._endlessAddHazard(w * 0.5, yTop + 60, 14, colors.hazard);
+            }
+        }
+    },
+    // 100–125m — sparse diagonals
+    {
+        id: 'diag_left_ramp',
+        band: 'diagonal',
+        height: 290,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(w * 0.1, yTop + 60, w * 0.45, yTop + 180, colors.wall);
+            game._endlessAddWall(w * 0.55, yTop + 220, w, yTop + 220, colors.wall);
+        }
+    },
+    {
+        id: 'diag_right_ramp',
+        band: 'diagonal',
+        height: 290,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(w * 0.9, yTop + 60, w * 0.55, yTop + 180, colors.wall);
+            game._endlessAddWall(0, yTop + 220, w * 0.45, yTop + 220, colors.wall);
+        }
+    },
+    {
+        id: 'diag_soft_v',
+        band: 'diagonal',
+        height: 280,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(w * 0.12, yTop + 50, w * 0.4, yTop + 160, colors.wall);
+            game._endlessAddWall(w * 0.88, yTop + 50, w * 0.6, yTop + 160, colors.wall);
+            game._endlessAddWall(0, yTop + 230, w * 0.32, yTop + 230, colors.wall);
+            game._endlessAddWall(w * 0.68, yTop + 230, w, yTop + 230, colors.wall);
+        }
+    },
+    // 125–150m — floating squares & triangles
+    {
+        id: 'shapes_square_lane',
+        band: 'shapes',
+        height: 290,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(0, yTop + 200, w * 0.55, yTop + 200, colors.wall);
+            game._endlessAddBox(w * 0.72, yTop + 100, 44, 44, colors.wall);
+            game._endlessAddHazard(w * 0.3, yTop + 90, 14, colors.hazard);
+        }
+    },
+    {
+        id: 'shapes_tri_pair',
+        band: 'shapes',
+        height: 300,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(w * 0.4, yTop + 220, w, yTop + 220, colors.wall);
+            game._endlessAddTriangle(w * 0.25, yTop + 110, 48, colors.wall);
+            game._endlessAddBox(w * 0.7, yTop + 80, 36, 36, colors.wall);
+        }
+    },
+    {
+        id: 'shapes_scatter',
+        band: 'shapes',
+        height: 300,
+        build(game, yTop, w, colors) {
+            const y = yTop + 230;
             const gap = 100;
             game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
             game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
-            game._endlessAddHazard(w * 0.2, y - 18, 16, colors.hazard);
+            game._endlessAddTriangle(w * 0.5, yTop + 100, 42, colors.wall);
+            game._endlessAddBox(w * 0.2, yTop + 140, 32, 32, colors.wall);
         }
     },
+    // 150–200m — slow moving traps
     {
-        id: 'left_corridor',
-        tier: 'medium',
-        height: 270,
-        build(game, yTop, w, colors) {
-            const y = yTop + 135;
-            game._endlessAddWall(w * 0.34, y, w, y, colors.wall);
-            game._endlessAddHazard(w * 0.6, y - 18, 16, colors.hazard);
-        }
-    },
-    {
-        id: 'right_corridor',
-        tier: 'medium',
-        height: 270,
-        build(game, yTop, w, colors) {
-            const y = yTop + 135;
-            game._endlessAddWall(0, y, w * 0.66, y, colors.wall);
-            game._endlessAddHazard(w * 0.4, y - 18, 16, colors.hazard);
-        }
-    },
-    {
-        id: 'staggered_shelves',
-        tier: 'medium',
-        height: 300,
-        build(game, yTop, w, colors) {
-            game._endlessAddWall(0, yTop + 80, w * 0.55, yTop + 80, colors.wall);
-            game._endlessAddHazard(w * 0.28, yTop + 80 - 18, 15, colors.hazard);
-            game._endlessAddWall(w * 0.45, yTop + 200, w, yTop + 200, colors.wall);
-        }
-    },
-    {
-        id: 'side_windows',
-        tier: 'medium',
-        height: 270,
-        build(game, yTop, w, colors) {
-            const y = yTop + 135;
-            game._endlessAddWall(w * 0.22, y, w * 0.78, y, colors.wall);
-            game._endlessAddHazard(w * 0.5, y - 18, 15, colors.hazard);
-        }
-    },
-    // --- HARD ---
-    {
-        id: 'dual_gates',
-        tier: 'hard',
-        height: 300,
-        build(game, yTop, w, colors) {
-            const y1 = yTop + 100;
-            const y2 = yTop + 210;
-            game._endlessAddWall(0, y1, w * 0.38, y1, colors.wall);
-            game._endlessAddWall(w * 0.62, y1, w, y1, colors.wall);
-            game._endlessAddHazard(w * 0.5, y1 + 40, 16, colors.hazard);
-            game._endlessAddWall(w * 0.22, y2, w, y2, colors.wall);
-            game._endlessAddHazard(w * 0.7, y2 - 18, 16, colors.hazard);
-        }
-    },
-    {
-        id: 'zigzag_ledges',
-        tier: 'hard',
-        height: 320,
-        build(game, yTop, w, colors) {
-            const y1 = yTop + 90;
-            const y2 = yTop + 200;
-            game._endlessAddWall(0, y1, w * 0.58, y1, colors.wall);
-            game._endlessAddHazard(w * 0.35, y1 - 18, 16, colors.hazard);
-            game._endlessAddWall(w * 0.42, y2, w, y2, colors.wall);
-            game._endlessAddHazard(w * 0.7, y2 - 18, 16, colors.hazard);
-        }
-    },
-    {
-        id: 'funnel_ascent',
-        tier: 'hard',
-        height: 290,
-        build(game, yTop, w, colors) {
-            const yMid = yTop + 160;
-            game._endlessAddWall(w * 0.08, yTop + 40, w * 0.38, yMid, colors.wall);
-            game._endlessAddWall(w * 0.92, yTop + 40, w * 0.62, yMid, colors.wall);
-            game._endlessAddWall(0, yMid + 70, w * 0.35, yMid + 70, colors.wall);
-            game._endlessAddWall(w * 0.65, yMid + 70, w, yMid + 70, colors.wall);
-            game._endlessAddHazard(w * 0.5, yMid + 20, 15, colors.hazard);
-        }
-    },
-    {
-        id: 'moving_patrol',
-        tier: 'hard',
+        id: 'moving_slow_left',
+        band: 'moving',
         height: 280,
         build(game, yTop, w, colors) {
             const y = yTop + 145;
-            const gap = 100;
+            const gap = 105;
             game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
             game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
-            game.hazards.push(new MovingHazard(
-                w * 0.12, y - 18,
-                w * 0.5 - gap * 0.5 - 20, y - 18,
-                90, 16, colors.hazard
-            ));
-            game.hazards[game.hazards.length - 1]._endlessCull = true;
+            game._endlessAddMovingHazard(w * 0.1, y - 18, w * 0.5 - gap * 0.5 - 24, y - 18, 55, 15, colors.hazard);
         }
     },
     {
-        id: 'offset_steps',
-        tier: 'hard',
-        height: 300,
+        id: 'moving_slow_right',
+        band: 'moving',
+        height: 280,
         build(game, yTop, w, colors) {
-            const y1 = yTop + 80;
-            const y2 = yTop + 170;
-            const y3 = yTop + 250;
-            game._endlessAddWall(w * 0.25, y1, w, y1, colors.wall);
-            game._endlessAddHazard(w * 0.6, y1 - 18, 15, colors.hazard);
-            game._endlessAddWall(0, y2, w * 0.72, y2, colors.wall);
-            game._endlessAddHazard(w * 0.3, y2 - 18, 15, colors.hazard);
-            game._endlessAddWall(w * 0.28, y3, w, y3, colors.wall);
+            game._endlessAddWall(0, yTop + 140, w * 0.62, yTop + 140, colors.wall);
+            game._endlessAddMovingHazard(w * 0.15, yTop + 140 - 18, w * 0.5, yTop + 140 - 18, 60, 15, colors.hazard);
+            game._endlessAddWall(w * 0.4, yTop + 240, w, yTop + 240, colors.wall);
         }
     },
     {
-        id: 'squeeze_ladder',
-        tier: 'hard',
-        height: 310,
-        build(game, yTop, w, colors) {
-            game._endlessAddWall(0, yTop + 70, w * 0.48, yTop + 70, colors.wall);
-            game._endlessAddHazard(w * 0.3, yTop + 70 - 18, 15, colors.hazard);
-            game._endlessAddWall(w * 0.52, yTop + 160, w, yTop + 160, colors.wall);
-            game._endlessAddHazard(w * 0.72, yTop + 160 - 18, 15, colors.hazard);
-            game._endlessAddWall(0, yTop + 250, w * 0.48, yTop + 250, colors.wall);
-            game._endlessAddHazard(w * 0.22, yTop + 250 - 18, 15, colors.hazard);
-        }
-    },
-    {
-        id: 'twin_ledges',
-        tier: 'hard',
+        id: 'moving_mid_air',
+        band: 'moving',
         height: 290,
         build(game, yTop, w, colors) {
-            const y = yTop + 145;
-            game._endlessAddWall(0, y, w * 0.3, y, colors.wall);
-            game._endlessAddWall(w * 0.7, y, w, y, colors.wall);
-            game._endlessAddHazard(w * 0.15, y - 18, 15, colors.hazard);
-            game._endlessAddHazard(w * 0.85, y - 18, 15, colors.hazard);
-            game._endlessAddWall(w * 0.2, yTop + 240, w * 0.8, yTop + 240, colors.wall);
+            game._endlessAddWall(w * 0.3, yTop + 210, w, yTop + 210, colors.wall);
+            game._endlessAddMovingHazard(w * 0.2, yTop + 90, w * 0.75, yTop + 90, 50, 14, colors.hazard);
+        }
+    },
+    // 200m+ — faster movers + diagonals + shapes
+    {
+        id: 'challenge_combo_a',
+        band: 'challenge',
+        height: 310,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(w * 0.1, yTop + 50, w * 0.42, yTop + 150, colors.wall);
+            game._endlessAddWall(w * 0.55, yTop + 200, w, yTop + 200, colors.wall);
+            game._endlessAddMovingHazard(w * 0.58, yTop + 200 - 18, w * 0.9, yTop + 200 - 18, 120, 15, colors.hazard);
+            game._endlessAddBox(w * 0.25, yTop + 230, 36, 36, colors.wall);
+        }
+    },
+    {
+        id: 'challenge_combo_b',
+        band: 'challenge',
+        height: 320,
+        build(game, yTop, w, colors) {
+            game._endlessAddWall(0, yTop + 90, w * 0.55, yTop + 90, colors.wall);
+            game._endlessAddHazard(w * 0.3, yTop + 90 - 18, 15, colors.hazard);
+            game._endlessAddWall(w * 0.9, yTop + 140, w * 0.5, yTop + 230, colors.wall);
+            game._endlessAddMovingHazard(w * 0.15, yTop + 160, w * 0.45, yTop + 160, 130, 14, colors.hazard);
+            game._endlessAddTriangle(w * 0.7, yTop + 280, 40, colors.wall);
+        }
+    },
+    {
+        id: 'challenge_combo_c',
+        band: 'challenge',
+        height: 300,
+        build(game, yTop, w, colors) {
+            const y = yTop + 150;
+            const gap = 90;
+            game._endlessAddWall(0, y, w * 0.5 - gap * 0.5, y, colors.wall);
+            game._endlessAddWall(w * 0.5 + gap * 0.5, y, w, y, colors.wall);
+            game._endlessAddMovingHazard(w * 0.08, y - 18, w * 0.5 - gap * 0.5 - 18, y - 18, 140, 15, colors.hazard);
+            game._endlessAddBox(w * 0.5, yTop + 70, 40, 40, colors.wall);
+            game._endlessAddHazard(w * 0.78, yTop + 240, 15, colors.hazard);
         }
     }
 ];
@@ -1146,7 +1150,32 @@ class Wall {
 
         const flash = Math.max(this.illumination, this.flashTimer);
         const levelIndex = gameInstance ? gameInstance.currentLevelIndex : 0;
-        
+        const isEndless = !!(gameInstance && gameInstance.isEndless) || !!this.alwaysLit;
+
+        // Endless Mode: always fully visible neon platforms (ignore campaign dark/blueprint state)
+        if (isEndless) {
+            ctx.save();
+            ctx.globalAlpha = 1;
+            ctx.lineCap = 'round';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 5.5;
+            ctx.beginPath();
+            ctx.moveTo(this.x1, this.y1);
+            ctx.lineTo(this.x2, this.y2);
+            ctx.stroke();
+            ctx.shadowBlur = 6;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(this.x1, this.y1);
+            ctx.lineTo(this.x2, this.y2);
+            ctx.stroke();
+            ctx.restore();
+            return;
+        }
+
         // Level 1 (Index 0): Faint Blueprint Mode — unrevealed walls render at ~18% opacity outline
         // Level 2+ (Index 1+): Standard Dark Mode — unrevealed walls hidden at ~4% opacity until Echo/Sonar hits
         const isBlueprint = (levelIndex === 0);
@@ -1244,7 +1273,9 @@ class Hazard {
     }
 
     draw(ctx) {
-        const baseAlpha = Math.min(1, 0.45 + 0.55 * this.illumination);
+        const baseAlpha = this.alwaysLit
+            ? 1
+            : Math.min(1, 0.45 + 0.55 * this.illumination);
 
         ctx.save();
         ctx.globalAlpha = baseAlpha;
@@ -1530,6 +1561,9 @@ class PlayerOrb {
         }
 
         gameInstance.echoWaves.push(new EchoWave(targetX, targetY, 110, 0.6, this.color));
+        if (gameInstance.isEndless && typeof gameInstance._endlessOnFirstMove === 'function') {
+            gameInstance._endlessOnFirstMove();
+        }
     }
 
     update(dt, gameInstance) {
@@ -1557,6 +1591,9 @@ class PlayerOrb {
                     this.bounces++;
                     haptic(15);
                     Audio.playBounce();
+                    if (gameInstance.isEndless && wall._endlessCull && typeof gameInstance._endlessOnPlatformTouch === 'function') {
+                        gameInstance._endlessOnPlatformTouch();
+                    }
                     gameInstance.echoWaves.push(new EchoWave(impact.x, impact.y, 140, 0.9, wallWaveColor));
 
                     for (let i = 0; i < 8; i++) {
@@ -1738,7 +1775,9 @@ class EchoBounceGame {
         this.endlessChunks = [];
         this.endlessColors = null;
         this.endlessFloorY = 0;
-        this.endlessScrollGrace = 0;
+        this.endlessScrollActive = false;
+        this.endlessHasMoved = false;
+        this.endlessTouchedPlatform = false;
         this._endlessGameOverLatched = false;
 
         // DOM Screen Elements
@@ -1920,6 +1959,8 @@ class EchoBounceGame {
     _endlessAddWall(x1, y1, x2, y2, color) {
         const wall = new Wall(x1, y1, x2, y2, color);
         wall._endlessCull = true;
+        wall.alwaysLit = true;
+        wall.illumination = 1;
         this.walls.push(wall);
         return wall;
     }
@@ -1927,8 +1968,39 @@ class EchoBounceGame {
     _endlessAddHazard(x, y, r, color) {
         const h = new Hazard(x, y, r, color);
         h._endlessCull = true;
+        h.alwaysLit = true;
+        h.illumination = 1;
         this.hazards.push(h);
         return h;
+    }
+
+    _endlessAddMovingHazard(x1, y1, x2, y2, speed, r, color) {
+        const h = new MovingHazard(x1, y1, x2, y2, speed, r, color);
+        h._endlessCull = true;
+        h.alwaysLit = true;
+        h.illumination = 1;
+        this.hazards.push(h);
+        return h;
+    }
+
+    _endlessAddBox(cx, cy, width, height, color) {
+        const hw = width / 2;
+        const hh = height / 2;
+        this._endlessAddWall(cx - hw, cy - hh, cx + hw, cy - hh, color);
+        this._endlessAddWall(cx + hw, cy - hh, cx + hw, cy + hh, color);
+        this._endlessAddWall(cx + hw, cy + hh, cx - hw, cy + hh, color);
+        this._endlessAddWall(cx - hw, cy + hh, cx - hw, cy - hh, color);
+    }
+
+    _endlessAddTriangle(cx, cy, size, color) {
+        const h = size * 0.866;
+        const topY = cy - h * 0.55;
+        const botY = cy + h * 0.45;
+        const leftX = cx - size * 0.5;
+        const rightX = cx + size * 0.5;
+        this._endlessAddWall(cx, topY, rightX, botY, color);
+        this._endlessAddWall(rightX, botY, leftX, botY, color);
+        this._endlessAddWall(leftX, botY, cx, topY, color);
     }
 
     _refreshEndlessSideWalls() {
@@ -1941,20 +2013,28 @@ class EchoBounceGame {
         const right = new Wall(w, yTop, w, yBot, color);
         left._endlessSide = true;
         right._endlessSide = true;
+        left.alwaysLit = true;
+        right.alwaysLit = true;
+        left.illumination = 1;
+        right.illumination = 1;
         this.walls.push(left, right);
     }
 
-    _getEndlessChunkPool() {
+    _getEndlessBand() {
         const d = this.endlessDistanceM || 0;
-        let tiers;
-        if (d < 100) tiers = ['easy'];
-        else if (d < 200) tiers = ['easy', 'medium'];
-        else if (d < 320) tiers = ['medium', 'hard'];
-        else tiers = ['medium', 'hard'];
+        if (d < 50) return 'warmup';
+        if (d < 100) return 'staticTraps';
+        if (d < 125) return 'diagonal';
+        if (d < 150) return 'shapes';
+        if (d < 200) return 'moving';
+        return 'challenge';
+    }
 
-        let pool = ENDLESS_CHUNKS.filter(c => tiers.includes(c.tier) && c.id !== this.endlessLastChunkId);
+    _getEndlessChunkPool() {
+        const band = this._getEndlessBand();
+        let pool = ENDLESS_CHUNKS.filter(c => c.band === band && c.id !== this.endlessLastChunkId);
         if (pool.length === 0) {
-            pool = ENDLESS_CHUNKS.filter(c => tiers.includes(c.tier));
+            pool = ENDLESS_CHUNKS.filter(c => c.band === band);
         }
         if (pool.length === 0) pool = ENDLESS_CHUNKS.slice();
         return pool;
@@ -1965,10 +2045,30 @@ class EchoBounceGame {
         const chunk = pool[Math.floor(Math.random() * pool.length)] || ENDLESS_CHUNKS[0];
         const yTop = this.endlessNextChunkY - chunk.height;
         chunk.build(this, yTop, this.width, this.endlessColors);
-        this.endlessChunks.push({ id: chunk.id, tier: chunk.tier, yTop, yBottom: this.endlessNextChunkY });
+        this.endlessChunks.push({ id: chunk.id, band: chunk.band, yTop, yBottom: this.endlessNextChunkY });
         this.endlessLastChunkId = chunk.id;
         this.endlessNextChunkY = yTop;
         this._refreshEndlessSideWalls();
+    }
+
+    _endlessOnFirstMove() {
+        if (!this.isEndless || this.endlessHasMoved) return;
+        this.endlessHasMoved = true;
+        this._tryStartEndlessScroll();
+    }
+
+    _endlessOnPlatformTouch() {
+        if (!this.isEndless || this.endlessTouchedPlatform) return;
+        this.endlessTouchedPlatform = true;
+        this._tryStartEndlessScroll();
+    }
+
+    _tryStartEndlessScroll() {
+        if (this.endlessScrollActive) return;
+        if (!this.endlessHasMoved || !this.endlessTouchedPlatform) return;
+        this.endlessScrollActive = true;
+        // Continue pressure from the current camera so the view doesn't jump
+        this.endlessScrollY = this.camera.y;
     }
 
     _cullEndlessGeometry() {
@@ -2007,6 +2107,8 @@ class EchoBounceGame {
 
         const floor = new Wall(0, floorY, w, floorY, theme.wall);
         floor._endlessFloor = true;
+        floor.alwaysLit = true;
+        floor.illumination = 1;
         this.walls.push(floor);
 
         this.endlessSpawnY = floorY - CONFIG.ORB_RADIUS - 2;
@@ -2016,8 +2118,10 @@ class EchoBounceGame {
         this.endlessChunks = [];
         this.endlessNextChunkY = floorY - 180;
         this.endlessScrollSpeed = CONFIG.ENDLESS_SCROLL_BASE;
-        this.endlessScrollGrace = 1.6;
-        // Frame spawn near lower third so the player has room before the kill line rises
+        this.endlessScrollActive = false;
+        this.endlessHasMoved = false;
+        this.endlessTouchedPlatform = false;
+        // Frame spawn near lower third; pressure scroll waits for first move + first step
         this.endlessScrollY = floorY - this.height * 0.42;
         this.camera.x = w / 2;
         this.camera.y = this.endlessScrollY;
@@ -2027,6 +2131,15 @@ class EchoBounceGame {
 
         this._refreshEndlessSideWalls();
         for (let i = 0; i < 3; i++) this._spawnEndlessChunk();
+        // Force full glow in case any wall was spawned without the flag
+        for (const wall of this.walls) {
+            wall.alwaysLit = true;
+            wall.illumination = 1;
+        }
+        for (const h of this.hazards) {
+            h.alwaysLit = true;
+            h.illumination = 1;
+        }
 
         const skin = this.saveSystem.data.orbSkin || 'cyan';
         if (!this.player) {
@@ -2090,20 +2203,25 @@ class EchoBounceGame {
         this.endlessMinPlayerY = Math.min(this.endlessMinPlayerY, this.player.pos.y);
         this.endlessDistanceM = Math.max(0, (this.endlessSpawnY - this.endlessMinPlayerY) / CONFIG.ENDLESS_PX_PER_METER);
 
-        if (this.endlessScrollGrace > 0) {
-            this.endlessScrollGrace = Math.max(0, this.endlessScrollGrace - dt);
-        } else {
+        this.camera.x = this.width / 2;
+
+        if (this.endlessScrollActive) {
+            // Smooth subtle speed curve with distance
+            const t = this.endlessDistanceM;
             this.endlessScrollSpeed = Math.min(
                 CONFIG.ENDLESS_SCROLL_MAX,
-                CONFIG.ENDLESS_SCROLL_BASE + this.endlessDistanceM * CONFIG.ENDLESS_SCROLL_ACCEL
+                CONFIG.ENDLESS_SCROLL_BASE + t * CONFIG.ENDLESS_SCROLL_ACCEL + t * t * 0.002
             );
             this.endlessScrollY -= this.endlessScrollSpeed * dt;
+            // Follow player up, but never scroll back down; pressure from auto-scroll
+            const followY = Math.min(this.endlessScrollY, this.player.pos.y);
+            this.camera.y = Math.min(this.camera.y, followY);
+        } else {
+            // Pre-pressure: only follow the player upward so they can climb into view
+            if (this.player.pos.y < this.camera.y) {
+                this.camera.y = this.player.pos.y;
+            }
         }
-
-        // Camera follows upward progress but never scrolls back down
-        const followY = Math.min(this.endlessScrollY, this.player.pos.y);
-        this.camera.x = this.width / 2;
-        this.camera.y = Math.min(this.camera.y, followY);
 
         this._updateEndlessDistanceHud();
 
@@ -2115,9 +2233,12 @@ class EchoBounceGame {
 
         this._cullEndlessGeometry();
 
-        const viewBottom = this.camera.y + (this.height * 0.5) / (this.camera.scale || 1) - CONFIG.ENDLESS_FALL_MARGIN;
-        if (this.player.pos.y > viewBottom) {
-            this.triggerEndlessGameOver();
+        // Kill line only after pressure scroll has started
+        if (this.endlessScrollActive) {
+            const viewBottom = this.camera.y + (this.height * 0.5) / (this.camera.scale || 1) - CONFIG.ENDLESS_FALL_MARGIN;
+            if (this.player.pos.y > viewBottom) {
+                this.triggerEndlessGameOver();
+            }
         }
     }
 
