@@ -180,15 +180,25 @@ function hexToRgba(hex, alpha) {
 
 /**
  * Unified Orb Theme presets.
- * `env` (optional): full environment palette — ball, bg, grid, wall, hazard, portal, UI accents.
- * Themes without `env` fall back to the active world palette + ball skin color.
+ * Each theme's `env` drives ball, background, grid, walls, hazards, portal, and HUD accents.
  */
 const THEMES = {
     cyber: {
         color: 'cyan',
         trail: 'standard',
-        label: 'Cyber Neon'
-        // env omitted → world theme fallback
+        label: 'Cyber Neon',
+        env: {
+            ball: '#00F3FF',
+            bg: '#0B0C10',
+            grid: '#12333A',
+            wall: '#00E5FF',
+            hazard: '#FF007F',
+            portalBase: '#7B1FA2',
+            portalAccent: '#00E5FF',
+            uiAccent: '#00F3FF',
+            uiGlow: 'rgba(0, 243, 255, 0.42)',
+            uiSecondary: '#7B1FA2'
+        }
     },
     solar: {
         color: 'gold',
@@ -207,10 +217,74 @@ const THEMES = {
             uiSecondary: '#FFE600'
         }
     },
-    arctic:  { color: 'cyan',   trail: 'ice',      label: 'Arctic Ice' },
-    volt:    { color: 'purple', trail: 'electric', label: 'Volt Electric' },
-    emerald: { color: 'green',  trail: 'standard', label: 'Emerald Abyss' },
-    crimson: { color: 'pink',   trail: 'fire',     label: 'Crimson Storm' }
+    arctic: {
+        color: 'cyan',
+        trail: 'ice',
+        label: 'Arctic Ice',
+        env: {
+            ball: '#F4FCFF',
+            bg: '#050C12',
+            grid: '#1A3A48',
+            wall: '#8BE9FF',
+            hazard: '#FF6B5A',
+            portalBase: '#0D3A4A',
+            portalAccent: '#E8FBFF',
+            uiAccent: '#8BE9FF',
+            uiGlow: 'rgba(139, 233, 255, 0.42)',
+            uiSecondary: '#F4FCFF'
+        }
+    },
+    volt: {
+        color: 'purple',
+        trail: 'electric',
+        label: 'Volt Electric',
+        env: {
+            ball: '#E066FF',
+            bg: '#0C0614',
+            grid: '#2A1040',
+            wall: '#B44DFF',
+            hazard: '#00F0FF',
+            portalBase: '#3A0A5C',
+            portalAccent: '#E066FF',
+            uiAccent: '#B44DFF',
+            uiGlow: 'rgba(180, 77, 255, 0.45)',
+            uiSecondary: '#00F0FF'
+        }
+    },
+    emerald: {
+        color: 'green',
+        trail: 'standard',
+        label: 'Emerald Abyss',
+        env: {
+            ball: '#00FF88',
+            bg: '#04140E',
+            grid: '#0A2E22',
+            wall: '#00E87A',
+            hazard: '#FFD700',
+            portalBase: '#004D40',
+            portalAccent: '#FFD700',
+            uiAccent: '#00FF88',
+            uiGlow: 'rgba(0, 255, 136, 0.42)',
+            uiSecondary: '#FFD700'
+        }
+    },
+    crimson: {
+        color: 'pink',
+        trail: 'fire',
+        label: 'Crimson Storm',
+        env: {
+            ball: '#FF007F',
+            bg: '#12040A',
+            grid: '#3A0A18',
+            wall: '#FF2A6D',
+            hazard: '#FFEE55',
+            portalBase: '#4A0020',
+            portalAccent: '#FF66A8',
+            uiAccent: '#FF2A6D',
+            uiGlow: 'rgba(255, 42, 109, 0.45)',
+            uiSecondary: '#FFEE55'
+        }
+    }
 };
 
 // 3-Star Rating Target Thresholds per Level { time: maxSec, bounces: maxBounces }
@@ -2269,7 +2343,11 @@ class EchoBounceGame {
         this._applyThemeCss(palette);
 
         const skinKey = (THEMES[palette.key] && THEMES[palette.key].color) || this.saveSystem.data.orbSkin || 'cyan';
-        if (this.player) this.player.setSkin(skinKey);
+        if (this.player) {
+            this.player.setSkin(skinKey);
+            // Prefer theme env ball color (e.g. Arctic ice-white) over generic skin map
+            if (palette.ball) this.player.color = palette.ball;
+        }
 
         if (this.walls) {
             for (const wall of this.walls) wall.color = palette.wall;
