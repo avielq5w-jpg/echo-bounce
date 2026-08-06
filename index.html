@@ -86,7 +86,13 @@
                     <button id="btn-menu-play" class="btn-menu btn-primary-menu" data-i18n="menuPlay">PLAY GAME</button>
                     <button id="btn-menu-levels" class="btn-menu" data-i18n="menuLevels">LEVEL SELECT</button>
                     <button id="btn-menu-profile" class="btn-menu" data-i18n="menuProfile">PROFILE &amp; SKINS</button>
-                    <button id="btn-menu-settings" class="btn-menu btn-settings-style">⚙️ SETTINGS</button>
+                    <button id="btn-menu-settings" class="btn-menu btn-settings-style">
+                        <svg class="menu-inline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        SETTINGS
+                    </button>
                 </div>
             </div>
         </div>
@@ -124,8 +130,14 @@
                 <!-- Language Toggle -->
                 <div class="settings-row" id="settings-lang-row">
                     <div class="settings-row-info">
-                        <span class="settings-row-icon">🌐</span>
-                        <div>
+                        <span class="settings-row-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M2 12h20"></path>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                        </span>
+                        <div class="settings-row-text">
                             <span class="settings-row-label">Language</span>
                             <span class="settings-row-sub" id="settings-lang-sub">English</span>
                         </div>
@@ -136,8 +148,14 @@
                 <!-- SFX Toggle -->
                 <div class="settings-row">
                     <div class="settings-row-info">
-                        <span class="settings-row-icon">🔊</span>
-                        <div>
+                        <span class="settings-row-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                            </svg>
+                        </span>
+                        <div class="settings-row-text">
                             <span class="settings-row-label">Sound Effects</span>
                             <span class="settings-row-sub">Echo &amp; bounce audio</span>
                         </div>
@@ -150,8 +168,15 @@
                 <!-- Haptics Toggle -->
                 <div class="settings-row">
                     <div class="settings-row-info">
-                        <span class="settings-row-icon">📳</span>
-                        <div>
+                        <span class="settings-row-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="7" y="2" width="10" height="20" rx="2"></rect>
+                                <path d="M2 9v6"></path>
+                                <path d="M22 9v6"></path>
+                                <path d="M11 18h2"></path>
+                            </svg>
+                        </span>
+                        <div class="settings-row-text">
                             <span class="settings-row-label">Haptic Feedback</span>
                             <span class="settings-row-sub">Vibration on impact</span>
                         </div>
@@ -164,8 +189,14 @@
                 <!-- Ghost Replay Row -->
                 <div class="settings-row">
                     <div class="settings-row-info">
-                        <span class="settings-row-icon">👻</span>
-                        <div>
+                        <span class="settings-row-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 10h.01"></path>
+                                <path d="M15 10h.01"></path>
+                                <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"></path>
+                            </svg>
+                        </span>
+                        <div class="settings-row-text">
                             <span class="settings-row-label">Ghost Replay</span>
                             <span class="settings-row-sub">Show your best run</span>
                         </div>
@@ -178,7 +209,13 @@
                 <!-- How To Play collapsible -->
                 <div class="settings-how-to-play" id="settings-htp-section">
                     <button class="settings-htp-toggle" id="btn-htp-toggle">
-                        <span>📖 How To Play</span>
+                        <span class="settings-htp-label">
+                            <svg class="settings-htp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                            How To Play
+                        </span>
                         <span class="htp-arrow" id="htp-arrow">›</span>
                     </button>
                     <div class="settings-htp-body hidden" id="settings-htp-body">
@@ -270,19 +307,40 @@
         </div>
 
         <!-- 5. PAUSE MODAL -->
-        <div id="pause-modal" class="modal-overlay hidden">
-            <div class="modal-card">
-                <h2 class="modal-title" style="color: var(--neon-cyan);" data-i18n="pauseTitle">GAME PAUSED</h2>
+        <div id="pause-modal" class="modal-overlay pause-overlay hidden">
+            <div class="modal-card pause-card">
+                <h2 class="modal-title pause-title" data-i18n="pauseTitle">GAME PAUSED</h2>
                 <p class="modal-desc" data-i18n="pauseSub">Take a breath or return to menu</p>
-                <div class="pause-buttons" style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%; margin-top: 1.25rem;">
-                    <div class="pause-quick-toggles">
-                        <button id="btn-pause-sound" class="btn-menu pause-toggle-btn" type="button" aria-pressed="true">🔊 SOUND: ON</button>
-                        <button id="btn-pause-vibrate" class="btn-menu pause-toggle-btn" type="button" aria-pressed="true">📳 VIBRATION: ON</button>
-                    </div>
+                <div class="pause-buttons">
                     <button id="btn-pause-resume" class="btn-primary" data-i18n="btnResume">RESUME GAME</button>
                     <button id="btn-pause-restart" class="btn-menu" style="width: 100%;" data-i18n="btnRestart">RESTART LEVEL</button>
                     <button id="btn-pause-level-select" class="btn-menu" style="width: 100%;" data-i18n="btnLevelSelect">LEVEL SELECT</button>
                     <button id="btn-pause-menu" class="btn-menu" style="width: 100%;" data-i18n="btnMainMenu">MAIN MENU</button>
+                </div>
+                <div class="pause-footer-toggles" aria-label="Quick settings">
+                    <div class="pause-toggle-item">
+                        <svg class="pause-toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        </svg>
+                        <div class="toggle-switch" id="toggle-pause-sound" data-state="on" role="switch" aria-checked="true" aria-label="Sound">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+                    <div class="pause-toggle-item">
+                        <svg class="pause-toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8v8"></path>
+                            <path d="M6 5v14"></path>
+                            <path d="M10 2v20"></path>
+                            <path d="M14 6v12"></path>
+                            <path d="M18 9v6"></path>
+                            <path d="M22 11v2"></path>
+                        </svg>
+                        <div class="toggle-switch" id="toggle-pause-vibrate" data-state="on" role="switch" aria-checked="true" aria-label="Vibration">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
