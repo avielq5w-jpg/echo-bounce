@@ -1277,6 +1277,25 @@ body {
     animation: cardNeonPulse 4s ease-in-out infinite alternate;
 }
 
+.pause-quick-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
+}
+
+.pause-toggle-btn {
+    width: 100%;
+    border-color: rgba(0, 243, 255, 0.35);
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+}
+
+.pause-toggle-btn.pause-toggle-off {
+    opacity: 0.55;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
 .victory-card {
     border: 1px solid rgba(0, 255, 136, 0.6);
     box-shadow: 0 0 22px rgba(0, 255, 136, 0.35), inset 0 0 14px rgba(0, 255, 136, 0.15);

@@ -243,6 +243,10 @@ const TRANSLATIONS = {
         lblBestTimes: "BEST LEVEL TIMES & STARS",
         pauseTitle: "GAME PAUSED",
         pauseSub: "Take a breath or return to menu",
+        pauseSoundOn: "🔊 SOUND: ON",
+        pauseSoundOff: "🔊 SOUND: OFF",
+        pauseVibrateOn: "📳 VIBRATION: ON",
+        pauseVibrateOff: "📳 VIBRATION: OFF",
         btnResume: "RESUME GAME",
         btnRestart: "RESTART LEVEL",
         btnMainMenu: "MAIN MENU",
@@ -267,7 +271,7 @@ const TRANSLATIONS = {
         heroSubtitle: "נווט בחשיכה",
         menuPlay: "התחל למשחק",
         menuLevels: "בחירת שלב",
-        menuProfile: "פרופיל ועורים",
+        menuProfile: "פרופיל וערכות נושא",
         menuTutorial: "איך משחקים",
         levelSelectTitle: "בחירת שלב",
         levelSelectSub: "הקש על כרטיס העולם לצפייה בשלבים",
@@ -294,6 +298,10 @@ const TRANSLATIONS = {
         lblBestTimes: "שיאי זמן לפי שלב",
         pauseTitle: "המשחק מושהה",
         pauseSub: "קח אוויר או חזור לתפריט",
+        pauseSoundOn: "🔊 צליל: פועל",
+        pauseSoundOff: "🔊 צליל: כבוי",
+        pauseVibrateOn: "📳 רטט: פועל",
+        pauseVibrateOff: "📳 רטט: כבוי",
         btnResume: "המשך במשחק",
         btnRestart: "אפס שלב",
         btnMainMenu: "תפריט ראשי",
@@ -345,6 +353,10 @@ const TRANSLATIONS = {
         lblBestTimes: "MEJORES TIEMPOS",
         pauseTitle: "JUEGO EN PAUSA",
         pauseSub: "Tómate un respiro o vuelve al menú",
+        pauseSoundOn: "🔊 SONIDO: ON",
+        pauseSoundOff: "🔊 SONIDO: OFF",
+        pauseVibrateOn: "📳 VIBRACIÓN: ON",
+        pauseVibrateOff: "📳 VIBRACIÓN: OFF",
         btnResume: "REANUDAR",
         btnRestart: "REINICIAR NIVEL",
         btnMainMenu: "MENÚ PRINCIPAL",
@@ -396,6 +408,10 @@ const TRANSLATIONS = {
         lblBestTimes: "MEILLEURS TEMPS",
         pauseTitle: "JEU EN PAUSE",
         pauseSub: "Faites une pause ou revenez au menu",
+        pauseSoundOn: "🔊 SON: ON",
+        pauseSoundOff: "🔊 SON: OFF",
+        pauseVibrateOn: "📳 VIBRATION: ON",
+        pauseVibrateOff: "📳 VIBRATION: OFF",
         btnResume: "REPRENDRE",
         btnRestart: "RECOMMENCER",
         btnMainMenu: "MENU PRINCIPAL",
@@ -447,6 +463,10 @@ const TRANSLATIONS = {
         lblBestTimes: "ベストタイム",
         pauseTitle: "一時停止中",
         pauseSub: "休憩するかメニューに戻ります",
+        pauseSoundOn: "🔊 サウンド: ON",
+        pauseSoundOff: "🔊 サウンド: OFF",
+        pauseVibrateOn: "📳 振動: ON",
+        pauseVibrateOff: "📳 振動: OFF",
         btnResume: "再開する",
         btnRestart: "リトライ",
         btnMainMenu: "メインメニュー",
@@ -1745,6 +1765,7 @@ class EchoBounceGame {
                 this.elGameHud.classList.remove('hidden');
                 this.elGameActionBar.classList.remove('hidden');
                 this.elPauseModal.classList.remove('hidden');
+                this._syncPauseUI();
                 break;
 
             case 'DEATH':
@@ -2276,7 +2297,7 @@ class EchoBounceGame {
             });
         }
 
-        // Settings: Ghost toggle
+        // Settings: Ghost toggle (settings only — not on pause menu)
         const toggleGhostSettings = document.getElementById('toggle-ghost-settings');
         if (toggleGhostSettings) {
             toggleGhostSettings.addEventListener('click', () => {
@@ -2284,8 +2305,6 @@ class EchoBounceGame {
                 this.saveSystem.data.ghostEnabled = next;
                 this.saveSystem.save();
                 this._syncSettingsUI();
-                const btnPauseGhost = document.getElementById('btn-pause-ghost');
-                if (btnPauseGhost) btnPauseGhost.textContent = next ? '👻 GHOST: ON' : '👻 GHOST: OFF';
             });
         }
 
@@ -2374,6 +2393,28 @@ class EchoBounceGame {
             this.switchState('LEVEL_SELECT');
         });
 
+        const btnPauseSound = document.getElementById('btn-pause-sound');
+        if (btnPauseSound) {
+            btnPauseSound.addEventListener('click', () => {
+                const next = this.saveSystem.data.sfxEnabled === false;
+                this.saveSystem.data.sfxEnabled = next;
+                this.saveSystem.save();
+                this._syncPauseUI();
+                this._syncSettingsUI();
+            });
+        }
+        const btnPauseVibrate = document.getElementById('btn-pause-vibrate');
+        if (btnPauseVibrate) {
+            btnPauseVibrate.addEventListener('click', () => {
+                const next = this.saveSystem.data.hapticsEnabled === false;
+                this.saveSystem.data.hapticsEnabled = next;
+                this.saveSystem.save();
+                this._syncPauseUI();
+                this._syncSettingsUI();
+                if (next) haptic([30]);
+            });
+        }
+
         // Unlock Web Audio on any user interaction
         document.addEventListener('touchstart', () => Audio.unlock(), { once: true, passive: true });
         document.addEventListener('pointerdown', () => Audio.unlock(), { once: true, passive: true });
@@ -2412,20 +2453,6 @@ class EchoBounceGame {
                 });
             });
         }
-
-        // Ghost Replay Toggle Handler (pause modal)
-        const toggleGhost = () => {
-            const current = this.saveSystem.data.ghostEnabled !== false;
-            const nextState = !current;
-            this.saveSystem.data.ghostEnabled = nextState;
-            this.saveSystem.save();
-            const btnPauseGhost = document.getElementById('btn-pause-ghost');
-            if (btnPauseGhost) btnPauseGhost.textContent = nextState ? '👻 GHOST: ON' : '👻 GHOST: OFF';
-            const tgs = document.getElementById('toggle-ghost-settings');
-            if (tgs) { tgs.setAttribute('data-state', nextState ? 'on' : 'off'); tgs.setAttribute('aria-checked', String(nextState)); }
-        };
-        const btnPauseGhost = document.getElementById('btn-pause-ghost');
-        if (btnPauseGhost) btnPauseGhost.addEventListener('click', toggleGhost);
     }
 
     bindEvents() {
@@ -2677,6 +2704,32 @@ class EchoBounceGame {
         }
     }
 
+    _syncPauseUI() {
+        const d = this.saveSystem.data;
+        const lang = d.language || 'en';
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+        const sfxOn = d.sfxEnabled !== false;
+        const hapOn = d.hapticsEnabled !== false;
+
+        const btnSound = document.getElementById('btn-pause-sound');
+        if (btnSound) {
+            btnSound.textContent = sfxOn
+                ? (dict.pauseSoundOn || '🔊 SOUND: ON')
+                : (dict.pauseSoundOff || '🔊 SOUND: OFF');
+            btnSound.setAttribute('aria-pressed', String(sfxOn));
+            btnSound.classList.toggle('pause-toggle-off', !sfxOn);
+        }
+
+        const btnVibrate = document.getElementById('btn-pause-vibrate');
+        if (btnVibrate) {
+            btnVibrate.textContent = hapOn
+                ? (dict.pauseVibrateOn || '📳 VIBRATION: ON')
+                : (dict.pauseVibrateOff || '📳 VIBRATION: OFF');
+            btnVibrate.setAttribute('aria-pressed', String(hapOn));
+            btnVibrate.classList.toggle('pause-toggle-off', !hapOn);
+        }
+    }
+
     renderProfile() {
         if (this.inputPlayerName) {
             this.inputPlayerName.value = this.saveSystem.data.playerName;
@@ -2690,11 +2743,6 @@ class EchoBounceGame {
                 card.classList.toggle('active', card.getAttribute('data-theme') === activeTheme);
             });
         }
-
-        // Sync pause ghost button text
-        const isGhostOn = this.saveSystem.data.ghostEnabled !== false;
-        const btnPauseGhost = document.getElementById('btn-pause-ghost');
-        if (btnPauseGhost) btnPauseGhost.textContent = isGhostOn ? '👻 GHOST: ON' : '👻 GHOST: OFF';
 
         const lang = this.saveSystem.data.language || 'en';
         const notClearedStr = TRANSLATIONS[lang].notCleared;
