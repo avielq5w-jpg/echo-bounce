@@ -2060,7 +2060,7 @@ class EchoBounceGame {
             this.walls.push(new Wall(0, h * 0.30, w * 0.40, h * 0.30, wallColor));
             this.walls.push(new Wall(w * 0.60, h * 0.30, w, h * 0.30, wallColor));
             this.hazards.push(new MovingHazard(w * 0.25, h * 0.52 - 18, w * 0.75, h * 0.52 - 18, 180, 18, hazardColor));
-            this.hazards.push(new Hazard(w * 0.50, h * 0.78 - 18, 18, hazardColor));
+            this.hazards.push(new Hazard(w * 0.50, h * 0.70, 18, hazardColor)); // Raised so orb can clear the bottom gap
             this.portal = this.createExitPortal(w * 0.50, h * 0.10, 19, portalBase, portalAccent);
 
         } else if (levelIndex === 16) {
