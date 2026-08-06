@@ -255,10 +255,12 @@ const TRANSLATIONS = {
         authSyncSub: "Link Google or Apple to join the global Endless board.",
         authGoogle: "Sign in with Google",
         authApple: "Sign in with Apple",
+        authSignIn: "Sign In",
         authSignOut: "Sign Out",
+        authGuest: "Guest",
         authSignedInGoogle: "Google",
         authSignedInApple: "Apple",
-        authLocalSession: "Local sync (connect Firebase for global)",
+        authLocalSession: "Local sync",
         authSigningIn: "Signing in…",
         authSignInFailed: "Sign-in failed. Try again.",
         authSynced: "Score synced to leaderboard",
@@ -267,6 +269,12 @@ const TRANSLATIONS = {
         lbColDistance: "Distance",
         lbYourBest: "Your best",
         lbGuestLabel: "You (Guest)",
+        lbGuestNotice: "Sign in from Profile to sync your score globally.",
+        lbGoProfile: "Profile",
+        lblOrbTheme: "ORB THEME",
+        lblLevelsClearedShort: "Levels",
+        lblTotalStarsShort: "Stars",
+        lblLifetimeBouncesShort: "Bounces",
         menuProfile: "PROFILE & SKINS",
         menuProfileShort: "Profile",
         menuSettings: "Settings",
@@ -351,10 +359,12 @@ const TRANSLATIONS = {
         authSyncSub: "חבר Google או Apple כדי להצטרף לטבלה העולמית.",
         authGoogle: "התחברות עם Google",
         authApple: "התחברות עם Apple",
+        authSignIn: "התחבר",
         authSignOut: "התנתק",
+        authGuest: "אורח",
         authSignedInGoogle: "Google",
         authSignedInApple: "Apple",
-        authLocalSession: "סנכרון מקומי (חבר Firebase לעולמי)",
+        authLocalSession: "סנכרון מקומי",
         authSigningIn: "מתחבר…",
         authSignInFailed: "ההתחברות נכשלה. נסה שוב.",
         authSynced: "השיא סונכרן לטבלה",
@@ -363,6 +373,12 @@ const TRANSLATIONS = {
         lbColDistance: "מרחק",
         lbYourBest: "השיא שלך",
         lbGuestLabel: "אתה (אורח)",
+        lbGuestNotice: "התחבר בפרופיל כדי לסנכרן את השיא.",
+        lbGoProfile: "פרופיל",
+        lblOrbTheme: "ערכת אורב",
+        lblLevelsClearedShort: "שלבים",
+        lblTotalStarsShort: "כוכבים",
+        lblLifetimeBouncesShort: "קפיצות",
         menuProfile: "פרופיל וערכות נושא",
         menuProfileShort: "פרופיל",
         menuSettings: "הגדרות",
@@ -439,10 +455,12 @@ const TRANSLATIONS = {
         authSyncSub: "Vincula Google o Apple para unirte al ranking global.",
         authGoogle: "Iniciar con Google",
         authApple: "Iniciar con Apple",
-        authSignOut: "Cerrar sesión",
+        authSignIn: "Entrar",
+        authSignOut: "Salir",
+        authGuest: "Invitado",
         authSignedInGoogle: "Google",
         authSignedInApple: "Apple",
-        authLocalSession: "Sync local (conecta Firebase para global)",
+        authLocalSession: "Sync local",
         authSigningIn: "Iniciando sesión…",
         authSignInFailed: "Error al iniciar sesión.",
         authSynced: "Puntuación sincronizada",
@@ -451,6 +469,12 @@ const TRANSLATIONS = {
         lbColDistance: "Distancia",
         lbYourBest: "Tu mejor",
         lbGuestLabel: "Tú (Invitado)",
+        lbGuestNotice: "Inicia sesión en Perfil para sincronizar.",
+        lbGoProfile: "Perfil",
+        lblOrbTheme: "TEMA DEL ORBE",
+        lblLevelsClearedShort: "Niveles",
+        lblTotalStarsShort: "Estrellas",
+        lblLifetimeBouncesShort: "Rebotes",
         menuProfile: "PERFIL Y SKINS",
         menuProfileShort: "Perfil",
         menuSettings: "Ajustes",
@@ -527,10 +551,12 @@ const TRANSLATIONS = {
         authSyncSub: "Liez Google ou Apple pour rejoindre le classement.",
         authGoogle: "Connexion Google",
         authApple: "Connexion Apple",
-        authSignOut: "Se déconnecter",
+        authSignIn: "Connexion",
+        authSignOut: "Déconnexion",
+        authGuest: "Invité",
         authSignedInGoogle: "Google",
         authSignedInApple: "Apple",
-        authLocalSession: "Sync locale (Firebase pour le mondial)",
+        authLocalSession: "Sync locale",
         authSigningIn: "Connexion…",
         authSignInFailed: "Échec de la connexion.",
         authSynced: "Score synchronisé",
@@ -539,6 +565,12 @@ const TRANSLATIONS = {
         lbColDistance: "Distance",
         lbYourBest: "Votre record",
         lbGuestLabel: "Vous (Invité)",
+        lbGuestNotice: "Connectez-vous dans Profil pour synchroniser.",
+        lbGoProfile: "Profil",
+        lblOrbTheme: "THÈME DE L'ORBE",
+        lblLevelsClearedShort: "Niveaux",
+        lblTotalStarsShort: "Étoiles",
+        lblLifetimeBouncesShort: "Rebonds",
         menuProfile: "PROFIL ET SKINS",
         menuProfileShort: "Profil",
         menuSettings: "Réglages",
@@ -615,10 +647,12 @@ const TRANSLATIONS = {
         authSyncSub: "Google / Apple でグローバルボードに参加。",
         authGoogle: "Googleでサインイン",
         authApple: "Appleでサインイン",
+        authSignIn: "サインイン",
         authSignOut: "サインアウト",
+        authGuest: "ゲスト",
         authSignedInGoogle: "Google",
         authSignedInApple: "Apple",
-        authLocalSession: "ローカル同期（Firebaseでグローバル）",
+        authLocalSession: "ローカル同期",
         authSigningIn: "サインイン中…",
         authSignInFailed: "サインインに失敗しました。",
         authSynced: "スコアを同期しました",
@@ -627,6 +661,12 @@ const TRANSLATIONS = {
         lbColDistance: "距離",
         lbYourBest: "ベスト",
         lbGuestLabel: "あなた（ゲスト）",
+        lbGuestNotice: "プロフィールからサインインして同期。",
+        lbGoProfile: "プロフィール",
+        lblOrbTheme: "オーブテーマ",
+        lblLevelsClearedShort: "クリア",
+        lblTotalStarsShort: "スター",
+        lblLifetimeBouncesShort: "バウンス",
         menuProfile: "プロフィール",
         menuProfileShort: "プロフィール",
         menuSettings: "設定",
@@ -2219,32 +2259,27 @@ class EchoBounceGame {
         const user = authed ? this.authService.getUser() : null;
         const displayName = (user && user.displayName) || this.saveSystem.data.playerName || 'Player';
 
-        const panels = [
-            {
-                guest: document.getElementById('lb-auth-guest'),
-                userBox: document.getElementById('lb-auth-user'),
-                name: document.getElementById('lb-auth-name'),
-                provider: document.getElementById('lb-auth-provider'),
-                avatar: document.getElementById('lb-auth-avatar')
-            },
-            {
-                guest: document.getElementById('profile-auth-guest'),
-                userBox: document.getElementById('profile-auth-user'),
-                name: document.getElementById('profile-auth-name'),
-                provider: document.getElementById('profile-auth-provider'),
-                avatar: document.getElementById('profile-auth-avatar')
-            }
-        ];
+        const statusEl = document.getElementById('profile-auth-provider');
+        const toggleBtn = document.getElementById('btn-profile-auth-toggle');
+        const sheet = document.getElementById('profile-auth-sheet');
+        const avatar = document.getElementById('profile-auth-avatar');
+        const guestNotice = document.getElementById('lb-guest-notice');
 
-        for (const p of panels) {
-            if (p.guest) p.guest.classList.toggle('hidden', !!authed);
-            if (p.userBox) p.userBox.classList.toggle('hidden', !authed);
-            if (authed && user) {
-                if (p.name) p.name.textContent = displayName;
-                if (p.provider) p.provider.textContent = this._providerLabel(user, dict);
-                this._paintAvatar(p.avatar, displayName, user.photoURL);
-            }
+        if (statusEl) {
+            statusEl.textContent = authed && user
+                ? this._providerLabel(user, dict)
+                : (dict.authGuest || 'Guest');
         }
+        if (toggleBtn) {
+            toggleBtn.textContent = authed
+                ? (dict.authSignOut || 'Sign Out')
+                : (dict.authSignIn || 'Sign In');
+            toggleBtn.classList.toggle('is-signed-in', !!authed);
+            toggleBtn.setAttribute('aria-expanded', sheet && !sheet.classList.contains('hidden') ? 'true' : 'false');
+        }
+        if (sheet && authed) sheet.classList.add('hidden');
+        this._paintAvatar(avatar, displayName, user ? user.photoURL : null);
+        if (guestNotice) guestNotice.classList.toggle('hidden', !!authed);
     }
 
     async renderLeaderboard() {
@@ -2321,6 +2356,8 @@ class EchoBounceGame {
                 this.authService.updateDisplayName(this.saveSystem.data.playerName || 'Player');
             }
             await this._syncEndlessScoreToLeaderboard(this.saveSystem.data.endlessBestDistance || 0, { quiet: true });
+            const sheet = document.getElementById('profile-auth-sheet');
+            if (sheet) sheet.classList.add('hidden');
             this._syncAuthUI();
             if (this.gameState === 'LEADERBOARD') await this.renderLeaderboard();
             if (this.gameState === 'PROFILE') this.renderProfile();
@@ -2336,6 +2373,8 @@ class EchoBounceGame {
     async _handleSignOut() {
         if (!this.authService) return;
         await this.authService.signOut();
+        const sheet = document.getElementById('profile-auth-sheet');
+        if (sheet) sheet.classList.add('hidden');
         this._syncAuthUI();
         if (this.gameState === 'LEADERBOARD') this.renderLeaderboard();
         if (this.gameState === 'PROFILE') this.renderProfile();
@@ -2367,9 +2406,22 @@ class EchoBounceGame {
                 this._handleSignIn(provider === 'apple' ? 'apple' : 'google');
             });
         });
-        const signOut = document.getElementById('btn-auth-signout');
-        if (signOut) {
-            signOut.addEventListener('click', () => this._handleSignOut());
+        const toggle = document.getElementById('btn-profile-auth-toggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                if (this.authService && this.authService.isAuthenticated()) {
+                    this._handleSignOut();
+                    return;
+                }
+                const sheet = document.getElementById('profile-auth-sheet');
+                if (!sheet) return;
+                sheet.classList.toggle('hidden');
+                toggle.setAttribute('aria-expanded', sheet.classList.contains('hidden') ? 'false' : 'true');
+            });
+        }
+        const goProfile = document.getElementById('btn-lb-go-profile');
+        if (goProfile) {
+            goProfile.addEventListener('click', () => this.switchState('PROFILE'));
         }
     }
 
@@ -4056,7 +4108,7 @@ class EchoBounceGame {
         }
 
         if (elCleared) elCleared.textContent = `${this.saveSystem.data.levelsCompleted}/${this.totalLevels}`;
-        if (elTotalStars) elTotalStars.textContent = `${totalStars}/45`;
+        if (elTotalStars) elTotalStars.textContent = `${totalStars}/${this.totalLevels * 3}`;
         if (elBounces) elBounces.textContent = this.saveSystem.data.totalLifetimeBounces;
 
         if (elBestTimes) {
