@@ -249,6 +249,24 @@ const TRANSLATIONS = {
         menuLevels: "LEVEL SELECT",
         menuLeaderboard: "LEADERBOARD",
         leaderboardSoon: "Leaderboard coming soon",
+        leaderboardTitle: "GLOBAL LEADERBOARD",
+        leaderboardSub: "Endless Mode · Top climbers",
+        authSyncTitle: "Sign in to sync scores",
+        authSyncSub: "Link Google or Apple to join the global Endless board.",
+        authGoogle: "Sign in with Google",
+        authApple: "Sign in with Apple",
+        authSignOut: "Sign Out",
+        authSignedInGoogle: "Google",
+        authSignedInApple: "Apple",
+        authLocalSession: "Local sync (connect Firebase for global)",
+        authSigningIn: "Signing in…",
+        authSignInFailed: "Sign-in failed. Try again.",
+        authSynced: "Score synced to leaderboard",
+        lbColRank: "#",
+        lbColPlayer: "Player",
+        lbColDistance: "Distance",
+        lbYourBest: "Your best",
+        lbGuestLabel: "You (Guest)",
         menuProfile: "PROFILE & SKINS",
         menuProfileShort: "Profile",
         menuSettings: "Settings",
@@ -327,6 +345,24 @@ const TRANSLATIONS = {
         menuLevels: "בחירת שלב",
         menuLeaderboard: "טבלת שיאים",
         leaderboardSoon: "טבלת השיאים בקרוב",
+        leaderboardTitle: "טבלת שיאים עולמית",
+        leaderboardSub: "מצב אינסופי · המטפסים המובילים",
+        authSyncTitle: "התחבר לסנכרון שיאים",
+        authSyncSub: "חבר Google או Apple כדי להצטרף לטבלה העולמית.",
+        authGoogle: "התחברות עם Google",
+        authApple: "התחברות עם Apple",
+        authSignOut: "התנתק",
+        authSignedInGoogle: "Google",
+        authSignedInApple: "Apple",
+        authLocalSession: "סנכרון מקומי (חבר Firebase לעולמי)",
+        authSigningIn: "מתחבר…",
+        authSignInFailed: "ההתחברות נכשלה. נסה שוב.",
+        authSynced: "השיא סונכרן לטבלה",
+        lbColRank: "#",
+        lbColPlayer: "שחקן",
+        lbColDistance: "מרחק",
+        lbYourBest: "השיא שלך",
+        lbGuestLabel: "אתה (אורח)",
         menuProfile: "פרופיל וערכות נושא",
         menuProfileShort: "פרופיל",
         menuSettings: "הגדרות",
@@ -397,6 +433,24 @@ const TRANSLATIONS = {
         menuLevels: "NIVELES",
         menuLeaderboard: "CLASIFICACIÓN",
         leaderboardSoon: "Clasificación pronto",
+        leaderboardTitle: "CLASIFICACIÓN GLOBAL",
+        leaderboardSub: "Modo Infinito · Mejores",
+        authSyncTitle: "Inicia sesión para sincronizar",
+        authSyncSub: "Vincula Google o Apple para unirte al ranking global.",
+        authGoogle: "Iniciar con Google",
+        authApple: "Iniciar con Apple",
+        authSignOut: "Cerrar sesión",
+        authSignedInGoogle: "Google",
+        authSignedInApple: "Apple",
+        authLocalSession: "Sync local (conecta Firebase para global)",
+        authSigningIn: "Iniciando sesión…",
+        authSignInFailed: "Error al iniciar sesión.",
+        authSynced: "Puntuación sincronizada",
+        lbColRank: "#",
+        lbColPlayer: "Jugador",
+        lbColDistance: "Distancia",
+        lbYourBest: "Tu mejor",
+        lbGuestLabel: "Tú (Invitado)",
         menuProfile: "PERFIL Y SKINS",
         menuProfileShort: "Perfil",
         menuSettings: "Ajustes",
@@ -467,6 +521,24 @@ const TRANSLATIONS = {
         menuLevels: "NIVEAUX",
         menuLeaderboard: "CLASSEMENT",
         leaderboardSoon: "Classement bientôt",
+        leaderboardTitle: "CLASSEMENT MONDIAL",
+        leaderboardSub: "Mode Sans Fin · Meilleurs",
+        authSyncTitle: "Connectez-vous pour synchroniser",
+        authSyncSub: "Liez Google ou Apple pour rejoindre le classement.",
+        authGoogle: "Connexion Google",
+        authApple: "Connexion Apple",
+        authSignOut: "Se déconnecter",
+        authSignedInGoogle: "Google",
+        authSignedInApple: "Apple",
+        authLocalSession: "Sync locale (Firebase pour le mondial)",
+        authSigningIn: "Connexion…",
+        authSignInFailed: "Échec de la connexion.",
+        authSynced: "Score synchronisé",
+        lbColRank: "#",
+        lbColPlayer: "Joueur",
+        lbColDistance: "Distance",
+        lbYourBest: "Votre record",
+        lbGuestLabel: "Vous (Invité)",
         menuProfile: "PROFIL ET SKINS",
         menuProfileShort: "Profil",
         menuSettings: "Réglages",
@@ -537,6 +609,24 @@ const TRANSLATIONS = {
         menuLevels: "ステージ選択",
         menuLeaderboard: "リーダーボード",
         leaderboardSoon: "リーダーボードは近日公開",
+        leaderboardTitle: "グローバルランキング",
+        leaderboardSub: "エンドレス · トップクライマー",
+        authSyncTitle: "サインインして同期",
+        authSyncSub: "Google / Apple でグローバルボードに参加。",
+        authGoogle: "Googleでサインイン",
+        authApple: "Appleでサインイン",
+        authSignOut: "サインアウト",
+        authSignedInGoogle: "Google",
+        authSignedInApple: "Apple",
+        authLocalSession: "ローカル同期（Firebaseでグローバル）",
+        authSigningIn: "サインイン中…",
+        authSignInFailed: "サインインに失敗しました。",
+        authSynced: "スコアを同期しました",
+        lbColRank: "#",
+        lbColPlayer: "プレイヤー",
+        lbColDistance: "距離",
+        lbYourBest: "ベスト",
+        lbGuestLabel: "あなた（ゲスト）",
         menuProfile: "プロフィール",
         menuProfileShort: "プロフィール",
         menuSettings: "設定",
@@ -1853,6 +1943,8 @@ class EchoBounceGame {
         this.height = 0;
 
         this.saveSystem = new SaveSystem();
+        this.authService = window.EchoAuthService || new AuthService();
+        this.leaderboardService = window.EchoLeaderboardService || new LeaderboardService();
         this.currentLevelIndex = 0; // 0 to 32 (33 Levels total, 4 Worlds)
         this.totalLevels = 23;
 
@@ -1927,6 +2019,7 @@ class EchoBounceGame {
         this.elLevelSelectScreen = document.getElementById('level-select-screen');
         this.elTutorialScreen = document.getElementById('tutorial-screen');
         this.elProfileScreen = document.getElementById('profile-screen');
+        this.elLeaderboardScreen = document.getElementById('leaderboard-screen');
         this.elSettingsModal = document.getElementById('settings-modal');
         this.elGameHud = document.getElementById('game-hud');
         this.elGameActionBar = document.getElementById('game-action-bar');
@@ -1940,6 +2033,7 @@ class EchoBounceGame {
         this.btnDevCamUp = document.getElementById('dev-cam-up');
         this.btnDevCamDown = document.getElementById('dev-cam-down');
         this.btnDevGodMode = document.getElementById('dev-god-mode');
+        this._authBusy = false;
 
         // i18n — managed via Settings modal pill
         this.btnLangToggle = document.getElementById('btn-lang-toggle'); // null in Phase 13
@@ -1974,6 +2068,15 @@ class EchoBounceGame {
         this.bindEvents();
         this.bindNavigationEvents();
         this.bindSkinSelectorEvents();
+        this.bindAuthEvents();
+
+        if (this.authService && typeof this.authService.onAuthStateChanged === 'function') {
+            this.authService.onAuthStateChanged(() => {
+                this._syncAuthUI();
+                if (this.gameState === 'LEADERBOARD') this.renderLeaderboard();
+                if (this.gameState === 'PROFILE') this.renderProfile();
+            });
+        }
 
         // Apply saved language & RTL settings
         this.setLanguage(this.saveSystem.data.language || 'en');
@@ -2062,8 +2165,10 @@ class EchoBounceGame {
         this.updateHudLevelBadge();
         this._syncMainMenu();
 
+        this._syncAuthUI();
         if (this.gameState === 'LEVEL_SELECT') this.renderLevelSelect();
         if (this.gameState === 'PROFILE') this.renderProfile();
+        if (this.gameState === 'LEADERBOARD') this.renderLeaderboard();
         if (this.gameState === 'PLAYING') this.updateOnScreenHint();
     }
 
@@ -2072,6 +2177,199 @@ class EchoBounceGame {
         if (elBest) {
             const best = Math.floor(this.saveSystem.data.endlessBestDistance || 0);
             elBest.textContent = `${best}m`;
+        }
+    }
+
+    _initialsFromName(name) {
+        const n = (name || 'P').trim();
+        const parts = n.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+        return n.slice(0, 2).toUpperCase();
+    }
+
+    _paintAvatar(el, name, photoURL, hue) {
+        if (!el) return;
+        el.innerHTML = '';
+        el.style.background = '';
+        if (photoURL) {
+            const img = document.createElement('img');
+            img.src = photoURL;
+            img.alt = '';
+            img.referrerPolicy = 'no-referrer';
+            el.appendChild(img);
+            return;
+        }
+        el.textContent = this._initialsFromName(name);
+        const h = hue != null ? hue : ((name || 'P').charCodeAt(0) * 37) % 360;
+        el.style.background = `linear-gradient(135deg, hsl(${h}, 85%, 60%), hsl(${(h + 40) % 360}, 80%, 55%))`;
+    }
+
+    _providerLabel(user, dict) {
+        if (!user) return '';
+        if (user.isLocalSession) return dict.authLocalSession || 'Local sync';
+        if (user.provider === 'apple') return dict.authSignedInApple || 'Apple';
+        if (user.provider === 'google') return dict.authSignedInGoogle || 'Google';
+        return user.provider || '';
+    }
+
+    _syncAuthUI() {
+        const lang = this.saveSystem.data.language || 'en';
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+        const authed = this.authService && this.authService.isAuthenticated();
+        const user = authed ? this.authService.getUser() : null;
+        const displayName = (user && user.displayName) || this.saveSystem.data.playerName || 'Player';
+
+        const panels = [
+            {
+                guest: document.getElementById('lb-auth-guest'),
+                userBox: document.getElementById('lb-auth-user'),
+                name: document.getElementById('lb-auth-name'),
+                provider: document.getElementById('lb-auth-provider'),
+                avatar: document.getElementById('lb-auth-avatar')
+            },
+            {
+                guest: document.getElementById('profile-auth-guest'),
+                userBox: document.getElementById('profile-auth-user'),
+                name: document.getElementById('profile-auth-name'),
+                provider: document.getElementById('profile-auth-provider'),
+                avatar: document.getElementById('profile-auth-avatar')
+            }
+        ];
+
+        for (const p of panels) {
+            if (p.guest) p.guest.classList.toggle('hidden', !!authed);
+            if (p.userBox) p.userBox.classList.toggle('hidden', !authed);
+            if (authed && user) {
+                if (p.name) p.name.textContent = displayName;
+                if (p.provider) p.provider.textContent = this._providerLabel(user, dict);
+                this._paintAvatar(p.avatar, displayName, user.photoURL);
+            }
+        }
+    }
+
+    async renderLeaderboard() {
+        if (!this.leaderboardService) return;
+        const lang = this.saveSystem.data.language || 'en';
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+        this._syncAuthUI();
+
+        await this.leaderboardService.fetchTop(25);
+        const user = this.authService && this.authService.isAuthenticated()
+            ? this.authService.getUser()
+            : null;
+        const view = this.leaderboardService.buildView(
+            25,
+            user,
+            this.saveSystem.data.endlessBestDistance || 0,
+            this.saveSystem.data.playerName || 'Player'
+        );
+
+        const list = document.getElementById('lb-list');
+        if (list) {
+            list.innerHTML = '';
+            view.top.forEach((entry, i) => {
+                const isYou = user && entry.uid === user.uid;
+                const li = document.createElement('li');
+                li.className = 'lb-row' + (isYou ? ' is-you' : '');
+                const avatar = document.createElement('div');
+                avatar.className = 'lb-avatar';
+                this._paintAvatar(avatar, entry.name, entry.photoURL, entry.avatarHue);
+                li.innerHTML = `
+                    <span class="lb-rank">${i + 1}</span>
+                    <div class="lb-player">
+                        <div class="lb-avatar-slot"></div>
+                        <span class="lb-name"></span>
+                    </div>
+                    <span class="lb-dist">${Math.floor(entry.distance || 0)}m</span>
+                `;
+                const slot = li.querySelector('.lb-avatar-slot');
+                if (slot) slot.replaceWith(avatar);
+                const nameEl = li.querySelector('.lb-name');
+                if (nameEl) nameEl.textContent = entry.name || 'Player';
+                list.appendChild(li);
+            });
+        }
+
+        const youName = view.you.isGuest
+            ? (dict.lbGuestLabel || 'You (Guest)')
+            : view.you.name;
+        const elRank = document.getElementById('lb-you-rank');
+        const elName = document.getElementById('lb-you-name');
+        const elDist = document.getElementById('lb-you-dist');
+        if (elRank) elRank.textContent = view.you.rank ? `#${view.you.rank}` : '—';
+        if (elName) elName.textContent = youName;
+        if (elDist) elDist.textContent = `${Math.floor(view.you.distance || 0)}m`;
+        this._paintAvatar(
+            document.getElementById('lb-you-avatar'),
+            view.you.name,
+            view.you.photoURL
+        );
+    }
+
+    async _handleSignIn(provider) {
+        if (!this.authService || this._authBusy) return;
+        const lang = this.saveSystem.data.language || 'en';
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+        this._authBusy = true;
+        document.querySelectorAll('.btn-auth').forEach(btn => { btn.disabled = true; });
+        this._showLockToast(dict.authSigningIn || 'Signing in…');
+        try {
+            const user = provider === 'apple'
+                ? await this.authService.signInWithApple()
+                : await this.authService.signInWithGoogle();
+            if (user && !user.displayName) {
+                this.authService.updateDisplayName(this.saveSystem.data.playerName || 'Player');
+            }
+            await this._syncEndlessScoreToLeaderboard(this.saveSystem.data.endlessBestDistance || 0, { quiet: true });
+            this._syncAuthUI();
+            if (this.gameState === 'LEADERBOARD') await this.renderLeaderboard();
+            if (this.gameState === 'PROFILE') this.renderProfile();
+        } catch (e) {
+            console.warn('Sign-in failed', e);
+            this._showLockToast(dict.authSignInFailed || 'Sign-in failed. Try again.');
+        } finally {
+            this._authBusy = false;
+            document.querySelectorAll('.btn-auth').forEach(btn => { btn.disabled = false; });
+        }
+    }
+
+    async _handleSignOut() {
+        if (!this.authService) return;
+        await this.authService.signOut();
+        this._syncAuthUI();
+        if (this.gameState === 'LEADERBOARD') this.renderLeaderboard();
+        if (this.gameState === 'PROFILE') this.renderProfile();
+    }
+
+    async _syncEndlessScoreToLeaderboard(distanceM, opts = {}) {
+        if (!this.authService || !this.authService.isAuthenticated()) return null;
+        if (!this.leaderboardService) return null;
+        const user = this.authService.getUser();
+        const name = user.displayName || this.saveSystem.data.playerName || 'Player';
+        const result = await this.leaderboardService.submitScore({
+            uid: user.uid,
+            name,
+            photoURL: user.photoURL,
+            distance: distanceM
+        });
+        if (result && result.ok && !opts.quiet) {
+            const lang = this.saveSystem.data.language || 'en';
+            const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+            this._showLockToast(dict.authSynced || 'Score synced to leaderboard');
+        }
+        return result;
+    }
+
+    bindAuthEvents() {
+        document.querySelectorAll('.btn-auth[data-auth]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const provider = btn.getAttribute('data-auth');
+                this._handleSignIn(provider === 'apple' ? 'apple' : 'google');
+            });
+        });
+        const signOut = document.getElementById('btn-auth-signout');
+        if (signOut) {
+            signOut.addEventListener('click', () => this._handleSignOut());
         }
     }
 
@@ -2488,6 +2786,11 @@ class EchoBounceGame {
         if (elDist) elDist.textContent = `${result.distance}m`;
         if (elBest) elBest.textContent = `${result.best}m`;
 
+        // Authenticated players sync Endless best after every run
+        if (this.authService && this.authService.isAuthenticated()) {
+            this._syncEndlessScoreToLeaderboard(result.best, { quiet: !result.isNewBest });
+        }
+
         this.switchState('ENDLESS_GAME_OVER');
     }
 
@@ -2616,6 +2919,7 @@ class EchoBounceGame {
         this.elLevelSelectScreen.classList.add('hidden');
         if (this.elTutorialScreen) this.elTutorialScreen.classList.add('hidden');
         this.elProfileScreen.classList.add('hidden');
+        if (this.elLeaderboardScreen) this.elLeaderboardScreen.classList.add('hidden');
         this.elGameHud.classList.add('hidden');
         this.elGameActionBar.classList.add('hidden');
         this.elPauseModal.classList.add('hidden');
@@ -2654,6 +2958,11 @@ class EchoBounceGame {
             case 'PROFILE':
                 this.renderProfile();
                 this.elProfileScreen.classList.remove('hidden');
+                break;
+
+            case 'LEADERBOARD':
+                if (this.elLeaderboardScreen) this.elLeaderboardScreen.classList.remove('hidden');
+                this.renderLeaderboard();
                 break;
 
             case 'PLAYING':
@@ -3196,11 +3505,11 @@ class EchoBounceGame {
         }
         const btnLeaderboard = document.getElementById('btn-menu-leaderboard');
         if (btnLeaderboard) {
-            btnLeaderboard.addEventListener('click', () => {
-                const lang = this.saveSystem.data.language || 'en';
-                const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
-                this._showLockToast(dict.leaderboardSoon || 'Leaderboard coming soon');
-            });
+            btnLeaderboard.addEventListener('click', () => this.switchState('LEADERBOARD'));
+        }
+        const btnLbBack = document.getElementById('btn-leaderboard-back');
+        if (btnLbBack) {
+            btnLbBack.addEventListener('click', () => this.switchState('MENU'));
         }
 
         // Dev Endless overlay (only wired when isDevMode)
@@ -3336,6 +3645,11 @@ class EchoBounceGame {
             this.inputPlayerName.addEventListener('change', (e) => {
                 this.saveSystem.data.playerName = e.target.value.trim() || 'Player 1';
                 this.saveSystem.save();
+                if (this.authService && this.authService.isAuthenticated()) {
+                    this.authService.updateDisplayName(this.saveSystem.data.playerName);
+                    this._syncEndlessScoreToLeaderboard(this.saveSystem.data.endlessBestDistance || 0, { quiet: true });
+                }
+                this._syncAuthUI();
             });
         }
 
@@ -3716,6 +4030,7 @@ class EchoBounceGame {
         if (this.inputPlayerName) {
             this.inputPlayerName.value = this.saveSystem.data.playerName;
         }
+        this._syncAuthUI();
 
         // Theme Preset active highlight
         const activeTheme = this.saveSystem.data.theme || 'cyber';
@@ -4345,7 +4660,7 @@ class EchoBounceGame {
         this.renderGrid();
 
         // Draw live Nexus Light Streams behind menu/UI screens
-        if (this.nexusStreams && (this.gameState === 'MENU' || this.gameState === 'LEVEL_SELECT' || this.gameState === 'SETTINGS' || this.gameState === 'PROFILE')) {
+        if (this.nexusStreams && (this.gameState === 'MENU' || this.gameState === 'LEVEL_SELECT' || this.gameState === 'SETTINGS' || this.gameState === 'PROFILE' || this.gameState === 'LEADERBOARD')) {
             for (let i = 0; i < this.nexusStreams.length; i++) {
                 this.nexusStreams[i].draw(this.ctx);
             }

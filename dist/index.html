@@ -347,7 +347,93 @@
                     </div>
                 </div>
 
+                <!-- Auth: sync Endless scores -->
+                <div class="auth-panel" id="profile-auth-panel">
+                    <div class="auth-guest" id="profile-auth-guest">
+                        <p class="auth-panel-title" data-i18n="authSyncTitle">Sign in to sync scores</p>
+                        <p class="auth-panel-sub" data-i18n="authSyncSub">Link Google or Apple to join the global Endless board.</p>
+                        <div class="auth-btn-row">
+                            <button type="button" class="btn-auth btn-auth-google" data-auth="google">
+                                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6S8.9 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.7 14.6 2.8 12 2.8 6.9 2.8 2.8 6.9 2.8 12S6.9 21.2 12 21.2c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1.1-.2-1.6H12z"/></svg>
+                                <span data-i18n="authGoogle">Sign in with Google</span>
+                            </button>
+                            <button type="button" class="btn-auth btn-auth-apple" data-auth="apple">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 3.2c-.8.5-1.5 1.4-1.4 2.4 1 .1 1.9-.4 2.5-1.2.7-.8 1.1-1.8 1-2.7-1 .1-2 .6-2.1 1.5zM19.2 8.3c-1.4-.1-2.6.8-3.3.8s-1.7-.8-3-.8c-1.5 0-2.9.9-3.7 2.2-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.2 1.1-.1 1.6-.7 2.9-.7s1.7.7 2.9.7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.4-.9-2.4-3.6 0-2.2 1.8-3.3 1.9-3.4-1.1-1.5-2.7-1.7-3.3-1.6z"/></svg>
+                                <span data-i18n="authApple">Sign in with Apple</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="auth-user hidden" id="profile-auth-user">
+                        <div class="auth-user-row">
+                            <div class="lb-avatar" id="profile-auth-avatar" aria-hidden="true">?</div>
+                            <div class="auth-user-meta">
+                                <span class="auth-user-name" id="profile-auth-name">Player</span>
+                                <span class="auth-user-provider" id="profile-auth-provider">Google</span>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-auth-signout" class="btn-menu btn-auth-signout" data-i18n="authSignOut">Sign Out</button>
+                    </div>
+                </div>
+
                 <button id="btn-profile-back" class="btn-menu btn-back" data-i18n="btnBack">BACK TO MENU</button>
+            </div>
+        </div>
+
+        <!-- 4b. GLOBAL LEADERBOARD -->
+        <div id="leaderboard-screen" class="screen-overlay hidden">
+            <div class="screen-card leaderboard-card">
+                <div class="screen-header lb-header">
+                    <h2 data-i18n="leaderboardTitle">GLOBAL LEADERBOARD</h2>
+                    <p class="sub-title" data-i18n="leaderboardSub">Endless Mode · Top climbers</p>
+                </div>
+
+                <div class="auth-panel lb-auth-panel" id="lb-auth-panel">
+                    <div class="auth-guest" id="lb-auth-guest">
+                        <p class="auth-panel-title" data-i18n="authSyncTitle">Sign in to sync scores</p>
+                        <div class="auth-btn-row">
+                            <button type="button" class="btn-auth btn-auth-google" data-auth="google">
+                                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6S8.9 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.7 14.6 2.8 12 2.8 6.9 2.8 2.8 6.9 2.8 12S6.9 21.2 12 21.2c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1.1-.2-1.6H12z"/></svg>
+                                <span data-i18n="authGoogle">Sign in with Google</span>
+                            </button>
+                            <button type="button" class="btn-auth btn-auth-apple" data-auth="apple">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 3.2c-.8.5-1.5 1.4-1.4 2.4 1 .1 1.9-.4 2.5-1.2.7-.8 1.1-1.8 1-2.7-1 .1-2 .6-2.1 1.5zM19.2 8.3c-1.4-.1-2.6.8-3.3.8s-1.7-.8-3-.8c-1.5 0-2.9.9-3.7 2.2-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.2 1.1-.1 1.6-.7 2.9-.7s1.7.7 2.9.7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.4-.9-2.4-3.6 0-2.2 1.8-3.3 1.9-3.4-1.1-1.5-2.7-1.7-3.3-1.6z"/></svg>
+                                <span data-i18n="authApple">Sign in with Apple</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="auth-user hidden" id="lb-auth-user">
+                        <div class="auth-user-row">
+                            <div class="lb-avatar" id="lb-auth-avatar" aria-hidden="true">?</div>
+                            <div class="auth-user-meta">
+                                <span class="auth-user-name" id="lb-auth-name">Player</span>
+                                <span class="auth-user-provider" id="lb-auth-provider">Signed in</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lb-list-wrap">
+                    <div class="lb-list-head">
+                        <span data-i18n="lbColRank">#</span>
+                        <span data-i18n="lbColPlayer">Player</span>
+                        <span data-i18n="lbColDistance">Distance</span>
+                    </div>
+                    <ol id="lb-list" class="lb-list" aria-live="polite"></ol>
+                </div>
+
+                <div class="lb-you" id="lb-you">
+                    <div class="lb-you-label" data-i18n="lbYourBest">Your best</div>
+                    <div class="lb-row lb-row-you">
+                        <span class="lb-rank" id="lb-you-rank">—</span>
+                        <div class="lb-player">
+                            <div class="lb-avatar" id="lb-you-avatar">Y</div>
+                            <span class="lb-name" id="lb-you-name">You</span>
+                        </div>
+                        <span class="lb-dist" id="lb-you-dist">0m</span>
+                    </div>
+                </div>
+
+                <button id="btn-leaderboard-back" class="btn-menu btn-back" data-i18n="btnBack">BACK TO MENU</button>
             </div>
         </div>
 
@@ -468,6 +554,7 @@
 
     </div>
 
+    <script src="services.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
