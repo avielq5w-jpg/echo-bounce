@@ -2243,6 +2243,7 @@ class EchoBounceGame {
         if (palette && palette.hasEnvOverride && palette.uiAccent) {
             root.style.setProperty('--neon-cyan', palette.uiAccent);
             root.style.setProperty('--neon-cyan-glow', palette.uiGlow || hexToRgba(palette.uiAccent, 0.4));
+            root.style.setProperty('--neon-pulse-mid', palette.uiSecondary || palette.uiAccent);
             root.style.setProperty('--bg-dark', palette.bg);
             if (palette.uiSecondary) {
                 root.style.setProperty('--neon-gold', palette.uiSecondary);
@@ -2256,7 +2257,7 @@ class EchoBounceGame {
             }
         } else {
             [
-                '--neon-cyan', '--neon-cyan-glow', '--bg-dark', '--neon-gold',
+                '--neon-cyan', '--neon-cyan-glow', '--neon-pulse-mid', '--bg-dark', '--neon-gold',
                 '--neon-red', '--neon-red-glow', '--neon-pink', '--neon-pink-glow'
             ].forEach(v => root.style.removeProperty(v));
         }
